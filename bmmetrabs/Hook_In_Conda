@@ -1,0 +1,9 @@
+#
+#memo activating the py shell
+#
+
+eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
+conda activate metrabs
+
+
+
