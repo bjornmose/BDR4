@@ -19,7 +19,7 @@ skeleton = ''
 
 
 # set other parameters here
-datapath = 'Cris26'
+datapath = 'default'
 resdetail = 'MQFOV30'
 # set appenix
 respath = datapath + resdetail
