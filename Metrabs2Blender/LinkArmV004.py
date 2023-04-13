@@ -394,6 +394,19 @@ def makefeetrot(parent,joma):
             co.up_axis="UP_Y"
             co.name = cname
 
+def _clear_ArmatureConstraints(arm):
+    print('_clear_ArmatureConstraints')
+    for bone in arm.pose.bones:
+        for co in bone.constraints:
+            try:
+                _ta = co.target 
+            except:
+                continue # no property target
+            if _ta is None:
+                bone.constraints.remove(co) 
+    print('_clear_ArmatureConstraints Done')
+	
+
 
 class LinkArmature(bpy.types.Operator):
     """LinkArmatureToSimpl"""
@@ -494,6 +507,8 @@ class LinkArmature(bpy.types.Operator):
         arm = bpy.data.objects.get(nameA)
         print(nameA,' is:',arm)
         pre = obj.name
+        _clear_ArmatureConstraints(arm)
+
         # see if 'rwri' element of jome is there
         '''
         n_probe = pre+'_'+joma['rwri']
