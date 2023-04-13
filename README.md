@@ -1,14 +1,14 @@
 # BDR4
 There are two folders
 
-##1. bmmetrabs: Calling METRABS for a sequence of images
-###1.1 have a python shell with tensorflow installed
+## 1. bmmetrabs: Calling METRABS for a sequence of images
+### 1.1 have a python shell with tensorflow installed
 '''
 jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
 (base) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ conda activate tf-py38
 '''
 
-###1.2 Edit the file Job_ioV001.py to your needs
+### 1.2 Edit the file Job_ioV001.py to your needs
 
 1.3 run it
 '''
@@ -21,7 +21,7 @@ New job is {'version': 3, 'max_detections': 1, 'fov_degrees': 30, 'skeleton': ''
 
 '''
 
-###1.4 run the job
+### 1.4 run the job
 
 '''
 (tf-py38) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ ./evaltofiles.py 
