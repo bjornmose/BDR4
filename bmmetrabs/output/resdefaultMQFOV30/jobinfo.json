@@ -1,0 +1,9 @@
+{
+    "skeleton": "",
+    "start": 1,
+    "end": 10,
+    "inpattern": "input/default/Image{0:04d}.png",
+    "modelname": "./models/metrabs_eff2s_y4",
+    "max_detections": 1,
+    "fov_degrees": 30
+}

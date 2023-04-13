@@ -23,8 +23,8 @@ datapath = 'default'
 resdetail = 'MQFOV30'
 # set appenix
 respath = datapath + resdetail
-frame_start = 730
-frame_end = 2800  # 1160
+frame_start = 1
+frame_end = 10  # 1160
 max_detections=1
 jobfilename = 'e2fjob'+datapath+resdetail+'.json'
 create_json = 1  # enum 0 dont 1 skip existing 2 overwrite
