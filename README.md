@@ -1,8 +1,17 @@
 # BDR4
+Some work I did to crop the fruit of :
+
+https://github.com/isarandi/metrabs [1]
+
+in my little blender world on an lunix machine
+
 There are two folders
+## 1. bmmetrabs: Calling METRABS for a sequence of images
+## 2. Metrabs2Blender Cropping results in Blender
 
 ## 1. bmmetrabs: Calling METRABS for a sequence of images
 ### 1.1 have a python shell with tensorflow installed
+to get there see [1]
 '''
 jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
 (base) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ conda activate tf-py38
@@ -10,7 +19,7 @@ jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ eval "$("$HOME/minicon
 
 ### 1.2 Edit the file Job_ioV001.py to your needs
 
-1.3 run it
+### 1.3 run it
 '''
 (tf-py38) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ ./Job_ioV001.py 
 class __init__ Jobfile e2fjobdefaultMQFOV30.json
@@ -48,9 +57,5 @@ loading takes a while
 ....
 
 
-
-
-
-
-
-2. Metrabs2Blender Cropping results in Blender
+## 2. Metrabs2Blender Cropping results in Blender
+Blender files are 2.79 but should work with 3.x too
