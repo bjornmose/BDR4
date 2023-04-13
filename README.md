@@ -55,6 +55,14 @@ Wait..
 loading takes a while
 
 ....
+### 1.5 Results
+There should be a bunch of JSON files in the destination folder:
+```
+jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs/output/resdefaultMQFOV30$ ls
+jobinfo.json       Posedata0002.json  Posedata0004.json  Posedata0006.json  Posedata0008.json  viz
+Posedata0001.json  Posedata0003.json  Posedata0005.json  Posedata0007.json  Posedata0009.json
+```
+
 
 
 ## 2. Metrabs2Blender Cropping results in Blender
