@@ -31,6 +31,22 @@ New job is {'version': 3, 'max_detections': 1, 'fov_degrees': 30, 'skeleton': ''
 ```
 
 NOTE: the destination folders must be there ... otherwise evaltofiles.py will complain! 
+NOTE: the models folders is empty  ! see text in the folder. For now my choices are:
+
+```
+
+    if qual < 1 : 
+        _modelname = './models/metrabs_mob3l_y4t'
+    else: 
+        if qual < 20 : 
+            _modelname = './models/metrabs_eff2s_y4'
+        else:
+            if qual< 50 : 
+                _modelname = './models/metrabs_eff2l_y4'
+            else :
+                _modelname = './models/metrabs_eff2l_y4_360'
+```
+
 
 ### 1.4 run the job
 ```
@@ -82,3 +98,7 @@ The optional viz folder holds images visualizing the results. The Posedata files
 
 ## 2. Metrabs2Blender Cropping results in Blender
 Blender files are 2.79 but should work with 3.x too
+
+### Reading data to a bunch of 'empies'
+Once the script 'ImportMetrabsjsonV003.py' ran in blender the object panel will have a button 'Make metrabs root' 
+### Link to armature
