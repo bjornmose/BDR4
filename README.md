@@ -30,6 +30,8 @@ New job is {'version': 3, 'max_detections': 1, 'fov_degrees': 30, 'skeleton': ''
 
 '''
 
+NOTE: the destination folders must be there ... otherwise evaltofiles.py will complain! 
+
 ### 1.4 run the job
 
 '''
@@ -52,7 +54,20 @@ inpattern input/default/Image{0:04d}.png outpath output/resdefaultMQFOV30 json o
 '''
 Wait.. 
 
-loading takes a while
+loading takes a while .. with loads of TF output
+
+.... 1rst result
+
+<-out output/resdefaultMQFOV30/Posedata0001.json
+output/resdefaultMQFOV30/viz/Image0001.png
+
+....
+
+finally you may see
+Frame Loop  9  maxrss:  5864248
+###e2f#######################################################
+ DONE :) 
+^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ....
 ### 1.5 Results
@@ -62,7 +77,7 @@ jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs/output/resdefaultMQFOV3
 jobinfo.json       Posedata0002.json  Posedata0004.json  Posedata0006.json  Posedata0008.json  viz
 Posedata0001.json  Posedata0003.json  Posedata0005.json  Posedata0007.json  Posedata0009.json
 ```
-
+The optional viz folder holds images visualizing the results. The Posedata files hold the data to go on.
 
 
 ## 2. Metrabs2Blender Cropping results in Blender
