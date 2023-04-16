@@ -106,7 +106,7 @@ Blender files are 2.79 but should work with 3.x too
 Once the script 'ImportMetrabsjsonV003.py' ran in blender the object panel will have a button 'Make metrabs root' 
 This will generate some 'custom properties' and some new items in the objects 'Metrabs' panel.
 Once you have set the path variable there to the 'destination' folder it will enable the job reading and the importing button.
-Job reading thefile 'jobinfo' will be evaluated and some of the object properties will be adjusted to read the data.
+The script 'job reading' will evaluate the file 'jobinfo' and some of the object properties will be adjusted to read the data.
 The script behind the import botton will do its very best to build a bunch of empties with actions attached. 
 
 ### Link to armature
