@@ -110,3 +110,7 @@ The script 'job reading' will evaluate the file 'jobinfo' and some of the object
 The script behind the import botton will do its very best to build a bunch of empties with actions attached. 
 
 ### Link to armature
+So now we have a cloud of empties moving .. how to make my charater move?
+Tricky but possible using constraints .. to be continued
+Best 4 now LinkArmV004.py
+
