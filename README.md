@@ -94,11 +94,19 @@ jobinfo.json       Posedata0002.json  Posedata0004.json  Posedata0006.json  Pose
 Posedata0001.json  Posedata0003.json  Posedata0005.json  Posedata0007.json  Posedata0009.json
 ```
 The optional viz folder holds images visualizing the results. The Posedata files hold the data to go on.
+At this point you are free to go where ever you want. Data is JSON and can be imported by any tool of your choice.
+
 
 
 ## 2. Metrabs2Blender Cropping results in Blender
+However I decided to proceed with blender.
 Blender files are 2.79 but should work with 3.x too
 
 ### Reading data to a bunch of 'empies'
 Once the script 'ImportMetrabsjsonV003.py' ran in blender the object panel will have a button 'Make metrabs root' 
+This will generate some 'custom properties' and some new items in the objects 'Metrabs' panel.
+Once you have set the path variable there to the 'destination' folder it will enable the job reading and the importing button.
+Job reading thefile 'jobinfo' will be evaluated and some of the object properties will be adjusted to read the data.
+The script behind the import botton will do its very best to build a bunch of empties with actions attached. 
+
 ### Link to armature
