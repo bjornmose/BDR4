@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-#evaltofiles.py vers: I
+#evaltofiles.py vers: J
 import resource
 import gc
 import os
@@ -204,7 +204,8 @@ def doimage(model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_jso
 			return
 	pred = tf.nest.map_structure(lambda x: x.numpy(), pred)  # convert tensors to numpy arrays
 	joint_names = model.per_skeleton_joint_names[skeleton].numpy().astype(str)	
-	joint_edges = model.per_skeleton_joint_edges[skeleton].numpy()   
+	joint_edges = model.per_skeleton_joint_edges[skeleton].numpy()
+	rearrange(pred)   
 	if create_json > 0 :
 		p3d = pred['poses3d']
 		boxes = pred['boxes']
@@ -271,6 +272,12 @@ def download_model(model_type):
     return model_path
 
 
+def rearrange(pred):
+    poses3d = pred['poses3d']
+    poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
+	   
+
+
 def visualize(image, pred, joint_names, joint_edges):
     try:
         visualize_poseviz(image, pred, joint_names, joint_edges)
@@ -306,7 +313,7 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
         
     # Matplotlib plots the Z axis as vertical, but our poses have Y as the vertical axis.
     # Therefore, we do a 90° rotation around the X axis:
-    poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
+    #poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
     for pose3d, pose2d in zip(poses3d, poses2d):
         for i_start, i_end in joint_edges:
             image_ax.plot(*zip(pose2d[i_start], pose2d[i_end]), marker='o', markersize=2)
@@ -346,7 +353,7 @@ def visualize_3dtofile(image, pred, joint_names, joint_edges,frame,pat):
 
     # Matplotlib plots the Z axis as vertical, but our poses have Y as the vertical axis.
     # Therefore, we do a 90° rotation around the X axis:
-    poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
+    #poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
     for pose3d, pose2d in zip(poses3d, poses2d):
         for i_start, i_end in joint_edges:
             image_ax.plot(*zip(pose2d[i_start], pose2d[i_end]), marker='o', markersize=2)
