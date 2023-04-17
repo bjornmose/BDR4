@@ -13,6 +13,9 @@ There are two folders
 ### 1.1 have a python shell with tensorflow installed
 to get there see [1]
 
+works fine without using the GPU
+Want you GPU to run? -> Follow ulysses in TensorFlowGPUHack.txt
+
 ``
 jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
 (base) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ conda activate tf-py38
@@ -112,5 +115,5 @@ The script behind the import botton will do its very best to build a bunch of em
 ### Link to armature
 So now we have a cloud of empties moving .. how to make my charater move?
 Tricky but possible using constraints .. to be continued
-Best 4 now LinkArmV004.py
+Best 4 now LinkArmV004.py in MetrabsDemoLink.blend
 

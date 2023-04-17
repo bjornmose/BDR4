@@ -34,5 +34,14 @@ Linking works like
 Most of the times I disable the constraints for the Root bone
 and use the root bone to model inverse camera movement.
 
+Legal Note:
+    RawBodyGend is derived from 
+    http://www.makehumancommunity.org/
+    TheRig is derived from
+    www.blender.org 2.77 rigify
+    please read the licenses
+    
+    
+
                 
 
