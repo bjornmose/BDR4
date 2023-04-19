@@ -5,9 +5,10 @@ https://github.com/isarandi/metrabs [1]
 
 in my little blender world on an lunix machine
 
-There are two folders
+There are three folders
 ## 1. bmmetrabs: Calling METRABS for a sequence of images
 ## 2. Metrabs2Blender Cropping results in Blender
+## 3. Metrabs2Blender3_x Cropping results in Blender
 
 ## 1. bmmetrabs: Calling METRABS for a sequence of images
 ### 1.1 have a python shell with tensorflow installed
@@ -101,12 +102,19 @@ At this point you are free to go where ever you want. Data is JSON and can be im
 
 
 
-## 2. Metrabs2Blender Cropping results in Blender
+## 2. Metrabs2Blender Cropping results in Blender 2.79a
 However I decided to proceed with blender.
-Blender files are 2.79 but should work with 3.x too
+Blender files are 2.79 
+
+## 3. Metrabs2Blender3_x Cropping results in Blender 3.x (3.2, 3.5 where tested here)
+However I decided to proceed with blender.
+Blender files are 3.5 
+*.py files should work for 2.79 - 3.5 however I did not understand in which collecion(s) the empties are created any why
+
+
 
 ### Reading data to a bunch of 'empies'
-Once the script 'ImportMetrabsjsonV003.py' ran in blender the object panel will have a button 'Make metrabs root' 
+Once the script 'ImportMetrabsjsonV004.py' ran in blender the object panel will have a button 'Make metrabs root' 
 This will generate some 'custom properties' and some new items in the objects 'Metrabs' panel.
 Once you have set the path variable there to the 'destination' folder it will enable the job reading and the importing button.
 The script 'job reading' will evaluate the file 'jobinfo' and some of the object properties will be adjusted to read the data.
@@ -115,5 +123,6 @@ The script behind the import botton will do its very best to build a bunch of em
 ### Link to armature
 So now we have a cloud of empties moving .. how to make my charater move?
 Tricky but possible using constraints .. to be continued
-Best 4 now LinkArmV004.py in MetrabsDemoLink.blend
+Best 4 now LinkArmV004.py in MetrabsDemoLink.blend (2.79)
+Best 4 now LinkArmV005.py in no file yet (3.x) would expect to work in MetrabsDemoLink.blend (2.79) loaded in 3.x
 
