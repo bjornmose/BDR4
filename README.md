@@ -1,8 +1,4 @@
 # BDR4
-## on uTube
-https://www.youtube.com/watch?v=yiU9tS6l2VU
-https://www.youtube.com/watch?v=VgyKScXE33I
-https://www.youtube.com/watch?v=r_s-iVQXNf0
 
 Some work I did to crop the fruit of :
 
@@ -130,4 +126,12 @@ So now we have a cloud of empties moving .. how to make my charater move?
 Tricky but possible using constraints .. to be continued
 Best 4 now LinkArmV004.py in MetrabsDemoLink.blend (2.79)
 Best 4 now LinkArmV005.py in no file yet (3.x) would expect to work in MetrabsDemoLink.blend (2.79) loaded in 3.x
+
+
+## on uTube
+
+https://www.youtube.com/watch?v=yiU9tS6l2VU
+https://www.youtube.com/watch?v=VgyKScXE33I
+https://www.youtube.com/watch?v=r_s-iVQXNf0
+
 
