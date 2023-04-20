@@ -1,4 +1,9 @@
 # BDR4
+## on uTube
+https://www.youtube.com/watch?v=yiU9tS6l2VU
+https://www.youtube.com/watch?v=VgyKScXE33I
+https://www.youtube.com/watch?v=r_s-iVQXNf0
+
 Some work I did to crop the fruit of :
 
 https://github.com/isarandi/metrabs [1]
