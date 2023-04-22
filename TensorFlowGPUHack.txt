@@ -1,0 +1,101 @@
+almost working 
+
+hook in conda:
+
+jenscave@jenscave-i5:~$ eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
+(base) jenscave@jenscave-i5:~$ conda -V
+conda 4.10.3
+(base) jenscave@jenscave-i5:~$ 
+
+
+check nvidia driver is there:
+base) jenscave@jenscave-i5:~$ nvidia-smi
+Tue Mar  7 01:19:51 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 515.86.01    Driver Version: 515.86.01    CUDA Version: 11.7     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA GeForce ...  Off  | 00000000:01:00.0  On |                  N/A |
+| 45%   27C    P5    18W / 130W |    293MiB /  4096MiB |      1%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|    0   N/A  N/A      1660      G   /usr/lib/xorg/Xorg                104MiB |
+|    0   N/A  N/A      1832      G   /usr/bin/gnome-shell               25MiB |
+|    0   N/A  N/A      3027      G   ...1/usr/lib/firefox/firefox      157MiB |
++-----------------------------------------------------------------------------+
+
+make conda env tf
+conda create --name tf python=3.9
+....
+
+activate tf 
+(base) jenscave@jenscave-i5:~$ conda activate tf
+(tf) jenscave@jenscave-i5:~$ 
+
+install cuda toolkit'n stuff
+
+conda install -c conda-forge cudatoolkit=11.2.2 cudnn=8.1.0
+
+adapt path
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/
+
+
+automagic:
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+
+update pip:
+pip install --upgrade pip
+
+install tensorflow:
+pip install tensorflow==2.11.*
+
+
+
+
+
+
+So after spending 2 days on this issue... Here's a solution/workaround to get TF2.10 running with TRT on Ubuntu 20.04 (assuming 22 schould work aswell):
+
+As the Error mentions
+Could not load dynamic library 'libnvinfer.so.7'; dlerror: libnvinfer.so.7: cannot open shared object file: No such file or directory
+-> so you need TensorRT 7.X ...
+to get it installed you have to differ some actions from official Step-by-step instructions as in: https://www.tensorflow.org/install/pip
+
+    Sys. Req. -> guidelike
+    install Miniconda/Anaconda -> guidelike
+    Create a conda environment -> differs
+    a) you need python 3.8 to install nvidia-tensorrt 7.x later on, otherwise pip won't found this specific version
+    conda create --name tf-py38 python=3.8
+    b) conda activate tf-py38
+    GPU setup -> guidelike, follow as is (nvidia-smi,conda install etc.)
+    (4,5.) Install tensorrt -> Extra step
+    pip-install tensorrt as in: https://docs.nvidia.com/deeplearning/tensorrt/archives/tensorrt-723/install-guide/index.html#installing-pip:
+        pip install --upgrade setuptools pip
+        pip install nvidia-pyindex
+        check for desired specific tensorrt-versions -> pip install nvidia-tensorrt==
+        py3.10 -> available from 8.4.0.+
+        py3.9 -> available from 8.0.+
+        py3.8 -> available from 7.2.2.+
+        install your favorite version e.g. -> pip install nvidia-tensorrt==7.2.3.4
+        verify -> python3 -c "import tensorrt; print(tensorrt.__version__); assert tensorrt.Builder(tensorrt.Logger())"
+        Configure the system paths once again as before to contain tensorrt path:
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/python3.8/site-packages/tensorrt/
+        or with recommended automation:
+        echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib/python3.8/site-packages/tensorrt/' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+    install Tensorflow and follow remaining steps
+
+python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))" -> no more missing 'libnvinfer.so.7' and 'libnvinfer_plugin.so.7'
+
+Hope it helps... Best Regards
+DiDaMain
+

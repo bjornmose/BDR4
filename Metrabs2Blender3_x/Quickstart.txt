@@ -1,0 +1,47 @@
+Press 'Make metrabs root' in the object panel to make
+Root (or any object you like) a target object for raw data.
+In the 'Metrabs' panel provide path,
+( what I do: navigate in the file browser to output/....
+copy paste to path field )
+The buttons 'read_metrabs_job' 
+and 'Import metrabs data' will be active.
+Run/Click 'read_metrabs_job'.
+This will read data from jobinfo.json preparing import.
+Run/Click 'Import_metrabs_data'.
+-->
+Root became parent of bunch of empies with actions
+on each.
+Hint:
+Adjust rotation focal lenght of camera to match  footage.
+
+Link to Armature is build to suit my favorite rig.
+A modified old (blender 2.77) rigify armature.
+
+Linking works like
+     #search bone im armature
+            bone = self.findbone(arm,"hand.ik.R")
+            if bone is not None:
+    #pick moving empty from map          
+                cname = pre+'_'+joma['rwri']
+    #add constraints to bone          
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+    #one more            
+                cname = pre+'_'+joma['rhan']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoik(bone,cname,IDtarget,1,nameP)
+                
+Most of the times I disable the constraints for the Root bone
+and use the root bone to model inverse camera movement.
+
+Legal Note:
+    RawBodyGend is derived from 
+    http://www.makehumancommunity.org/
+    TheRig is derived from
+    www.blender.org 2.77 rigify
+    please read the licenses
+    
+    
+
+                
+
