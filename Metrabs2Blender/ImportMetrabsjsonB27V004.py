@@ -325,15 +325,6 @@ def createEmpty(OName,draw_size,draw_type):
 
     return Cobj   
 
-'''
-#deprecated remove me
-def makeempties(parent):
-    for bone in bones:
-        obj = bpy.data.objects.get(bone)
-        if ( not obj):
-            obj = createEmpty(bone,0.5,'ARROWS')
-            obj.parent = parent
-'''
 
 def makejoints(parent,joints,pre):
     for joint in joints:
@@ -435,8 +426,14 @@ def makeactions_3d(joints,pre):
         obj = bpy.data.objects.get(pre+joint)
         #print('Action3d for', obj)
         if (obj) :
+            '''
+            #option append
+            if (obj.animation_data !=  None):
+                return #assume all curves are set
+                #option push down create new
+            '''
             obj.animation_data_create()
-            obj.animation_data.action = bpy.data.actions.new(name=joint+'Action')
+            obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action')
             fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
             fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
             fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
