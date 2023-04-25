@@ -107,8 +107,8 @@ At this point you are free to go where ever you want. Data is JSON and can be im
 However I decided to proceed with blender.
 Blender files are 2.79 
 
-## 3. Metrabs2Blender3_x Cropping results in Blender 3.x (3.2, 3.5 where tested here)
-However I decided to proceed with blender.
+## 3. Metrabs2Blender3_x Cropping results in Blender 3.x (3.2, 3.5 worked fine for me)
+For some reasons I prefer to use 2.79 for some tasks in my tiny shell .. so this folder will update less frequently on this topic.
 Blender files are 3.5 
 *.py files should work for 2.79 - 3.5 however I did not understand in which collecion(s) the empties are created any why
 
