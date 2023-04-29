@@ -257,6 +257,7 @@ joints_picked= [
         "nose_cmu_panoptic",
         "pelv_h36m",
         "rear_cmu_panoptic",
+        "reye_cmu_panoptic",
         "reye_sailvos",
         "rhip_h36m",
     ]
@@ -272,37 +273,14 @@ skel_list ={
     }
 
 
-
-    
-'''    
-joints_h36m_17 =['pelv' 'rhip' 'rkne' 'rank' 'lhip' 'lkne' 'lank' 'spin' 'neck' 'head'
- 'htop' 'lsho' 'lelb' 'lwri' 'rsho' 'relb' 'rwri']
- 
-joints_h36m_25 =
- ['rhip' 'rkne' 'rank' 'rfoo' 'rtoe' 'lhip' 'lkne' 'lank' 'lfoo' 'ltoe'
- 'spin' 'neck' 'head' 'htop' 'lsho' 'lelb' 'lwri' 'lthu' 'lfin' 'rsho'
- 'relb' 'rwri' 'rthu' 'rfin']
- 
-joints_mpi_inf_3dhp_17 = ['htop' 'neck' 'rsho' 'relb' 'rwri' 'lsho' 'lelb' 'lwri' 'rhip' 'rkne'
- 'rank' 'lhip' 'lkne' 'lank' 'pelv' 'spin' 'head']    
-'''    
-
-
-#body_25
-#bones = ['Nose','Neck','RShoulder','RElbow','RWrist','LShoulder','LElbow','LWrist','MidHip','RHip','RKnee','RAnkle','LHip','LKnee','LAnkle','REye','LEye','REar','LEar']
-
-#COCO
-#bones = ['Nose','Neck','RShoulder','RElbow','RWrist','LShoulder','LElbow','LWrist','RHip','RKnee','RAnkle','LHip','LKnee','LAnkle','REye','LEye','REar','LEar']
-
-#bones =['pelv_smpl', 'lhip_smpl', 'rhip_smpl', 'bell_smpl', 'lkne_smpl', 'rkne_smpl', 'spin_smpl', 'lank_smpl', 'rank_smpl', 'thor_smpl', 'ltoe_smpl', 'rtoe_smpl',
-#    'neck_smpl', 'lcla_smpl', 'rcla_smpl', 'head_smpl', 'lsho_smpl', 'rsho_smpl','lelb_smpl', 'relb_smpl', 'lwri_smpl', 'rwri_smpl' ,'lhan_smpl' ,'rhan_smpl', 'htop_mpi_inf_3dhp' ,'learcoco' ,'leyecoco', 'nosecoco' ,'rearcoco','reyecoco']
-
-#bones =['pelv_smpl', 'lhip_smpl', 'rhip_smpl', 'lkne_smpl', 'rkne_smpl', 'spin_smpl', 'lank_smpl', 'rank_smpl', 'thor_smpl', 'ltoe_smpl', 'rtoe_smpl']
-
-
-
-
-
+def obj_check_intCP(object,CP):
+    i = 0
+    try:
+        cp=obj['CP']
+        i = 1
+    except: 
+        i = 0
+    return i
 
 
 
@@ -426,18 +404,36 @@ def makeactions_3d(joints,pre):
         obj = bpy.data.objects.get(pre+joint)
         #print('Action3d for', obj)
         if (obj) :
-            '''
-            #option append
-            if (obj.animation_data !=  None):
-                return #assume all curves are set
-                #option push down create new
-            '''
-            obj.animation_data_create()
+            if obj.animation_data is None:
+                obj.animation_data_create()
+            if obj.animation_data.action is None: 
+                obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action3D')
+                fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
+                fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
+                fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
+            else:
+                print('continue / replace ',obj.animation_data.action.name )
+                
+                
+'''                
+def makeactions_3d(joints,pre):
+    for joint in joints:
+        obj = bpy.data.objects.get(pre+joint)
+        #print('Action3d for', obj)
+        if (obj) :
+            if obj.animation_data is not None:
+                action = obj.animation_data.action
+                if action is not None:
+                    track = obj.animation_data.nla_tracks.new()
+                    track.strips.new(action.name, action.frame_range[0], action)
+                    obj.animation_data.action = None
+           obj.animation_data_create()
             obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action')
             fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
             fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
             fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
-
+                
+'''
 class read_metrabs_info(bpy.types.Operator):
     """print info file"""
     bl_idname = "object.read_metrabs_info"
@@ -487,6 +483,44 @@ class read_metrabs_info(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class push_down_joints_action(bpy.types.Operator):
+    bl_idname = "object.push_down_joints_action"
+    bl_label = "push_down_joints_action"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        #i = obj_check_intCP(object,"metrabs")
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute (self,context):
+        obj = context.active_object
+        pre = obj.name + '_'
+        try:
+            res = obj['skeleton']
+            joints = skel_list[res]
+        except:
+            print('missing joint list')
+            return {'CANCELLED'}
+            
+        for joint in joints:
+            obj = bpy.data.objects.get(pre+joint)
+            if (obj) :
+                if obj.animation_data is not None:
+                    action = obj.animation_data.action
+                    if action is not None:
+                        print('push down Action3d for', obj.name)
+                        track = obj.animation_data.nla_tracks.new()
+                        stript = track.strips.new(action.name, action.frame_range[0], action)
+                        obj.animation_data.action = None
+              
+        
+        return {'FINISHED'}        
 
 class import_metrabs(bpy.types.Operator):
     bl_idname = "object.import_metrabs_operator"
@@ -674,6 +708,7 @@ class MetrabsPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.operator("operator.findmetabsdata")
+            row.operator("object.push_down_joints_action")
             row = layout.row()
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
             row = layout.row()
@@ -701,6 +736,7 @@ def register():
     bpy.utils.register_class(import_metrabs)
     bpy.utils.register_class(MetrabsPanel)
     bpy.utils.register_class(findMETRABData)
+    bpy.utils.register_class(push_down_joints_action)
     print('Import Mertabs register DONE')
 
 
@@ -710,6 +746,7 @@ def unregister():
     bpy.utils.unregister_class(import_metrabs)
     bpy.utils.unregister_class(MetrabsPanel)
     bpy.utils.unregister_class(findMETRABData)
+    bpy.utils.unregister_class(push_down_joints_action)
 
 if __name__ == "__main__":
     register() 
