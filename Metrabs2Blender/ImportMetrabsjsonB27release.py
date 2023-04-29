@@ -406,11 +406,34 @@ def makeactions_3d(joints,pre):
         if (obj) :
             if obj.animation_data is None:
                 obj.animation_data_create()
+            if obj.animation_data.action is None: 
                 obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action3D')
                 fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
                 fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
                 fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
-
+            else:
+                print('continue / replace ',obj.animation_data.action.name )
+                
+                
+'''                
+def makeactions_3d(joints,pre):
+    for joint in joints:
+        obj = bpy.data.objects.get(pre+joint)
+        #print('Action3d for', obj)
+        if (obj) :
+            if obj.animation_data is not None:
+                action = obj.animation_data.action
+                if action is not None:
+                    track = obj.animation_data.nla_tracks.new()
+                    track.strips.new(action.name, action.frame_range[0], action)
+                    obj.animation_data.action = None
+           obj.animation_data_create()
+            obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action')
+            fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
+            fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
+            fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
+                
+'''
 class read_metrabs_info(bpy.types.Operator):
     """print info file"""
     bl_idname = "object.read_metrabs_info"
@@ -482,17 +505,18 @@ class push_down_joints_action(bpy.types.Operator):
             res = obj['skeleton']
             joints = skel_list[res]
         except:
-            return {'Aborted'}        
+            print('missing joint list')
+            return {'CANCELLED'}
             
         for joint in joints:
             obj = bpy.data.objects.get(pre+joint)
-            #print('Action3d for', obj)
             if (obj) :
                 if obj.animation_data is not None:
                     action = obj.animation_data.action
                     if action is not None:
+                        print('push down Action3d for', obj.name)
                         track = obj.animation_data.nla_tracks.new()
-                        track.strips.new(action.name, action.frame_range[0], action)
+                        stript = track.strips.new(action.name, action.frame_range[0], action)
                         obj.animation_data.action = None
               
         
