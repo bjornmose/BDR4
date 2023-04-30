@@ -400,19 +400,25 @@ def makeactions_2d():
             #fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
 
 def makeactions_3d(joints,pre):
+    n_reused = 0
+    n_created = 0
     for joint in joints:
         obj = bpy.data.objects.get(pre+joint)
-        #print('Action3d for', obj)
         if (obj) :
             if obj.animation_data is None:
                 obj.animation_data_create()
             if obj.animation_data.action is None: 
-                obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action3D')
+                n_created += 1
+                obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'3D')
                 fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
                 fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
                 fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
             else:
-                print('continue / replace ',obj.animation_data.action.name )
+                #print('continue / replace ',obj.animation_data.action.name )
+                n_reused += 1
+    print('makeactions_3d continue',n_reused,'of',len(joints))
+    return [n_reused,n_created,len(joints)]
+                
                 
                 
 '''                
@@ -514,13 +520,49 @@ class push_down_joints_action(bpy.types.Operator):
                 if obj.animation_data is not None:
                     action = obj.animation_data.action
                     if action is not None:
-                        print('push down Action3d for', obj.name)
+                        #print('push down Action', obj.name)
                         track = obj.animation_data.nla_tracks.new()
                         stript = track.strips.new(action.name, action.frame_range[0], action)
                         obj.animation_data.action = None
               
         
         return {'FINISHED'}        
+    
+class unlink_joints_action(bpy.types.Operator):
+    bl_idname = "object.unlink_joints_action"
+    bl_label = "delete_joints_actions"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        #i = obj_check_intCP(object,"metrabs")
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute (self,context):
+        obj = context.active_object
+        pre = obj.name + '_'
+        try:
+            res = obj['skeleton']
+            joints = skel_list[res]
+        except:
+            print('missing joint list')
+            return {'CANCELLED'}
+            
+        for joint in joints:
+            obj = bpy.data.objects.get(pre+joint)
+            if (obj) :
+                if obj.animation_data is not None:
+                    obj.animation_data.action = None
+
+              
+        
+        return {'FINISHED'}        
+    
 
 class import_metrabs(bpy.types.Operator):
     bl_idname = "object.import_metrabs_operator"
@@ -564,7 +606,7 @@ class import_metrabs(bpy.types.Operator):
         print(joints)
         pre = obj.name + '_'
         makejoints(obj,joints,pre) 
-        makeactions_3d(joints,pre)
+        makeactions_3d_res = makeactions_3d(joints,pre)
         file = obj['inpath']+obj["infile"] 
         start_frame = obj["start_frame"]
         incr = obj["incr"]
@@ -577,6 +619,7 @@ class import_metrabs(bpy.types.Operator):
             print(Name)
             box=readmetrabs(Name,i,box,pre) 
             print(box)
+        print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
         return {'FINISHED'}        
 
@@ -708,16 +751,15 @@ class MetrabsPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.operator("operator.findmetabsdata")
-            row.operator("object.push_down_joints_action")
+            row.operator("object.read_metrabs_info")
+            row.operator("object.import_metrabs_operator")
             row = layout.row()
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
-            row = layout.row()
             row.prop(obj, '["%s"]' % ("end_frame"),text="end")  
-            row = layout.row()
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
-            row.operator("object.import_metrabs_operator")
-            row.operator("object.read_metrabs_info")
+            row.operator("object.unlink_joints_action")
+            row.operator("object.push_down_joints_action")
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
 
@@ -737,6 +779,7 @@ def register():
     bpy.utils.register_class(MetrabsPanel)
     bpy.utils.register_class(findMETRABData)
     bpy.utils.register_class(push_down_joints_action)
+    bpy.utils.register_class(unlink_joints_action)
     print('Import Mertabs register DONE')
 
 
@@ -747,6 +790,7 @@ def unregister():
     bpy.utils.unregister_class(MetrabsPanel)
     bpy.utils.unregister_class(findMETRABData)
     bpy.utils.unregister_class(push_down_joints_action)
+    bpy.utils.unregister_class(unlink_joints_action)
 
 if __name__ == "__main__":
     register() 
