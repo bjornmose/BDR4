@@ -128,17 +128,14 @@ def main(jobname):
         else:
             if qual< 50 : 
                 _modelname = './models/metrabs_eff2l_y4'
-'''
-new models 2023 
-picked from
-https://istvansarandi.com/dozens/
-'''
+#new models 2023 
+#picked from
+#https://istvansarandi.com/dozens/
     if qual > 199 :
-    	if qual < 205:
-    		_modelname = './models/metrabs_eff2s_y4_256px_1600k_28ds'
-    	if qual < 215:
+    	_modelname = './models/metrabs_eff2s_y4_256px_1600k_28ds'
+    	if qual > 215:
     		_modelname = './models/metrabs_eff2s_y4_384px_800k_28ds'
-    	if qual < 225:    	
+    	if qual > 225:    	
     		_modelname = './models/metrabs_eff2l_y4_384px_800k_28ds'
 
 
