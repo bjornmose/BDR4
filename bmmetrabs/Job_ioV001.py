@@ -9,31 +9,36 @@ from os.path import exists
 version = 3
 
 # choose skeleton
-skeleton = ''
+#skeleton = ''
 #skeleton = 'smpl+head_30'
 # skeleton = 'coco_19'
 # skeleton = 'h36m_17'
 # skeleton = 'h36m_25'
 # skeleton = 'mpi_inf_3dhp_17'
-#skeleton = 'mpi_inf_3dhp_28'
+skeleton = 'mpi_inf_3dhp_28'
 
 
 # set other parameters here
-datapath = 'default'
-resdetail = 'MQFOV30'
-# set appenix
-respath = datapath + resdetail
-frame_start = 1
-frame_end = 10  # 1160
+datapath = 'Cris26'
+fov_degrees = 55
+qual = 230  # v: v<1 lowest v<20 medium v<50 good else above  https://istvansarandi.com/dozens/ model  >199 >215 >225
+txt="fov{}m{}".format(fov_degrees,qual) 
+txt=skeleton+txt
+resdetail = ''+txt
+frame_start = 730
+frame_end = 2800  # 7000
+
 max_detections=1
-jobfilename = 'e2fjob'+datapath+resdetail+'.json'
 create_json = 1  # enum 0 dont 1 skip existing 2 overwrite
-fov_degrees = 30
-qual = 10  # v: v<1 lowest v<20 medium v<50 good else above best
 cpu_count = 3
-viz = 1
+viz = 2
 skip = 1
 #adust pathes
+
+# set appenix
+respath = datapath + resdetail
+jobfilename = 'e2fjob'+datapath+resdetail+'.json'
+
 inpath = 'input/' + datapath
 outpath = 'output/res' + respath
 

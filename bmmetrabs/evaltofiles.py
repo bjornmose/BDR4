@@ -118,6 +118,8 @@ def main(jobname):
     
 
     
+         
+     
     if qual < 1 : 
         _modelname = './models/metrabs_mob3l_y4t'
     else: 
@@ -126,8 +128,15 @@ def main(jobname):
         else:
             if qual< 50 : 
                 _modelname = './models/metrabs_eff2l_y4'
-            else :
-                _modelname = './models/metrabs_eff2l_y4_360'
+#new models 2023 
+#picked from
+#https://istvansarandi.com/dozens/
+    if qual > 199 :
+    	_modelname = './models/metrabs_eff2s_y4_256px_1600k_28ds'
+    	if qual > 215:
+    		_modelname = './models/metrabs_eff2s_y4_384px_800k_28ds'
+    	if qual > 225:    	
+    		_modelname = './models/metrabs_eff2l_y4_384px_800k_28ds'
 
 
     print('Start', frame_start, 'End', frame_end, 'Skip',frame_skip)    
@@ -151,7 +160,7 @@ def main(jobname):
       return
     tf.config.threading.set_intra_op_parallelism_threads(cpu_count)
 
-    print(msgbarstart,'load model :)',msgbarend)
+    print(msgbarstart,'load model :)',_modelname,msgbarend)
     model = tf.saved_model.load(_modelname)
     memstart = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss    
     print(msgbarstart,'model loaded:)',msgbarend)

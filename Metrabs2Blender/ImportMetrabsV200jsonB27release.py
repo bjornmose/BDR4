@@ -8,6 +8,7 @@ from bpy.types import Operator
 
 
 
+
 clearout = 1
 scale = 100
 
@@ -93,11 +94,11 @@ joints_smpl_head_30 =[
         "lhan_smpl",
         "rhan_smpl",
         "htop_mpi_inf_3dhp",
-        "learcoco",
-        "leyecoco",
-        "nosecoco",
-        "rearcoco",
-        "reyecoco"
+        "lear_coco",
+        "leye_coco",
+        "nose_coco",
+        "rear_coco",
+        "reye_coco"
     ]
     
     
@@ -282,26 +283,76 @@ def obj_check_intCP(object,CP):
         i = 0
     return i
 
+def createArmature():
+    C = bpy.context
+    D = bpy.data
+    #Create armature object
+    armature = D.armatures.new('Armature_Rig')
+    armature_object = D.objects.new('Armature_Host', armature)
+    #Link armature object to our scene
+    ver = bpy.app.version[1]
+    ver0 = bpy.app.version[0]
+    if (ver < 80 and ver0 < 3):
+        C.scene.objects.link(armature_object)
+        armature_object.show_name=1
+        armature_object.select=True
 
+    
+    if (ver > 79 and ver0 < 3):
+        bpy.context.scene.collection.objects.link(armature_object)
+        armature_object.show_name=1
+
+    if (ver < 99 and ver0 > 2):
+        #view_layer = bpy.context.view_layer
+        #view_layer.active_layer_collection.collection.objects.link( armature_object )
+        C.collection.objects.link(armature_object)
+        armature_object.show_name=1 
+        #Make armature variable
+        armature_data = D.objects[armature_object.name]
+        #Set armature active
+        C.view_layer.objects.active = armature_data
+    #Set armature selceted
+    #armature_object.select_set(state=True)
+    #Set edit mode
+    #bpy.ops.object.mode_set(mode='EDIT', toggle=False)
+
+    #Add root bone
+    #root_bone = armature.edit_bones.new('Root')
+    #root_bone = armature.bones.new('Root')
+    #Set its orientation and size
+    #root_bone.head = (0,0,0)
+    #root_bone.tail = (0,100,0)
+
+    return armature_object 
 
 def createEmpty(OName,draw_size,draw_type):
     #print('Create {:}'.format(OName))
     Cobj = bpy.data.objects.new( OName, None )
     ver = bpy.app.version[1]
+    ver0 = bpy.app.version[0]
     #print(ver)
-    if (ver < 80):
+    if (ver < 80 and ver0 < 3):
         bpy.context.scene.objects.link( Cobj )
         Cobj.empty_draw_size = draw_size
         Cobj.empty_draw_type = draw_type
         Cobj.show_name=1
     
-    if (ver > 79):
+    if (ver > 79 and ver0 < 3):
         bpy.context.scene.collection.objects.link( Cobj )
         Cobj.empty_display_size = draw_size
         Cobj.empty_display_type = draw_type
         Cobj.show_name=1
 
+    if (ver < 99 and ver0 > 2):
+        view_layer = bpy.context.view_layer
+        view_layer.active_layer_collection.collection.objects.link( Cobj )
+        Cobj.empty_display_size = draw_size
+        Cobj.empty_display_type = draw_type
+        Cobj.show_name=1
+
     return Cobj   
+
+
 
 
 def makejoints(parent,joints,pre):
@@ -793,5 +844,6 @@ def unregister():
     bpy.utils.unregister_class(unlink_joints_action)
 
 if __name__ == "__main__":
+    #createArmature()
     register() 
     
