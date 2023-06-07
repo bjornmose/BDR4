@@ -96,7 +96,7 @@ joints_smpl_head_30 =[
 #joint/target map used for buiding constraints in armature    
 joma_simpl = {
         "neck" : "neck_smpl",
-        "nose" : "nosecoco",
+        "nose" : "nose_coco",
         "pelv" : "pelv_smpl",
         "htop" : "htop_mpi_inf_3dhp",
         "lsho" : "lsho_smpl",
@@ -114,10 +114,10 @@ joma_simpl = {
         "rhip" : "rhip_smpl",
         "rkne" : "rkne_smpl",
         "rank" : "rank_smpl",
-        "leye" : "leyecoco",
-        "lear" : "learcoco",
-        "reye" : "reyecoco",
-        "rear" : "rearcoco",
+        "leye" : "leye_coco",
+        "lear" : "lear_coco",
+        "reye" : "reye_coco",
+        "rear" : "rear_coco",
         "rhan" : "rhan_smpl",
         "rfoo" : "rank_smpl",
         "rtoe" : "rtoe_smpl"
