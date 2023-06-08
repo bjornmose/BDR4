@@ -420,7 +420,7 @@ def _Tar_clear_ArmatureConstraints(arm,pat):
                 _na = co.name 
                 if (_na.find(pat) > -1):
                     bone.constraints.remove(co)
-                    print('remove',_na)
+                    print('remove',_na,'from',bone.name)
     print('_Tar_clear_ArmatureConstraints Done')
 
 
@@ -474,7 +474,7 @@ class LinkArmature(bpy.types.Operator):
         return i>0
     
     def cocoloc(self,bone,cname,IDtarget,pxname):
-        crc = bone.constraints.get(pxname+cname)
+        crc = bone.constraints.get('L_'+pxname+cname)
         if crc is None:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -482,7 +482,7 @@ class LinkArmature(bpy.types.Operator):
                 return('FAILED')
             crc = bone.constraints.new('COPY_LOCATION')
             crc.target = target
-            crc.name = pxname+cname
+            crc.name = 'L_'+pxname+cname
         else:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -494,7 +494,7 @@ class LinkArmature(bpy.types.Operator):
             return('FINISHED')
 
     def cocorot(self,bone,cname,IDtarget,pxname):
-        crc = bone.constraints.get(pxname+cname)
+        crc = bone.constraints.get('R_'+pxname+cname)
         if crc is None:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -502,7 +502,7 @@ class LinkArmature(bpy.types.Operator):
                 return('FAILED')
             crc = bone.constraints.new('COPY_ROTATION')
             crc.target = target
-            crc.name = pxname+cname
+            crc.name = 'R_'+pxname+cname
         else:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -515,7 +515,7 @@ class LinkArmature(bpy.types.Operator):
 
 
     def cocoik(self,bone,cname,IDtarget,len,pxname):
-        crc = bone.constraints.get(pxname+cname)
+        crc = bone.constraints.get('I_'+pxname+cname)
         if crc is None:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -524,7 +524,7 @@ class LinkArmature(bpy.types.Operator):
             crc = bone.constraints.new('IK')
             crc.target = target
             crc.chain_count = len
-            crc.name = pxname+cname
+            crc.name = 'I_'+pxname+cname
         else:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -558,7 +558,6 @@ class LinkArmature(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         _clear_ArmatureConstraints(arm)
-        _Tar_clear_ArmatureConstraints(arm,pre)
 
         # see if 'rwri' element of jome is there
         '''
@@ -577,6 +576,7 @@ class LinkArmature(bpy.types.Operator):
 
         
         if arm is not None:
+            
             
             n_probe = pre+'_'+joma['rwri']
             o_probe = bpy.data.objects.get(n_probe)
@@ -630,8 +630,8 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_Torso'
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,'L_'+cname,IDtarget,nameP)
-                self.cocorot(bone,'R_'+cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocorot(bone,cname,IDtarget,nameP)
                 
 
             bone = self.findbone(arm,"hips")
@@ -675,17 +675,18 @@ class LinkArmature(bpy.types.Operator):
 
             bone = self.findbone(arm,"root")
             if bone is not None:
-                cname = pre+'_FeetRot'
+                #cname = pre+'_FeetRot'
+                cname = pre+'_Torso'
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,'L'+cname,IDtarget,nameP)
-                crc = bone.constraints.get('L'+cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+                crc = bone.constraints.get(cname)
                 if crc is not None:
                     crc.use_z = 0
 
                 cname = pre+'_Torso'
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocorot(bone,'R'+cname,IDtarget,nameP)
-                crc = bone.constraints.get('R'+cname)
+                self.cocorot(bone,cname,IDtarget,nameP)
+                crc = bone.constraints.get(cname)
                 if crc is not None:
                     crc.use_x = 0
                     crc.use_y = 0
