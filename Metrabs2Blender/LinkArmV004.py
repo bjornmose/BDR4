@@ -406,6 +406,56 @@ def _clear_ArmatureConstraints(arm):
                 bone.constraints.remove(co) 
     print('_clear_ArmatureConstraints Done')
 	
+def _Tar_clear_ArmatureConstraints(arm,pat):
+    print('_Tar_clear_ArmatureConstraints')
+    for bone in arm.pose.bones:
+        for co in bone.constraints:
+            try:
+                _ta = co.target 
+            except:
+                continue # no property target
+            if _ta is None:                
+                bone.constraints.remove(co)
+            else: 
+                _na = co.name 
+                if (_na.find(pat) > -1):
+                    bone.constraints.remove(co)
+                    print('remove',_na)
+    print('_Tar_clear_ArmatureConstraints Done')
+
+
+
+class UnLinkArmature(bpy.types.Operator):
+    """UnLinkArmatureToSimpl"""
+    bl_idname = "object.unlinkarmature_operator"
+    bl_label = "Detach Armature "
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute(self,context):
+        obj = context.active_object
+        #nameP = obj.name
+        nameP = ''
+        try:
+            a=obj["~armature"]
+        except: 
+            obj["~armature"] = '*None*'
+        nameA = obj["~armature"]
+        arm = bpy.data.objects.get(nameA)
+        print(nameA,' is:',arm)
+        pre = obj.name
+        _Tar_clear_ArmatureConstraints(arm,pre)
+        return {'FINISHED'}
+
+
 
 
 class LinkArmature(bpy.types.Operator):
@@ -508,6 +558,7 @@ class LinkArmature(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         _clear_ArmatureConstraints(arm)
+        _Tar_clear_ArmatureConstraints(arm,pre)
 
         # see if 'rwri' element of jome is there
         '''
@@ -697,6 +748,7 @@ class LinkArmPanel(bpy.types.Panel):
                 pass
             row = layout.row()
             row.operator("object.linkarmature_operator")
+            row.operator("object.unlinkarmature_operator")
 
 
 """   
@@ -709,11 +761,13 @@ class LinkArmPanel(bpy.types.Panel):
 
 def register():
     bpy.utils.register_class(LinkArmature)
+    bpy.utils.register_class(UnLinkArmature)
     bpy.utils.register_class(LinkArmPanel)
 
 
 def unregister():
     bpy.utils.unregister_class(LinkArmature)
+    bpy.utils.unregister_class(UnLinkArmature)
     bpy.utils.unregister_class(LinkArmPanel)
     del theGen
 
