@@ -283,19 +283,67 @@ def obj_check_intCP(object,CP):
         i = 0
     return i
 
-def createArmature():
+def createArmature(joints,alink,aName):
+
+    def _BoneConstraintLoc(bone,cname,IDtarget,pxname):
+        crc = bone.constraints.get('L_'+pxname+cname)
+        if crc is None:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                return('FAILED')
+            crc = bone.constraints.new('COPY_LOCATION')
+            crc.target = target
+            crc.name = 'L_'+pxname+cname
+        else:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                bone.constraints.remove(crc)
+                return('FAILED')
+            crc.target = target
+            print(bone.name,IDtarget, 'loc_update')
+            return('FINISHED')
+    
+    
+    
     C = bpy.context
     D = bpy.data
     #Create armature object
-    armature = D.armatures.new('Armature_Rig')
-    armature_object = D.objects.new('Armature_Host', armature)
+    armature = D.armatures.new('Arm'+aName+'_Host_Rig')
+    armature_object = D.objects.new('Arm'+aName+'_Host', armature)
     #Link armature object to our scene
     ver = bpy.app.version[1]
     ver0 = bpy.app.version[0]
     if (ver < 80 and ver0 < 3):
         C.scene.objects.link(armature_object)
         armature_object.show_name=1
+        C.scene.objects.active = armature_object
         armature_object.select=True
+        bpy.ops.object.mode_set(mode='EDIT')
+        bones = C.active_object.data.edit_bones
+        #bones.remove(bones[0])
+        n = 0
+        for name in joints:
+            bone = bones.new(name)
+            bone.head = (n,0,0)
+            bone.tail = (n,0,1)
+            n = n +1
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
+        if (alink > 0):
+            for name in joints:
+                bone = armature_object.pose.bones.get(name)
+                if bone is not None:
+                    cname = 'o_'+name
+                    IDtarget = aName+'_'+name
+                    _BoneConstraintLoc(bone,cname,IDtarget,aName)
+            armature_object.name ='Arm'+aName+'_linked'
+            armature.name='Arm'+aName+'_Rig_linked'
+            
+
+
+
 
     
     if (ver > 79 and ver0 < 3):
@@ -777,6 +825,42 @@ class findMETRABData(Operator, ImportHelper):
 
     def execute(self, context):
         return set_importpath(context, self.filepath, self.use_setting)
+    
+class op_CreateArmature(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.create_armature"
+    bl_label = "Create Armature"
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return (i > 0)
+
+    def execute(self, context):
+        print('op_CreateArmature----------------Start' ) 
+        obj = context.active_object
+        try:
+            res = obj['skeleton']
+            joints = skel_list[res]
+            print('Object defined joints',res)
+        except:
+            print('ERR###NO JOINTS####')
+            return {'FINISHED'}
+            
+        try:
+            link = obj['A_link']
+            print('Object defined joints',res)
+        except:
+            link = 0
+        aName = obj.name
+
+        createArmature(joints,link,aName)
+        print('op_CreateArmature----------------End' ) 
+        return {'FINISHED'}
 
 
 
@@ -812,6 +896,9 @@ class MetrabsPanel(bpy.types.Panel):
             row.operator("object.unlink_joints_action")
             row.operator("object.push_down_joints_action")
             row = layout.row()
+            row.operator("object.create_armature")
+            row.prop(obj, '["%s"]' % ("A_link"),text="A_Link")  
+            row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
 
 
@@ -831,6 +918,7 @@ def register():
     bpy.utils.register_class(findMETRABData)
     bpy.utils.register_class(push_down_joints_action)
     bpy.utils.register_class(unlink_joints_action)
+    bpy.utils.register_class(op_CreateArmature)
     print('Import Mertabs register DONE')
 
 
@@ -842,6 +930,7 @@ def unregister():
     bpy.utils.unregister_class(findMETRABData)
     bpy.utils.unregister_class(push_down_joints_action)
     bpy.utils.unregister_class(unlink_joints_action)
+    bpy.utils.unregister_class(op_CreateArmature)
 
 if __name__ == "__main__":
     #createArmature()
