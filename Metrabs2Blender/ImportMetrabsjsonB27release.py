@@ -310,7 +310,7 @@ def createArmature(joints,alink,aName):
     C = bpy.context
     D = bpy.data
     #Create armature object
-    armature = D.armatures.new('Arm'+aName+'_Rig')
+    armature = D.armatures.new('Arm'+aName+'_Host_Rig')
     armature_object = D.objects.new('Arm'+aName+'_Host', armature)
     #Link armature object to our scene
     ver = bpy.app.version[1]
@@ -338,7 +338,8 @@ def createArmature(joints,alink,aName):
                     cname = 'L_'+name
                     IDtarget = aName+'_'+name
                     cocoloc(bone,cname,IDtarget,aName)
-            armature_object.name ='Arm'+aName+'linked'
+            armature_object.name ='Arm'+aName+'_linked'
+            armature.name='Arm'+aName+'_Rig_linked'
             
 
 
