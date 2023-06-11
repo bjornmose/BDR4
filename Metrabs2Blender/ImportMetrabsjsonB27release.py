@@ -762,6 +762,10 @@ class make_metrabs(bpy.types.Operator):
             T=obj["incr"] 
         except:
             obj["incr"]   = 1
+        try:
+            T=obj["A_link"] 
+        except:
+            obj["A_link"]   = 1
         obj["metrabs"] = 1  
         
         #
