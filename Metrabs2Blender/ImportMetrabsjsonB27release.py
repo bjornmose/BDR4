@@ -518,27 +518,39 @@ def makeactions_3d(joints,pre):
     print('makeactions_3d continue',n_reused,'of',len(joints))
     return [n_reused,n_created,len(joints)]
                 
+def completeObjectProperties(obj):
+    try:
+        T=obj["infile"]
+    except: 
+        obj["infile"] = '/Posedata'
+
+    try:
+        T=obj["inpath"]
+    except: 
+        obj["inpath"] = '*none*'
+
+    try:
+        T=obj["start_frame"]
+    except: 
+        obj["start_frame"] = 1
+
+    try:
+        T=obj["end_frame"]
+    except: 
+        obj["end_frame"]   = 5
+
+    try:
+        T=obj["incr"] 
+    except:
+        obj["incr"]   = 1
+    try:
+        T=obj["A_link"] 
+    except:
+        obj["A_link"]   = 1
+    obj["metrabs"] = 1  
+      
                 
                 
-'''                
-def makeactions_3d(joints,pre):
-    for joint in joints:
-        obj = bpy.data.objects.get(pre+joint)
-        #print('Action3d for', obj)
-        if (obj) :
-            if obj.animation_data is not None:
-                action = obj.animation_data.action
-                if action is not None:
-                    track = obj.animation_data.nla_tracks.new()
-                    track.strips.new(action.name, action.frame_range[0], action)
-                    obj.animation_data.action = None
-           obj.animation_data_create()
-            obj.animation_data.action = bpy.data.actions.new(name=pre+joint+'Action')
-            fcu_x = obj.animation_data.action.fcurves.new(data_path="location", index=0)
-            fcu_y = obj.animation_data.action.fcurves.new(data_path="location", index=1)
-            fcu_z = obj.animation_data.action.fcurves.new(data_path="location", index=2)
-                
-'''
 class read_metrabs_info(bpy.types.Operator):
     """print info file"""
     bl_idname = "object.read_metrabs_info"
@@ -738,30 +750,7 @@ class make_metrabs(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        try:
-            T=obj["infile"]
-        except: 
-            obj["infile"] = '/Posedata'
-
-        try:
-            T=obj["inpath"]
-        except: 
-            obj["inpath"] = '*none*'
-
-        try:
-            T=obj["start_frame"]
-        except: 
-            obj["start_frame"] = 1
-            
-        try:
-            T=obj["end_frame"]
-        except: 
-            obj["end_frame"]   = 5
-        
-        try:
-            T=obj["incr"] 
-        except:
-            obj["incr"]   = 1
+        completeObjectProperties(obj)
         obj["metrabs"] = 1  
         
         #
