@@ -1,7 +1,7 @@
 import bpy
 start = bpy.context.scene.frame_start
 end = bpy.context.scene.frame_end
-step = 5
+step = 1
 actual = start
 bpy.context.scene.frame_set(actual)
 while (actual < end + step):
