@@ -259,13 +259,13 @@ def pose2json(skeleton,p3d,boxes,joint_names,frame,pat):
           
         for joint in joint_names:
           jdata['joints'].append(joint.astype(str))
-          if len(p3d) > 0 :             
+        if len(p3d) > 0 :             
              for ppose,joint, in zip(p3d[0],joint_names):
                jdata['pose3d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
-          if len(p3d) > 1 :             
+        if len(p3d) > 1 :             
              for ppose,joint, in zip(p3d[1],joint_names):
                jdata['pose3d1'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
-          if len(p3d) > 2 :             
+        if len(p3d) > 2 :             
              for ppose,joint, in zip(p3d[2],joint_names):
                jdata['pose3d2'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
         json.dump(jdata, jf, ensure_ascii=False, indent=4)
