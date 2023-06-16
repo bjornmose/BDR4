@@ -283,30 +283,115 @@ def obj_check_intCP(object,CP):
         i = 0
     return i
 
-def createArmature(joints,alink,aName):
 
-    def cocoloc(bone,cname,IDtarget,pxname):
-        crc = bone.constraints.get('L_'+pxname+cname)
-        if crc is None:
-            target = bpy.data.objects.get(IDtarget)
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                return('FAILED')
-            crc = bone.constraints.new('COPY_LOCATION')
-            crc.target = target
-            crc.name = 'L_'+pxname+cname
-        else:
-            target = bpy.data.objects.get(IDtarget)
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                bone.constraints.remove(crc)
-                return('FAILED')
-            crc.target = target
-            print(bone.name,IDtarget, 'loc_update')
-            return('FINISHED')
+def cocoloc(bone,cname,IDtarget,pxname):
+    crc = bone.constraints.get('L_'+pxname+cname)
+    if crc is None:
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            return('FAILED')
+        crc = bone.constraints.new('COPY_LOCATION')
+        crc.target = target
+        crc.name = 'L_'+pxname+cname
+    else:
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            bone.constraints.remove(crc)
+            return('FAILED')
+        crc.target = target
+        print(bone.name,IDtarget, 'loc_update')
+        return('FINISHED')
+
+
+
+
+def readArmatureRestPos(name,box,jPre,link):
+    d_min = 100000.0
+    res_box = box
+    pname = 'pose3d' 
+    boxes = None
+    try: 
+        with open(name) as json_file:
+            data = json.load(json_file)
+    except:
+        print('except',name)
+        return res_box
+    try:
+        gotpose = data[pname]
+    except:
+        print('no pose')
+        return res_box
+    try:
+        boxes = data['boxes']
+    except:
+        print('no boxes')
+    if (boxes):
+        print('DO BOXES')                
+        l =len(boxes)
+        if l>0:
+          xb = boxes[0][0]
+          yb = boxes[0][1]
+          res_box = [xb,yb]
+          d_min = (xb - box[0])*(xb - box[0]) +(yb - box[1])*(yb - box[1]) 
+        for nb in range(1,l):
+            xn = boxes[nb][0]
+            yn = boxes[nb][1]
+            dn = (xn - box[0])*(xn - box[0]) +(yn - box[1])*(yn - box[1])
+            print('dn',dn,'d_min',d_min)
+            if dn < d_min:
+                res_box = [xn,yn]
+                d_min = dn
+                pname='pose3d{0:d}'.format(nb+1)
+                print(pname)        
     
+    p1 = data[pname]
+    if (not p1): return res_box
+    C = bpy.context
+    D = bpy.data
+    #Create armature object
+    armature = D.armatures.new('Arm'+jPre+'_Host_Rig')
+    armature_object = D.objects.new('Arm'+jPre+'_Host', armature)
+    #Link armature object to our scene
+    ver = bpy.app.version[1]
+    ver0 = bpy.app.version[0]
+    if (ver < 80 and ver0 < 3):
+        C.scene.objects.link(armature_object)
+        armature_object.show_name=1
+        C.scene.objects.active = armature_object
+        armature_object.select=True
+        bpy.ops.object.mode_set(mode='EDIT')
+        bones = C.active_object.data.edit_bones
+        
+
     
-    
+    for joint in p1:
+        jName = joint[0]
+        print(jName)
+        bone = bones.new(jName)
+        lx = joint[1] / scale
+        ly = joint[2] / scale
+        lz = joint[3] / scale
+        bone.head = (lx,ly,lz)
+        bone.tail = (lx,ly,lz+1.0)
+        
+            
+    bpy.ops.object.mode_set(mode='OBJECT')
+    if (link > 0):
+        for joint in p1:
+            jname = joint[0]
+            bone = armature_object.pose.bones.get(jname)
+            if bone is not None:
+                cname = '_'+jname
+                IDtarget = jPre+'_'+jname
+                cocoloc(bone,cname,IDtarget,jPre)
+        armature_object.name ='Arm'+jPre+'_linked'
+        armature.name='Arm'+jPre+'_Rig_linked'
+    return res_box
+
+
+def createArmature(joints,alink,aName):
     C = bpy.context
     D = bpy.data
     #Create armature object
@@ -850,6 +935,47 @@ class op_CreateArmature(bpy.types.Operator):
         createArmature(joints,link,aName)
         print('op_CreateArmature----------------End' ) 
         return {'FINISHED'}
+    
+class op_CreateArmatureRest(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.create_armature_rest"
+    bl_label = "Create Armature Rest"
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return (i > 0)
+
+    def execute(self, context):
+        print('op_CreateArmatureRest--------Start' ) 
+        obj = context.active_object
+        try:
+            res = obj['skeleton']
+            joints = skel_list[res]
+            print('Object defined joints',res)
+        except:
+            print('ERR###NO JOINTS####')
+            return {'FINISHED'}
+            
+        try:
+            link = obj['A_link']
+            print('Object defined joints',res)
+        except:
+            link = 0
+        aName = obj.name
+        
+        file = obj['inpath']+obj["infile"] 
+        box = [0.0,0.0]
+        path='{0:}{1:04d}.json'.format(file,1)
+        readArmatureRestPos(path,box,aName,link)
+
+        #createArmature(joints,link,aName)
+        print('op_CreateArmatureRest-----------End' ) 
+        return {'FINISHED'}
 
 
 
@@ -886,6 +1012,7 @@ class MetrabsPanel(bpy.types.Panel):
             row.operator("object.push_down_joints_action")
             row = layout.row()
             row.operator("object.create_armature")
+            row.operator("object.create_armature_rest")
             row.prop(obj, '["%s"]' % ("A_link"),text="A_Link")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
@@ -908,6 +1035,7 @@ def register():
     bpy.utils.register_class(push_down_joints_action)
     bpy.utils.register_class(unlink_joints_action)
     bpy.utils.register_class(op_CreateArmature)
+    bpy.utils.register_class(op_CreateArmatureRest)
     print('Import Mertabs register DONE')
 
 
@@ -920,6 +1048,7 @@ def unregister():
     bpy.utils.unregister_class(push_down_joints_action)
     bpy.utils.unregister_class(unlink_joints_action)
     bpy.utils.unregister_class(op_CreateArmature)
+    bpy.utils.unregister_class(op_CreateArmatureRest)
 
 if __name__ == "__main__":
     #createArmature()
