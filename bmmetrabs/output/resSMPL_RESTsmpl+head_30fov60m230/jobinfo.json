@@ -1,0 +1,9 @@
+{
+    "skeleton": "smpl+head_30",
+    "start": 1,
+    "end": 10,
+    "inpattern": "input/SMPL_REST/Image{0:04d}.png",
+    "modelname": "./models/metrabs_eff2l_y4_384px_800k_28ds",
+    "max_detections": 1,
+    "fov_degrees": 60
+}
