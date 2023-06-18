@@ -350,9 +350,10 @@ def readArmatureRestPos(name,box,jPre,link):
     if (not p1): return res_box
     C = bpy.context
     D = bpy.data
+    aPre = 'Arm_R'
     #Create armature object
-    armature = D.armatures.new('Arm'+jPre+'_Host_Rig')
-    armature_object = D.objects.new('Arm'+jPre+'_Host', armature)
+    armature = D.armatures.new(aPre+jPre+'_Host_Rig')
+    armature_object = D.objects.new(aPre+jPre+'_Host', armature)
     #Link armature object to our scene
     ver = bpy.app.version[1]
     ver0 = bpy.app.version[0]
@@ -401,8 +402,8 @@ def readArmatureRestPos(name,box,jPre,link):
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
-        armature_object.name ='Arm'+jPre+'_linked'
-        armature.name='Arm'+jPre+'_Rig_linked'
+        armature_object.name =aPre+jPre+'_linked'
+        armature.name=aPre+jPre+'_Rig_linked'
     return res_box
 
 
@@ -961,14 +962,20 @@ class op_CreateArmatureRest(bpy.types.Operator):
             
         try:
             link = obj['A_link']
-            print('Object defined joints',res)
+            print('Link To Empties',res)
         except:
             link = 0
+    
+        try:
+            rFrame = obj['start_frame']
+            print('Link To Empties',res)
+        except:
+            rFrame = 1
         aName = obj.name
         
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
-        path='{0:}{1:04d}.json'.format(file,1)
+        path='{0:}{1:04d}.json'.format(file,rFrame)
         readArmatureRestPos(path,box,aName,link)
 
         #createArmature(joints,link,aName)
