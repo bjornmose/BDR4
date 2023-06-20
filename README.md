@@ -129,8 +129,8 @@ Blender files are 3.5
 
 ### Reading data to a bunch of 'empies'
 On 2023 I decided to take another way:
-ImportMetrabsjsonB27_B3xWork.py should work fine with b2.7x and b3.x most 2.8x will fail 
-has a buttons
+ImportMetrabsjsonB27_B3xWork.py should work fine with b2.7x and b3.x most 2.8x will fail. 
+The new version has buttons:
 #### to set the input path 'Find Data'
 #### to read jobinfo.json 'read metrabs job'
 #### to create the bunch of empties 'import metrabs data'
@@ -140,7 +140,7 @@ if A_link is set it will create constraints to the empties
 #### to create an armature with bones according the first posedata.json file given 'Create Armature Rest'
 like the function b4re but bones are created at the position given in the file
 if A_link is set it will create constraints to the empties
-####baking armature actions
+#### baking armature actions
 i do with my tiny clonemotion.py script
 
 Once the script 'ImportMetrabsjsonV004.py' ran in blender the object panel will have a button 'Make metrabs root' 
