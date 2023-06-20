@@ -115,6 +115,13 @@ Blender files are 3.5
 
 
 ### Reading data to a bunch of 'empies'
+On 2023 I decided to take another way:
+ImportMetrabsjsonB27_B3xWork.py 
+has a buttons
+#### to set the input path 'finddata'
+#### to read jobinfo.json 'buttonlabel'
+#### to create the bunch of empties 'buttonlabel'
+
 Once the script 'ImportMetrabsjsonV004.py' ran in blender the object panel will have a button 'Make metrabs root' 
 This will generate some 'custom properties' and some new items in the objects 'Metrabs' panel.
 Once you have set the path variable there to the 'destination' folder it will enable the job reading and the importing button.
