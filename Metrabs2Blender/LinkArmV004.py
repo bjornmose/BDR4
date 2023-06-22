@@ -154,6 +154,14 @@ joma_picked = {
 
     }
     
+armlinkesto = {
+    "HandIK_R":"hand_IK.R",
+    "HandIK_L":"hand_IK.L",
+    "FootIK_R":"foot_IK.R",
+    "FootIK_L":"foot_IK.R",
+    "Head":""
+    }
+    
     
 joma_list ={
     "smpl+head_30":joma_simpl,
@@ -179,24 +187,34 @@ joints_mpi_inf_3dhp_28 = ['thor' 'spi4' 'spi2' 'spin' 'pelv' 'neck' 'head' 'htop
 joints_mpi_inf_3dhp_17 = ['htop' 'neck' 'rsho' 'relb' 'rwri' 'lsho' 'lelb' 'lwri' 'rhip' 'rkne'
  'rank' 'lhip' 'lkne' 'lank' 'pelv' 'spin' 'head']    
 '''
+
 def createEmpty(OName,draw_size,draw_type):
-    print('Create {:}'.format(OName))
+    #print('Create {:}'.format(OName))
     Cobj = bpy.data.objects.new( OName, None )
     ver = bpy.app.version[1]
+    ver0 = bpy.app.version[0]
     #print(ver)
-    if (ver < 80):
+    if (ver < 80 and ver0 < 3):
         bpy.context.scene.objects.link( Cobj )
         Cobj.empty_draw_size = draw_size
         Cobj.empty_draw_type = draw_type
         Cobj.show_name=1
     
-    if (ver > 79):
+    if (ver > 79 and ver0 < 3):
         bpy.context.scene.collection.objects.link( Cobj )
         Cobj.empty_display_size = draw_size
         Cobj.empty_display_type = draw_type
         Cobj.show_name=1
 
-    return Cobj
+    if (ver < 99 and ver0 > 2):
+        view_layer = bpy.context.view_layer
+        view_layer.active_layer_collection.collection.objects.link( Cobj )
+        Cobj.empty_display_size = draw_size
+        Cobj.empty_display_type = draw_type
+        Cobj.show_name=1
+
+    return Cobj   
+
 
 def objcoloc(obj,cname,IDtarget,influence):
     crc = obj.constraints.get(cname)
@@ -588,7 +606,7 @@ class LinkArmature(bpy.types.Operator):
                 makefeetrot(obj,joma)
 #            pre = obj.name
 
-            bone = self.findbone(arm,"hand.ik.R")
+            bone = self.findbone(arm,armlinkesto("hand_IK.R"))
             if bone is not None:
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -598,7 +616,7 @@ class LinkArmature(bpy.types.Operator):
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
                     
-            bone = self.findbone(arm,"hand.ik.L")
+            bone = self.findbone(arm,armlinkesto("hand_IK.L"))
             if bone is not None:
                 cname = pre+'_'+joma['lwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -607,7 +625,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,"foot.ik.L")
+            bone = self.findbone(arm,armlinkesto("foot_IK.L"))
             if bone is not None:
                 cname = pre+'_'+joma['lank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -616,7 +634,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,"foot.ik.R")
+            bone = self.findbone(arm,armlinkesto("foot_IK.R"))
             if bone is not None:
                 cname = pre+'_'+joma['rank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
