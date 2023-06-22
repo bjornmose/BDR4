@@ -51,9 +51,22 @@ NOTE: the models folders is empty  ! see text in the folder. For now my choices 
             else :
                 _modelname = './models/metrabs_eff2l_y4_360'
 ```
+need TF2
 
+```
+#new models 2023 
+#picked from
+#https://istvansarandi.com/dozens/
+    if qual > 199 :
+    	_modelname = './models/metrabs_eff2s_y4_256px_1600k_28ds'
+    	if qual > 215:
+		_modelname = './models/metrabs_eff2s_y4_384px_800k_28ds'
+    	if qual > 225:    	
+    		_modelname = './models/metrabs_eff2l_y4_384px_800k_28ds'
+```
 
 ### 1.4 run the job
+
 ```
 (tf-py38) jenscave@jenscave-i5:~/Documents/BDR_Root/BDR4/bmmetrabs$ ./evaltofiles.py 
 ###e2f#######################################################
@@ -115,6 +128,21 @@ Blender files are 3.5
 
 
 ### Reading data to a bunch of 'empies'
+On 2023 I decided to take another way:
+ImportMetrabsjsonB27_B3xWork.py should work fine with b2.7x and b3.x most 2.8x will fail. 
+The new version has buttons:
+#### to set the input path 'Find Data'
+#### to read jobinfo.json 'read metrabs job'
+#### to create the bunch of empties 'import metrabs data'
+with actions which can be 'pushed down' or deleted .. to give room for splitting things in more than one actions on the frame scale.
+#### to create an armature with bones according the skeleton definiton in the jobinfo file 'Create Armature'
+if A_link is set it will create constraints to the empties
+#### to create an armature with bones according the first posedata.json file given 'Create Armature Rest'
+like the function b4re but bones are created at the position given in the file
+if A_link is set it will create constraints to the empties
+#### baking armature actions
+i do with my tiny clonemotion.py script
+
 Once the script 'ImportMetrabsjsonV004.py' ran in blender the object panel will have a button 'Make metrabs root' 
 This will generate some 'custom properties' and some new items in the objects 'Metrabs' panel.
 Once you have set the path variable there to the 'destination' folder it will enable the job reading and the importing button.
