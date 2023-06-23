@@ -154,13 +154,25 @@ joma_picked = {
 
     }
     
-armlinkesto = {
+armlinkesto3_5 = {
     "HandIK_R":"hand_IK.R",
     "HandIK_L":"hand_IK.L",
     "FootIK_R":"foot_IK.R",
     "FootIK_L":"foot_IK.R",
     "Head":""
     }
+
+armlinkesto2_7= {
+    "HandIK_R":"hand.IK.R",
+    "HandIK_L":"hand.IK.L",
+    "FootIK_R":"foot.IK.R",
+    "FootIK_L":"foot.IK.R",
+    "Head":""
+    }
+
+armlinkesto = armlinkesto2_7
+
+
     
     
 joma_list ={
@@ -606,7 +618,7 @@ class LinkArmature(bpy.types.Operator):
                 makefeetrot(obj,joma)
 #            pre = obj.name
 
-            bone = self.findbone(arm,armlinkesto("hand_IK.R"))
+            bone = self.findbone(arm,armlinkesto("HandIK_R"))
             if bone is not None:
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -616,7 +628,7 @@ class LinkArmature(bpy.types.Operator):
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
                     
-            bone = self.findbone(arm,armlinkesto("hand_IK.L"))
+            bone = self.findbone(arm,armlinkesto("HandIK_L"))
             if bone is not None:
                 cname = pre+'_'+joma['lwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -625,7 +637,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,armlinkesto("foot_IK.L"))
+            bone = self.findbone(arm,armlinkesto("FootIK_L"))
             if bone is not None:
                 cname = pre+'_'+joma['lank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -634,7 +646,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,armlinkesto("foot_IK.R"))
+            bone = self.findbone(arm,armlinkesto("FootIK_R"))
             if bone is not None:
                 cname = pre+'_'+joma['rank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
