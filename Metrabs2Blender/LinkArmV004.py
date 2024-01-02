@@ -154,7 +154,7 @@ joma_picked = {
 
     }
     
-armlinkesto3_5 = {
+armlinksto3_5 = {
     "HandIK_R":"hand_IK.R",
     "HandIK_L":"hand_IK.L",
     "FootIK_R":"foot_IK.R",
@@ -162,15 +162,19 @@ armlinkesto3_5 = {
     "Head":""
     }
 
-armlinkesto2_7= {
-    "HandIK_R":"hand.IK.R",
-    "HandIK_L":"hand.IK.L",
-    "FootIK_R":"foot.IK.R",
-    "FootIK_L":"foot.IK.R",
+armlinksto2_7= {
+    "HandIK_R":"hand.ik.R",
+    "HandIK_L":"hand.ik.L",
+    "FootIK_R":"foot.ik.R",
+    "FootIK_L":"foot.ik.L",
+    "EllowTargetIK_R":"elbow_target.ik.R",
+    "EllowTargetIK_L":"elbow_target.ik.L",
+    "KneeTargetIK_R" :"knee_target.ik.R",
+    "KneeTargetIK_L" :"knee_target.ik.L",
     "Head":""
     }
 
-armlinkesto = armlinkesto2_7
+armlinksto = armlinksto2_7
 
 
     
@@ -618,7 +622,7 @@ class LinkArmature(bpy.types.Operator):
                 makefeetrot(obj,joma)
 #            pre = obj.name
 
-            bone = self.findbone(arm,armlinkesto("HandIK_R"))
+            bone = self.findbone(arm,armlinksto["HandIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -628,7 +632,7 @@ class LinkArmature(bpy.types.Operator):
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
                     
-            bone = self.findbone(arm,armlinkesto("HandIK_L"))
+            bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -637,7 +641,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,armlinkesto("FootIK_L"))
+            bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -646,7 +650,7 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
-            bone = self.findbone(arm,armlinkesto("FootIK_R"))
+            bone = self.findbone(arm,armlinksto["FootIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -655,6 +659,29 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
 
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
+            if bone is not None:
+                cname = pre+'_'+joma['relb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
+            if bone is not None:
+                cname = pre+'_'+joma['lelb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+
+            bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
+            if bone is not None:
+                cname = pre+'_'+joma['rkne']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
+
+            bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
+            if bone is not None:
+                cname = pre+'_'+joma['lkne']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP)
 
             bone = self.findbone(arm,"torso")
             if bone is not None:
