@@ -178,9 +178,27 @@ armlinksto2_7= {
     "Head":"headproxy"
     }
 
-armlinksto = armlinksto3_5
+armlinksto = armlinksto2_7
 
+#Library Metrabs Derived Empties 
+_lMDE = {
+    "kHipRot":"ZD_HipRot",
+    "kChestRot":"ZD_ChestRot",
+    "kTorso":"ZD_Torso",
+    "kTorsoL":"ZD_TorsoL",
+    "kTorsoR":"ZD_TorsoR",
+    "kHeadRot":"ZD_HeadRot",
+    "k11":"ZD_11",
+    "k12":"ZD_12",
+    "k13":"ZD_13",
+    "k14":"ZD_14",
+    "kFeetRot":"ZD_FeetRot"
+}
 
+def listMDE():
+    for mde in _lMDE:
+        print(mde,_lMDE[mde])
+        
 
     
     
@@ -236,6 +254,30 @@ def createEmpty(OName,draw_size,draw_type):
 
     return Cobj   
 
+def deleteObject35(name):
+    try:
+        objs = [bpy.context.scene.objects[name]]
+        with bpy.context.temp_override(selected_objects=objs):
+            bpy.ops.object.delete()
+        return('FINISHED')
+
+    except:
+        print('NOT Deleted',name)
+        return('FAILED')
+    
+    
+def deleteObject(name):
+    obj = bpy.data.objects.get(name)
+    if (obj is not None):
+        # Deselect all
+        bpy.ops.object.select_all(action='DESELECT')
+        # Select the object
+        bpy.data.objects[name].select = True    # Blender 2.7x        
+        # Delete the object
+        bpy.ops.object.delete() 
+        print('deleted',name)
+
+
 
 def objcoloc(obj,cname,IDtarget,influence):
     crc = obj.constraints.get(cname)
@@ -266,7 +308,8 @@ def objcoloc(obj,cname,IDtarget,influence):
 def makehiprot(parent,joma):
     
     pre = parent.name
-    ID =pre+"_HipRot"
+    ID =pre+_lMDE["kHipRot"]
+    deleteObject(ID)
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -291,16 +334,17 @@ def makehiprot(parent,joma):
 def maketorso(parent,joma):
 
     pre = parent.name
-    ID =pre+"_Torso"
+    ID =pre+_lMDE["kTorso"]
+    deleteObject(ID)
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
         obj.parent=parent
     if (obj):
-        objcoloc(obj,'COCO_Torso_HipRot',pre+'_HipRot',1.0)
-        objcoloc(obj,'COCO_Torso_ChestRot',pre+'_ChestRot',0.5)
+        objcoloc(obj,'COCO_Torso_HipRot',pre+_lMDE["kHipRot"],1.0)
+        objcoloc(obj,'COCO_Torso_ChestRot',pre+_lMDE["kChestRot"],0.5)
 
-    ID =pre+"_rTorso"
+    ID =pre+_lMDE["kTorsoR"]
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -309,7 +353,7 @@ def maketorso(parent,joma):
         objcoloc(obj,'COCO_rTorso_rsho',pre+'_'+joma['rsho'],1.0)
         objcoloc(obj,'COCO_rTorso_rhip',pre+'_'+joma['rhip'],0.5)
 
-    ID =pre+"_lTorso"
+    ID =pre+_lMDE["kTorsoL"]
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -319,14 +363,14 @@ def maketorso(parent,joma):
         objcoloc(obj,'COCO_lTorso_rhip',pre+'_'+joma['lhip'],0.5)
 
 
-    ID =pre+"_Torso"
+    ID =pre+_lMDE["kTorso"]
     obj = bpy.data.objects.get(ID)
     if (obj):
         cname = 'COCO_Torso_trackl'
         co = obj.constraints.get(cname)
         if co is None:
             co = obj.constraints.new('TRACK_TO')
-            ID =pre+"_lTorso"
+            ID =pre+_lMDE["kTorsoL"]
             tar = bpy.data.objects.get(ID)
             if tar is None:
                 obj.constraints.remove(co)
@@ -336,14 +380,14 @@ def maketorso(parent,joma):
             co.up_axis="UP_Z"
             co.name = cname
 
-    ID =pre+"_Torso"
+    ID =pre+_lMDE["kTorso"]
     obj = bpy.data.objects.get(ID)
     if (obj):
         cname = 'COCO_Torso_trackr'
         co = obj.constraints.get(cname)
         if co is None:
             co = obj.constraints.new('TRACK_TO')
-            ID =pre+"_rTorso"
+            ID =pre+_lMDE["kTorsoR"]
             tar = bpy.data.objects.get(ID)
             if tar is None:
                 obj.constraints.remove(co)
@@ -357,7 +401,9 @@ def maketorso(parent,joma):
 def makechestrot(parent,joma):
 
     pre = parent.name
-    ID =pre+"_ChestRot"
+    ID =pre+_lMDE["kChestRot"]
+    deleteObject(ID)
+
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -383,7 +429,9 @@ def makechestrot(parent,joma):
 def makeheadrot(parent,joma):
 
     pre = parent.name
-    ID =pre+"_HeadRot"
+    ID =pre+_lMDE["kHeadRot"]
+    deleteObject(ID)
+
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -409,7 +457,10 @@ def makeheadrot(parent,joma):
 def makefeetrot(parent,joma):
 
     pre = parent.name
-    ID =pre+"_FeetRot"
+    ID =pre+_lMDE["kFeetRot"]
+    deleteObject(ID)
+
+    
     obj = bpy.data.objects.get(ID)
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
@@ -492,6 +543,12 @@ class UnLinkArmature(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         _Tar_clear_ArmatureConstraints(arm,pre)
+        '''
+        for mde in _lMDE:
+            print(mde,_lMDE[mde])
+            deleteObject(pre+_lMDE[mde])
+        '''
+
         return {'FINISHED'}
 
 
@@ -512,7 +569,7 @@ class LinkArmature(bpy.types.Operator):
             i = 0
         return i>0
     
-    def cocoloc(self,bone,cname,IDtarget,pxname):
+    def cocoloc(self,bone,cname,IDtarget,pxname,influence):
         crc = bone.constraints.get('L_'+pxname+cname)
         if crc is None:
             target = bpy.data.objects.get(IDtarget)
@@ -522,6 +579,7 @@ class LinkArmature(bpy.types.Operator):
             crc = bone.constraints.new('COPY_LOCATION')
             crc.target = target
             crc.name = 'L_'+pxname+cname
+            crc.influence = influence
         else:
             target = bpy.data.objects.get(IDtarget)
             if target is None:
@@ -529,6 +587,7 @@ class LinkArmature(bpy.types.Operator):
                 bone.constraints.remove(crc)
                 return('FAILED')
             crc.target = target
+            crc.influence = influence
             print(bone.name,IDtarget, 'loc_update')
             return('FINISHED')
 
@@ -631,7 +690,7 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 cname = pre+'_'+joma['rhan']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
@@ -641,7 +700,7 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['lwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 cname = pre+'_'+joma['lhan']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
@@ -650,7 +709,7 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['lank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 cname = pre+'_'+joma['ltoe']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
@@ -659,7 +718,7 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['rank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 cname = pre+'_'+joma['rtoe']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
@@ -668,37 +727,42 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['relb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
 
             bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lelb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
 
             bone = self.findbone(arm,"torso")
             if bone is not None:
-                cname = pre+'_Torso'
+                cname = pre+_lMDE['kChestRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                cname = pre+_lMDE['kHipRot']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
                 
 
             bone = self.findbone(arm,"hips")
             if bone is not None:
-                cname =pre+"_HipRot"
+                cname =pre+_lMDE['kHipRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 target = bpy.data.objects.get(IDtarget)
                 self.cocorot(bone,cname,IDtarget,nameP)
@@ -730,7 +794,7 @@ class LinkArmature(bpy.types.Operator):
             
             bone = self.findbone(arm,"chest")
             if bone is not None:
-                cname = pre+'_ChestRot'
+                cname = pre+_lMDE['kChestRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 target = bpy.data.objects.get(IDtarget)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
@@ -738,17 +802,17 @@ class LinkArmature(bpy.types.Operator):
             bone = self.findbone(arm,"root")
             if bone is not None:
                 #cname = pre+'_FeetRot'
-                cname = pre+'_Torso'
+                cname = pre+_lMDE['kTorso']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP)
-                crc = bone.constraints.get(cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                crc = bone.constraints.get('L_'+cname)
                 if crc is not None:
                     crc.use_z = 0
 
-                cname = pre+'_Torso'
+                cname = pre+_lMDE['kTorso']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
-                crc = bone.constraints.get(cname)
+                crc = bone.constraints.get('R_'+cname)
                 if crc is not None:
                     crc.use_x = 0
                     crc.use_y = 0
@@ -756,7 +820,7 @@ class LinkArmature(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Head"])
             if bone is not None:
-                cname = pre+'_HeadRot'
+                cname = pre+_lMDE['kHeadRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
 
@@ -826,6 +890,7 @@ def register():
     bpy.utils.register_class(LinkArmature)
     bpy.utils.register_class(UnLinkArmature)
     bpy.utils.register_class(LinkArmPanel)
+    print('register LinkArmVxxx Done')
 
 
 def unregister():
@@ -838,8 +903,10 @@ def unregister():
 if __name__ == "__main__":
     #runit(bpy.context,1)    
     register()
+    listMDE()
+    print('LinkArmVxx DONE')
 #    makefeetrot() 
     
 #run with register flag
-else: register() 
-print('LinkArmVxx DONE')
+else: 
+    register() 
