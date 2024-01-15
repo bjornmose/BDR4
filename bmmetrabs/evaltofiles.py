@@ -9,6 +9,11 @@ from os.path import exists
 from os import remove
 from Job_ioV001 import Job_io
 
+#licence GPL
+#author bjornmose
+#today 2024_01_15
+
+
 
 import tensorflow as tf
 
@@ -202,15 +207,15 @@ def doimage(model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_jso
 	except:
 		print(msgbarstart)
 		print('detect_poses bailed out','max_detections',max_detections)
-	if max_detections > 1:
-		print('retry with 1')
-		try:
-			print(msgbarstart)
-			pred = model.detect_poses(image, default_fov_degrees=fov_degrees, skeleton=skeleton, max_detections=1)
-		except:
-			print('did not work',file=f)
-			fail2json(i,outputpatternjson)
-			return
+		if max_detections > 1:
+			print('retry with 1')
+			try:
+				print(msgbarstart)
+				pred = model.detect_poses(image, default_fov_degrees=fov_degrees, skeleton=skeleton, max_detections=1)
+			except:
+				print('did not work')
+				fail2json(i,outputpatternjson)
+				return
 	pred = tf.nest.map_structure(lambda x: x.numpy(), pred)  # convert tensors to numpy arrays
 	joint_names = model.per_skeleton_joint_names[skeleton].numpy().astype(str)	
 	joint_edges = model.per_skeleton_joint_edges[skeleton].numpy()
@@ -220,9 +225,9 @@ def doimage(model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_jso
 		boxes = pred['boxes']
 		pose2json(skeleton,p3d,boxes,joint_names,i,outputpatternjson)
 	if viz == 1 :visualize_3dtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
-	if viz == 2 :visualize_tofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
+	if viz == 2 :visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
 	if viz == 3 :
-		visualize_tofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
+		visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
 		visualize_3dOtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz2)
 		visualize_3dtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
 
@@ -320,10 +325,7 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
     for x, y, w, h in detections[:, :4]:
         image_ax.add_patch(Rectangle((x, y), w, h, fill=False))
         
-    # Matplotlib plots the Z axis as vertical, but our poses have Y as the vertical axis.
-    # Therefore, we do a 90° rotation around the X axis:
-    #poses3d[..., 1], poses3d[..., 2] = poses3d[..., 2], -poses3d[..., 1]
-    for pose3d, pose2d in zip(poses3d, poses2d):
+    for pose2d in poses2d:
         for i_start, i_end in joint_edges:
             image_ax.plot(*zip(pose2d[i_start], pose2d[i_end]), marker='o', markersize=2)
         image_ax.scatter(*pose2d.T, s=2)
@@ -336,6 +338,38 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
     fig.savefig(name, dpi=200) 
     plt.close()
 #    plt.show()
+
+def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
+    detections, poses3d, poses2d = pred['boxes'], pred['poses3d'], pred['poses2d']
+
+    import matplotlib.pyplot as plt
+    # noinspection PyUnresolvedReferences
+    from mpl_toolkits.mplot3d import Axes3D
+    from matplotlib.patches import Rectangle
+    plt.switch_backend('TkAgg')
+
+    fig = plt.figure(figsize=(7, 5))
+    plot_ax = fig.add_subplot(1, 1, 1)
+    plot_ax.set_xlim(0, image.shape[1])
+    plot_ax.set_ylim(0, image.shape[0])
+    plot_ax.invert_yaxis()
+    plot_ax.imshow(image)
+    for x, y, w, h in detections[:, :4]:
+        plot_ax.add_patch(Rectangle((x, y), w, h, fill=False))
+        
+    for pose2d in poses2d:
+        for i_start, i_end in joint_edges:
+            plot_ax.plot(*zip(pose2d[i_start], pose2d[i_end]), marker='o', markersize=2)
+        plot_ax.scatter(*pose2d.T, s=2)
+        
+
+ 
+    fig.tight_layout()
+    name=pat.format(i)
+    print('<--',name)
+    fig.savefig(name, dpi=200) 
+    plt.close()
+
 
 
 def visualize_3dtofile(image, pred, joint_names, joint_edges,frame,pat):
