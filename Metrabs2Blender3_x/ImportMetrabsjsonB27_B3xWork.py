@@ -1,6 +1,7 @@
 import bpy
 import json
 import os
+import inspect
 
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
@@ -794,10 +795,10 @@ class import_metrabs(bpy.types.Operator):
             joints = skel_list[res]
             print('Object defined joints')
         except:
+            print('## Manual joints ## in ',__file__,'line:',inspect.currentframe().f_lineno)
             joints = joints_coco_19
 #           joints = joints_smpl_head_30 
 #            joints = joints_mpi_inf_3dhp_28
-            print('Manual joints')
         print(joints)
         pre = obj.name + '_'
         makejoints(obj,joints,pre) 
@@ -852,15 +853,34 @@ class make_metrabs(bpy.types.Operator):
 
 def set_importpath(context, filepath, use_some_setting):
     print("Data in ",filepath)
-    f = open(filepath, 'r', encoding='utf-8')
-    data = f.read()
-    f.close()
-
-    # would normally load the data here
-    print(data)
     obj = context.active_object
-    #obj["inpath"] = filepath
     obj["inpath"] = os.path.dirname(filepath)+'/'
+    try:
+        f = open(filepath, 'r', encoding='utf-8')
+        data = f.read()
+        print(data)
+        f.close()
+    except:
+        print('Failed to open',filepath)
+        
+    try:
+        with open(filepath) as json_file:
+            data = json.load(json_file)
+            res = data['skeleton']
+            obj['skeleton'] = res
+            try:
+                j = skel_list[res]
+                print('skeleton:',res,'OK')
+            except:
+                print('***skeleton ? ****')
+            res = data['start']
+            obj['start_frame'] = res
+            res = data['end']
+            obj['end_frame'] = res
+            print('automacik DONE')
+    except:
+        print('automacik failed')
+
 
 
     return {'FINISHED'}
@@ -1057,5 +1077,7 @@ def unregister():
 
 if __name__ == "__main__":
     #createArmature()
+    register() 
+else:
     register() 
     
