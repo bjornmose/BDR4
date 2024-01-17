@@ -7,13 +7,16 @@ import sys
 import json
 from os.path import exists
 from os import remove
-from Job_ioV001 import Job_io
+#from Job_ioV001 import Job_io
+from Job_ioV001samba import Job_io
 
 #licence GPL
 #author bjornmose
-#today 2024_01_16
-version = 1
-
+#today 2024_01_17
+file_version = 0
+#define path to models based on home
+home_directory = os.path.expanduser( '~' )
+home_models = home_directory+'/sambashare/models/'
 
 
 import tensorflow as tf
@@ -25,6 +28,8 @@ msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
 
 def main(jobname):
     #set default values
+    modelpath = './models/'
+    modelpath = home_models
     max_blowup= 1.1
     frame_start= 1
     frame_end = 10
@@ -110,15 +115,6 @@ def main(jobname):
             return
 
     if viz > 2:
-        name = outputpatternviz2.format(42)+'.txt'
-        try:
-            with open(name, 'w') as probe:
-                print('Path looks good',file=probe)
-                probe.close()
-                os.remove(name)
-        except:
-            print(msgbarstart,'can not write:',name,msgbarend)
-            return
         name = outputpatternviz1.format(42)+'.txt'
         try:
             with open(name, 'w') as probe:
@@ -128,35 +124,48 @@ def main(jobname):
         except:
             print(msgbarstart,'can not write:',name,msgbarend)
             return
-
+#not used
+    if viz > 3:
+        name = outputpatternviz2.format(42)+'.txt'
+        try:
+            with open(name, 'w') as probe:
+                print('Path looks good',file=probe)
+                probe.close()
+                os.remove(name)
+        except:
+            print(msgbarstart,'can not write:',name,msgbarend)
+            return
     
 
     
          
      
     if qual < 1 : 
-        _modelname = './models/metrabs_mob3l_y4t'
+        _modelname = modelpath+'metrabs_mob3l_y4t'
     else: 
         if qual < 20 : 
-            _modelname = './models/metrabs_eff2s_y4'
+            _modelname = modelpath+'metrabs_eff2s_y4'
         else:
             if qual< 50 : 
-                _modelname = './models/metrabs_eff2l_y4'
+                _modelname = modelpath+'metrabs_eff2l_y4'
 #new models 2023 
 #picked from
 #https://istvansarandi.com/dozens/
     if qual > 199 :
-    	_modelname = './models/metrabs_eff2s_y4_256px_1600k_28ds'
+    	_modelname = modelpath+'metrabs_eff2s_y4_256px_1600k_28ds'
     	if qual > 215:
-    		_modelname = './models/metrabs_eff2s_y4_384px_800k_28ds'
+    		_modelname = modelpath+'metrabs_eff2s_y4_384px_800k_28ds'
     	if qual > 225:    	
-    		_modelname = './models/metrabs_eff2l_y4_384px_800k_28ds'
+    		_modelname = modelpath+'metrabs_eff2l_y4_384px_800k_28ds'
+    
 
 
+    print('modelname',_modelname)    
     print('Start', frame_start, 'End', frame_end, 'Skip',frame_skip)    
     print('inpattern', inpattern, 'outpath', outpath, 'json',outputpatternjson,'viz',outputpatternviz)  
     with open(outpath+'/jobinfo.json', 'w') as ji:
         jdata = {}
+        jdata['version'] = version
         jdata['skeleton'] = skeleton 
         jdata['start'] = frame_start
         jdata['end'] = frame_end
