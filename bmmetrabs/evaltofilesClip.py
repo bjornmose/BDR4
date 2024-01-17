@@ -16,7 +16,7 @@ from Job_ioV001samba import Job_io
 file_version = 0
 #define path to models based on home
 home_directory = os.path.expanduser( '~' )
-home_models = home_directory+'/sambashare/models/'
+home_models = home_directory+'/sambashare/modelstf2/'
 
 
 import tensorflow as tf
@@ -28,7 +28,7 @@ msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
 
 def main(jobname):
     #set default values
-    modelpath = './models/'
+    # local modelpath = './models/'
     modelpath = home_models
     max_blowup= 1.1
     frame_start= 1
