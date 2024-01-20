@@ -12,23 +12,36 @@ from Job_ioV001samba import Job_io
 
 #licence GPL
 #author bjornmose
-#today 2024_01_17
-file_version = 0
+#today 2024_01_20
+file_version = 1
+#use local model path
+#home_models = './models/'
 #define path to models based on home
 home_directory = os.path.expanduser( '~' )
 home_models = home_directory+'/sambashare/modelstf2/'
 
 
-import tensorflow as tf
+#import tensorflow as tf
 
 
 msgbarstart = '###e2f#######################################################\n'
 msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
 
+def _writestodir(name):
+ try:
+   with open(name, 'w') as probe:
+    print('Path looks good',file=probe)
+    probe.close()
+    os.remove(name)
+   return True
+ except:
+   print('hint:may be you need to create the directory ')
+   print(msgbarstart,'_WriteToDir_'+'can not write:',name,msgbarend)
+   return False
+
 
 def main(jobname):
     #set default values
-    # local modelpath = './models/'
     modelpath = home_models
     max_blowup= 1.1
     frame_start= 1
@@ -57,7 +70,8 @@ def main(jobname):
         #use the name known by class Job_io()
     else:
         joi = Job_io(jobname)
-
+# checking ze job
+    _halt=0
     inpt = joi.read_job_input()
     if inpt != None:
         print(inpt)
@@ -93,53 +107,25 @@ def main(jobname):
 
     if create_json > 0:
         name = outputpatternjson.format(42)+'.txt'
-        try:
-            with open(name, 'w') as probe:
-                print('Path looks good',file=probe)
-                probe.close()
-                os.remove(name)
-        except:
-            print(msgbarstart,'can not write:',name,msgbarend)
-            return
+        if not _writestodir(name): _halt += 1
         
         
     if viz > 0:
         name = outputpatternviz.format(42)+'.txt'
-        try:
-            with open(name, 'w') as probe:
-                print('Path looks good',file=probe)
-                probe.close()
-                os.remove(name)
-        except:
-            print(msgbarstart,'can not write:',name,msgbarend)
-            return
+        if not _writestodir(name): _halt += 1
 
     if viz > 2:
         name = outputpatternviz1.format(42)+'.txt'
-        try:
-            with open(name, 'w') as probe:
-                print('Path looks good',file=probe)
-                probe.close()
-                os.remove(name)
-        except:
-            print(msgbarstart,'can not write:',name,msgbarend)
-            return
+        if not _writestodir(name): _halt += 1
+
 #not used
     if viz > 3:
         name = outputpatternviz2.format(42)+'.txt'
-        try:
-            with open(name, 'w') as probe:
-                print('Path looks good',file=probe)
-                probe.close()
-                os.remove(name)
-        except:
-            print(msgbarstart,'can not write:',name,msgbarend)
-            return
-    
-
-    
-         
-     
+        if not _writestodir(name): _halt += 1
+    if(_halt>0):
+      print('#Issues',_halt)
+      return
+             
     if qual < 1 : 
         _modelname = modelpath+'metrabs_mob3l_y4t'
     else: 
@@ -176,11 +162,23 @@ def main(jobname):
         json.dump(jdata, ji, ensure_ascii=False, indent=4)
         ji.close()  
 
-    #see if image exists
-    probename=inpattern.format(frame_start)
-    if not exists(probename):
-      print(msgbarstart,'no input:',probename,'STOP',msgbarend)
-      return
+    #check input files
+    _nFound = 0
+    _nMissing = 0
+    for i in range ( frame_start , frame_end , frame_skip):
+     probename=inpattern.format(i)
+     if exists(probename):
+      _nFound += 1
+     else:
+      _nMissing += 1
+     
+     
+     if (_nFound<1):
+       print(msgbarstart,'no input:',probename,'STOP',msgbarend)
+       return
+    print(msgbarstart,'Images to go:',_nFound,'Missing:',_nMissing,msgbarend)
+    #actually the place we need load TF
+    import tensorflow as tf
     tf.config.threading.set_intra_op_parallelism_threads(cpu_count)
 
     print(msgbarstart,'load model :)',_modelname,msgbarend)
@@ -196,9 +194,12 @@ def main(jobname):
            print('skip',i)
            continue
       _name=inpattern.format(i)
+      if (not exists(_name)):
+        print('skip',_name)
+        continue
       progress = 100.0 * (i - frame_start)/(frame_end-frame_start)
       print('in->',_name,'max_detections',max_detections,'progress',progress)
-      doimage(model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson)
+      doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson)
       gc.collect()
       memnow = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
       memratio = (memnow - memstart) / memstart
@@ -217,9 +218,18 @@ def main(jobname):
     # - select the skeleton convention (COCO, H36M, SMPL...)
     # etc.
     
-def doimage(model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson):
+def doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson):
 	name=inpattern.format(i)
-	image = tf.image.decode_jpeg(tf.io.read_file(name))
+	file_exists = exists(name)
+	if not file_exists:
+	 print(msgbarstart,'no image',name,msgbarend)
+	 return	
+	try:
+	 image = tf.image.decode_jpeg(tf.io.read_file(name))
+	except:
+	 print(msgbarstart,'failed on image',name,msgbarend)
+	 return
+	
 	try:
 		pred = model.detect_poses(image, default_fov_degrees=fov_degrees, skeleton=skeleton, max_detections=max_detections)
 	except:
