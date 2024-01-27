@@ -382,6 +382,7 @@ def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
     plot_ax.set_ylim(0, image.shape[0])
     plot_ax.invert_yaxis()
     plot_ax.imshow(image)
+    plot_ax.axis('off')
     for x, y, w, h in detections[:, :4]:
         plot_ax.add_patch(Rectangle((x, y), w, h, fill=False))
         
