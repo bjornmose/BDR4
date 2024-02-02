@@ -34,15 +34,16 @@ msgbarstart = '###e2f#######################################################\n'
 msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
 
 def _writestodir(name,hintextra):
+ nprobe=name+'.txt' 
  try:
-   with open(name, 'w') as probe:
+   with open(nprobe, 'w') as probe:
     print('Path looks good',file=probe)
     probe.close()
-    os.remove(name)
+    os.remove(nprobe)
    return True
  except:
    print(msgbarstart,'hint:may be you need to create the directory ')
-   print('_WriteToDir_'+'can not write:',name)
+   print('_WriteToDir_'+'can not write:',nprobe)
    print(hintextra)
    print(msgbarend)
    return False
