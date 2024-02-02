@@ -10,10 +10,16 @@ from os import remove
 #from Job_ioV001 import Job_io
 from Job_ioV001samba import Job_io
 
+'''
+aye this file needs refactoring !!!!
+make classes main --> do_my_job
+have properties used by subroutines
+bad example doiimage (loads of params passed)
+'''
+
 #licence GPL
 #author bjornmose
-#today 2024_01_20
-file_version = 1
+#today 2024_02_02
 #use local model path
 #home_models = './models/'
 #define path to models based on home
@@ -21,13 +27,13 @@ home_directory = os.path.expanduser( '~' )
 home_models = home_directory+'/sambashare/modelstf2/'
 
 
-#import tensorflow as tf
+#import tensorflow as tf --- load later well check some other things first 
 
 
 msgbarstart = '###e2f#######################################################\n'
 msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
 
-def _writestodir(name):
+def _writestodir(name,hintextra):
  try:
    with open(name, 'w') as probe:
     print('Path looks good',file=probe)
@@ -35,8 +41,10 @@ def _writestodir(name):
     os.remove(name)
    return True
  except:
-   print('hint:may be you need to create the directory ')
-   print(msgbarstart,'_WriteToDir_'+'can not write:',name,msgbarend)
+   print(msgbarstart,'hint:may be you need to create the directory ')
+   print('_WriteToDir_'+'can not write:',name)
+   print(hintextra)
+   print(msgbarend)
    return False
 
 
@@ -48,7 +56,7 @@ def main(jobname):
     frame_end = 10
     frame_skip= 1
     qual = 0 # 0 lowest 19 meduim 49 good above 100 best
-    cpu_count = 3
+    cpu_count = 8
     fov_degrees = 55
     viz = 0
     max_detections=1
@@ -59,6 +67,8 @@ def main(jobname):
     outputpatternviz = outpath + '/viz/Image{0:04d}.png'
     outputpatternviz1 = outpath + '/viz1/Image{0:04d}.png'
     outputpatternviz2 = outpath + '/viz2/Image{0:04d}.png'
+    tfmodelname = ''
+    add_2d_json = 1
     skeleton = 'smpl+head_30'
 #    skeleton = 'coco_19'
 #    skeleton = 'h36m_17'
@@ -99,32 +109,36 @@ def main(jobname):
         if version > 2:
             outputpatternviz1 =  outpath + inpt['outputpatternviz1']
             outputpatternviz2 =  outpath + inpt['outputpatternviz2']
+        if version > 3:
+            tfmodelname = inpt['modelname']
+            add_2d_json = inpt['add_2d_json']
+
 
             
     else:
         print(msgbarstart,'job not found: ->',joi.myname(),'<- *using defaults*',msgbarend)
 
+    print('Go on with:','inpattern', inpattern, 'outpath', outpath, 'json',outputpatternjson,'viz',outputpatternviz)  
+
+
 
     if create_json > 0:
-        name = outputpatternjson.format(42)+'.txt'
-        if not _writestodir(name): _halt += 1
+        name = outputpatternjson.format(42)
+        if not _writestodir(name,'output'): _halt += 1
         
-        
+    _msg = 'Will use some space on disk .. know where it is'
     if viz > 0:
-        name = outputpatternviz.format(42)+'.txt'
-        if not _writestodir(name): _halt += 1
+        name = outputpatternviz.format(42)
+        if not _writestodir(name,_msg): _halt += 1
 
     if viz > 2:
-        name = outputpatternviz1.format(42)+'.txt'
-        if not _writestodir(name): _halt += 1
+        name = outputpatternviz1.format(42)
+        if not _writestodir(name_msg): _halt += 1
 
 #not used
     if viz > 3:
-        name = outputpatternviz2.format(42)+'.txt'
-        if not _writestodir(name): _halt += 1
-    if(_halt>0):
-      print('#Issues',_halt)
-      return
+        name = outputpatternviz2.format(42)
+        if not _writestodir(name,_msg): _halt += 1
              
     if qual < 1 : 
         _modelname = modelpath+'metrabs_mob3l_y4t'
@@ -144,39 +158,63 @@ def main(jobname):
     	if qual > 225:    	
     		_modelname = modelpath+'metrabs_eff2l_y4_384px_800k_28ds'
     
+#version 4 can override modelname
+    if(len(tfmodelname)>0):
+      _modelname = modelpath+tfmodelname 
 
 
     print('modelname',_modelname)    
     print('Start', frame_start, 'End', frame_end, 'Skip',frame_skip)    
-    print('inpattern', inpattern, 'outpath', outpath, 'json',outputpatternjson,'viz',outputpatternviz)  
+
+    #check input files
+    _nFound = 0
+    _nMissing = 0
+    _autoEnd = 0
+    _autoStart = 10000000
+    for i in range ( frame_start , frame_end , frame_skip):
+     probename=inpattern.format(i)
+     if exists(probename):
+      _nFound += 1
+      _autoEnd = i
+      if(_autoStart > i):
+      	_autoStart = i
+    #out there will be no more input
+    frame_end = _autoEnd
+    frame_start = _autoStart
+    print('Frames autorange',frame_start,frame_end)
+    #detect holes
+    for i in range ( frame_start , frame_end , frame_skip):
+     probename=inpattern.format(i)
+     if (not exists(probename)):
+      _nMissing += 1
+         
+    if (_nFound<1):
+       print(msgbarstart,'no input:',probename,'STOP',msgbarend)
+       _halt +=1
+       
+    if(_halt>0):
+      print('#Issues',_halt)
+      return
+
+    print(msgbarstart,'Images to go:',_nFound,'Missing:',_nMissing,msgbarend)
+
     with open(outpath+'/jobinfo.json', 'w') as ji:
         jdata = {}
         jdata['version'] = version
         jdata['skeleton'] = skeleton 
         jdata['start'] = frame_start
         jdata['end'] = frame_end
+        jdata['skip'] = frame_skip
         jdata['inpattern'] = inpattern
         jdata['modelname'] = _modelname
         jdata['max_detections'] = max_detections
         jdata['fov_degrees'] = fov_degrees
+        jdata['add_2d_json'] = add_2d_json
         json.dump(jdata, ji, ensure_ascii=False, indent=4)
         ji.close()  
 
-    #check input files
-    _nFound = 0
-    _nMissing = 0
-    for i in range ( frame_start , frame_end , frame_skip):
-     probename=inpattern.format(i)
-     if exists(probename):
-      _nFound += 1
-     else:
-      _nMissing += 1
-     
-     
-     if (_nFound<1):
-       print(msgbarstart,'no input:',probename,'STOP',msgbarend)
-       return
-    print(msgbarstart,'Images to go:',_nFound,'Missing:',_nMissing,msgbarend)
+       
+       
     #actually the place we need load TF
     import tensorflow as tf
     tf.config.threading.set_intra_op_parallelism_threads(cpu_count)
@@ -185,21 +223,23 @@ def main(jobname):
     model = tf.saved_model.load(_modelname)
     memstart = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss    
     print(msgbarstart,'model loaded:)',msgbarend)
-    with open('debugoutput.txt', 'w') as f:
+#debug stone age
+#    with open('debugoutput.txt', 'w') as f:
+    if (True): 
 
     
      for i in range ( frame_start , frame_end , frame_skip):
       if jsonexists(i,outputpatternjson) : 
          if create_json < 2:
-           print('skip',i)
+           print('skip existing result',i)
            continue
       _name=inpattern.format(i)
       if (not exists(_name)):
-        print('skip',_name)
+        print('skip missing image',_name)
         continue
       progress = 100.0 * (i - frame_start)/(frame_end-frame_start)
       print('in->',_name,'max_detections',max_detections,'progress',progress)
-      doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson)
+      doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,add_2d_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson)
       gc.collect()
       memnow = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
       memratio = (memnow - memstart) / memstart
@@ -218,7 +258,7 @@ def main(jobname):
     # - select the skeleton convention (COCO, H36M, SMPL...)
     # etc.
     
-def doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson):
+def doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_json,add_2d_json,outputpatternviz,outputpatternviz1,outputpatternviz2,outputpatternjson):
 	name=inpattern.format(i)
 	file_exists = exists(name)
 	if not file_exists:
@@ -250,8 +290,12 @@ def doimage(tf,model,i,inpattern,fov_degrees,skeleton,max_detections,viz,create_
 	rearrange(pred)   
 	if create_json > 0 :
 		p3d = pred['poses3d']
+		p2d = pred['poses2d']
 		boxes = pred['boxes']
-		pose2json(skeleton,p3d,boxes,joint_names,i,outputpatternjson)
+		if (add_2d_json>0):
+			pose2jsonplus(skeleton,p3d,p2d,boxes,joint_names,i,outputpatternjson)
+		else:
+			pose2json(skeleton,p3d,boxes,joint_names,i,outputpatternjson)
 	if viz == 1 :visualize_3dtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
 	if viz == 2 :visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
 	if viz == 3 :
@@ -301,6 +345,43 @@ def pose2json(skeleton,p3d,boxes,joint_names,frame,pat):
         if len(p3d) > 2 :             
              for ppose,joint, in zip(p3d[2],joint_names):
                jdata['pose3d2'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+        json.dump(jdata, jf, ensure_ascii=False, indent=4)
+        jf.close()
+
+def pose2jsonplus(skeleton,p3d,p2d,boxes,joint_names,frame,pat):
+    name=pat.format(frame)
+    print('<-out',name)
+    with open(name, 'w', encoding='utf-8') as jf:
+        jdata = {}
+        jdata['boxes'] = []
+        jdata['skeleton'] = skeleton 
+        jdata['joints'] = []
+        jdata['pose3d'] = []
+        jdata['pose2d'] = []
+        jdata['pose3d1'] = []
+        jdata['pose2d1'] = []
+        jdata['pose3d2'] = []
+        jdata['pose2d1'] = []
+        for x, y, w, h in boxes[:, :4]:
+          jdata['boxes'].append([x.astype(float),y.astype(float)])
+          
+        for joint in joint_names:
+          jdata['joints'].append(joint.astype(str))
+        if len(p3d) > 0 :             
+             for ppose,joint, in zip(p3d[0],joint_names):
+               jdata['pose3d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+             for ppose,joint, in zip(p2d[0],joint_names):
+               jdata['pose2d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float)])
+        if len(p3d) > 1 :             
+             for ppose,joint, in zip(p3d[1],joint_names):
+               jdata['pose3d1'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+             for ppose,joint, in zip(p2d[1],joint_names):
+               jdata['pose2d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float)])
+        if len(p3d) > 2 :             
+             for ppose,joint, in zip(p3d[2],joint_names):
+               jdata['pose3d2'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+             for ppose,joint, in zip(p2d[2],joint_names):
+               jdata['pose2d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float)])
         json.dump(jdata, jf, ensure_ascii=False, indent=4)
         jf.close()
 
