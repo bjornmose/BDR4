@@ -7,8 +7,8 @@ import sys
 from os.path import exists
 #licence GPL
 #author bjornmose
-#today 2024_01_16
-version = 3
+#today 2024_01_31
+version = 4
 
 ##############################################
 # configuration start
@@ -25,17 +25,29 @@ skeleton = 'smpl+head_30'
 
 
 # I/O Path
-datapath = 'MiReal_A'
+datapath = 'BlueLeg'
+#outpathdeko
+outpathdeko = ''
 # absolute path homebased
 usehome = True
 datapathpre = '/sambashare/MetarbsData/'
+filetemplate = '/Image{0:04d}.png'
 
+
+#fov_degrees = 30
 fov_degrees = 55
+#fov_degrees = 75
+#fov_degrees = 100
 
 #'quality' v: v<1 lowest v<20 medium v<50 good else above  https://istvansarandi.com/dozens/ model  >199 >215 >225
-qual = 10
+#old !! return other joints 
+#qual = 10
 #qual = 25
 #qual = 55
+#New with unified joinz
+#qual = 200
+qual = 220
+#qual = 230
 #models picked by chance
 '''
     EfficientNetV2-S, 256 px: hub.load('https://bit.ly/metrabs_s_256')
@@ -43,23 +55,41 @@ qual = 10
     EfficientNetV2-L, 384 px: hub.load('https://bit.ly/metrabs_l')
     EfficientNetV2-XL, 384 px: hub.load('https://bit.ly/metrabs_xl')
 '''    
-#qual = 210
-#qual = 220
-#qual = 230
+#qual = 400
+qual = 401
+#qual = 402
+#qual = 403
+#qual = 404
+#qual = 405
+modellist = {
+	400:'',
+	401:'metrabs_eff2s_y4_384px_800k_28ds',
+	402:'metrabs_eff2s_y4_256px_1600k_28ds',
+	403:'metrabs_eff2l_y4_384px_800k_28ds',
+	404:'metrabs_eff2xl_y4_384px_800k_28ds',
+	405:''
+}
+tfmodelname = ''
+#use modellist
+if (qual > 399):
+	tfmodelname = modellist[qual]
+
 
 #framerange
 frame_start = 1
-frame_end = 10  # 7000
+frame_end = 30000 # 7000
 skip = 1
 
 #
-max_detections=2
+max_detections=1
 
 #result as images 
-viz = 3 # enum 0, none 1, 3D Plot 2, 2D ovelay clipped 3, 3D 2D aside 
+viz = 2 # enum 0, none 1, 3D Plot 2, 2D ovelay clipped 3, 3D 2D aside 
 #result as data
 create_json = 1  # enum 0, dont 1, skip existing 2, overwrite
+add_2d_json = 0 
 cpu_count = 3
+
 
 ##############################################
 # configuration end
@@ -68,9 +98,8 @@ cpu_count = 3
 #adust pathes
 
 # set appenix
-txt="fov{}m{}".format(fov_degrees,qual)
-txt=skeleton+txt
-resdetail = ''+txt
+txt="{}fov{}m{}".format(skeleton,fov_degrees,qual)
+resdetail = txt+outpathdeko
 respath = datapath + resdetail
 
 jobfilename = 'e2fjob'+datapath+resdetail+'.json'
@@ -84,8 +113,7 @@ if (usehome):
 	outpath =home_directory+datapathpre+'output/res' + respath
 
 
-inpattern = inpath +'/Image{0:04d}.png'
-#inpattern = inpath +'/image{0:04d}.png'
+inpattern = inpath + filetemplate
 
 
 
@@ -133,8 +161,10 @@ class Job_io:
             jdata['skip'] = skip
             jdata['viz'] = viz
             jdata['qual'] = qual
+            jdata['modelname'] = tfmodelname
             jdata['cpu_count'] = cpu_count
             jdata['create_json'] = create_json
+            jdata['add_2d_json'] = add_2d_json
             jdata['inpattern'] = inpattern
             jdata['outpath'] = outpath
             jdata['outputpatternjson'] = '/Posedata{0:04d}.json'
