@@ -7,92 +7,8 @@ import numpy as np
 
 '''
 #look up info
-joints_coco_19 =  [
-        "neck",
-        "nose",
-        "pelv",
-        "lsho",
-        "lelb",
-        "lwri",
-        "lhip",
-        "lkne",
-        "lank",
-        "rsho",
-        "relb",
-        "rwri",
-        "rhip",
-        "rkne",
-        "rank",
-        "leye",
-        "lear",
-        "reye",
-        "rear"
-    ]
-    
-joints_mpi_inf_3dhp_28 = [
-        "thor",
-        "spi4",
-        "spi2",
-        "spin",
-        "pelv",
-        "neck",
-        "head",
-        "htop",
-        "lcla",
-        "lsho",
-        "lelb",
-        "lwri",
-        "lhan",
-        "rcla",
-        "rsho",
-        "relb",
-        "rwri",
-        "rhan",
-        "lhip",
-        "lkne",
-        "lank",
-        "lfoo",
-        "ltoe",
-        "rhip",
-        "rkne",
-        "rank",
-        "rfoo",
-        "rtoe"
-    ]
-
-joints_smpl_head_30 =[
-        "pelv_smpl",
-        "lhip_smpl",
-        "rhip_smpl",
-        "bell_smpl",
-        "lkne_smpl",
-        "rkne_smpl",
-        "spin_smpl",
-        "lank_smpl",
-        "rank_smpl",
-        "thor_smpl",
-        "ltoe_smpl",
-        "rtoe_smpl",
-        "neck_smpl",
-        "lcla_smpl",
-        "rcla_smpl",
-        "head_smpl",
-        "lsho_smpl",
-        "rsho_smpl",
-        "lelb_smpl",
-        "relb_smpl",
-        "lwri_smpl",
-        "rwri_smpl",
-        "lhan_smpl",
-        "rhan_smpl",
-        "htop_mpi_inf_3dhp",
-        "learcoco",
-        "leyecoco",
-        "nosecoco",
-        "rearcoco",
-        "reyecoco"
-    ]
-'''    
+''' 
+   
 #joint/target map used for buiding constraints in armature    
 joma_simpl = {
         "neck" : "neck_smpl",
@@ -118,6 +34,34 @@ joma_simpl = {
         "lear" : "lear_coco",
         "reye" : "reye_coco",
         "rear" : "rear_coco",
+        "rhan" : "rhan_smpl",
+        "rfoo" : "rank_smpl",
+        "rtoe" : "rtoe_smpl"
+}    
+joma_simplOM = {
+        "neck" : "neck_smpl",
+        "nose" : "nosecoco",
+        "pelv" : "pelv_smpl",
+        "htop" : "htop_mpi_inf_3dhp",
+        "lsho" : "lsho_smpl",
+        "lelb" : "lelb_smpl",
+        "lwri" : "lwri_smpl",
+        "lhip" : "lhip_smpl",
+        "lkne" : "lkne_smpl",
+        "lank" : "lank_smpl",
+        "lhan" : "lhan_smpl",
+        "lfoo" : "lank_smpl",
+        "ltoe" : "ltoe_smpl",
+        "rsho" : "rsho_smpl",
+        "relb" : "relb_smpl",
+        "rwri" : "rwri_smpl",
+        "rhip" : "rhip_smpl",
+        "rkne" : "rkne_smpl",
+        "rank" : "rank_smpl",
+        "leye" : "leye_coco",
+        "lear" : "learcoco",
+        "reye" : "reyecoco",
+        "rear" : "rearcoco",
         "rhan" : "rhan_smpl",
         "rfoo" : "rank_smpl",
         "rtoe" : "rtoe_smpl"
@@ -204,6 +148,7 @@ def listMDE():
     
 joma_list ={
     "smpl+head_30":joma_simpl,
+    "smpl+head_30OM":joma_simplOM,
     "":joma_picked,
     }
     
@@ -655,7 +600,8 @@ class LinkArmature(bpy.types.Operator):
         arm = bpy.data.objects.get(nameA)
         print(nameA,' is:',arm)
         pre = obj.name
-        _clear_ArmatureConstraints(arm)
+        if(arm is not None):
+            _clear_ArmatureConstraints(arm)
 
         # see if 'rwri' element of jome is there
         '''
@@ -823,6 +769,10 @@ class LinkArmature(bpy.types.Operator):
                 cname = pre+_lMDE['kHeadRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
+                cname = pre+'_'+joma['htop']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                target = bpy.data.objects.get(IDtarget)
+                self.cocoik(bone,cname,IDtarget,1,nameP)
 
 
             '''
@@ -867,10 +817,8 @@ class LinkArmPanel(bpy.types.Panel):
             row = layout.row()
         else:
             try:
-                a=obj["~armature"]
-                if a is not None:
-                    row = layout.row()
-                    row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                row = layout.row()
+                row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
             except: 
                 pass
             row = layout.row()
