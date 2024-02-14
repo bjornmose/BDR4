@@ -16,18 +16,19 @@ blend_dir = os.path.dirname(bpy.data.filepath)
 if blend_dir not in sys.path:
    sys.path.append(blend_dir)
 
-import ImportMetrabsjsonB27_B3_3
+import ImportMetrabsjsonB27_B3Test2D
 import ArmatureBasic
 import CloneMotionPanel
-import LinkArmSimpl
+import LinkArmV004work
 
 '''
 the cache may hold older copies
 HINT run this script manually to find errors on you new edit
 '''
 import importlib
-importlib.reload(ImportMetrabsjsonB27_B3_3)
+importlib.reload(ImportMetrabsjsonB27_B3Test2D)
 importlib.reload(ArmatureBasic)
 importlib.reload(CloneMotionPanel)
-importlib.reload(LinkArmSimpl)
+importlib.reload(LinkArmV004work)
+#ImportMetrabsjsonB27_B3Test2D.main() 
 
