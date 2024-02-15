@@ -158,24 +158,7 @@ joma_list ={
     
     
     
-    
 '''    
-joints_h36m_17 =['pelv' 'rhip' 'rkne' 'rank' 'lhip' 'lkne' 'lank' 'spin' 'neck' 'head'
- 'htop' 'lsho' 'lelb' 'lwri' 'rsho' 'relb' 'rwri']
- 
-joints_h36m_25 =
- ['rhip' 'rkne' 'rank' 'rfoo' 'rtoe' 'lhip' 'lkne' 'lank' 'lfoo' 'ltoe'
- 'spin' 'neck' 'head' 'htop' 'lsho' 'lelb' 'lwri' 'lthu' 'lfin' 'rsho'
- 'relb' 'rwri' 'rthu' 'rfin']
-
-joints_mpi_inf_3dhp_28 = ['thor' 'spi4' 'spi2' 'spin' 'pelv' 'neck' 'head' 'htop' 'lcla' 'lsho'
- 'lelb' 'lwri' 'lhan' 'rcla' 'rsho' 'relb' 'rwri' 'rhan' 'lhip' 'lkne'
- 'lank' 'lfoo' 'ltoe' 'rhip' 'rkne' 'rank' 'rfoo' 'rtoe']
- 
-joints_mpi_inf_3dhp_17 = ['htop' 'neck' 'rsho' 'relb' 'rwri' 'lsho' 'lelb' 'lwri' 'rhip' 'rkne'
- 'rank' 'lhip' 'lkne' 'lank' 'pelv' 'spin' 'head']    
-'''
-
 def createEmpty(OName,draw_size,draw_type):
     #print('Create {:}'.format(OName))
     Cobj = bpy.data.objects.new( OName, None )
@@ -202,31 +185,7 @@ def createEmpty(OName,draw_size,draw_type):
         Cobj.show_name=1
 
     return Cobj   
-
-def deleteObject35(name):
-    try:
-        objs = [bpy.context.scene.objects[name]]
-        with bpy.context.temp_override(selected_objects=objs):
-            bpy.ops.object.delete()
-        return('FINISHED')
-
-    except:
-        print('NOT Deleted',name)
-        return('FAILED')
-    
-    
-def deleteObject(name):
-    obj = bpy.data.objects.get(name)
-    if (obj is not None):
-        # Deselect all
-        bpy.ops.object.select_all(action='DESELECT')
-        # Select the object
-        bpy.data.objects[name].select = True    # Blender 2.7x        
-        # Delete the object
-        bpy.ops.object.delete() 
-        print('deleted',name)
-
-
+'''
 
 def objcoloc(obj,cname,IDtarget,influence):
     crc = obj.constraints.get(cname)
@@ -285,8 +244,6 @@ def objcoTrackTo(obj,cname,IDtarget,track_axis,up_axis,influence):
         crc.influence=influence
     return('FINISHED')
 
-    
-#sleep 2024_02_11
 
 def makehiprot(parent,joma):
     
@@ -301,7 +258,7 @@ def makehiprot(parent,joma):
         objcoloc(obj,'COL_HipRot_lhip',pre+'_'+joma['lhip'],1.0)
         objcoloc(obj,'COL_HipRot_rhip',pre+'_'+joma['rhip'],0.5)
         objcoTrackTo(obj,'COTT_HipRot_lhip',pre+'_'+joma['lhip'],'TRACK_X','UP_Y',1.0)
-        objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',0.5)
+        objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',1.0)
 
 def maketorso(parent,joma):
 
@@ -334,41 +291,13 @@ def maketorso(parent,joma):
         objcoloc(obj,'COCO_lTorso_rsho',pre+'_'+joma['lsho'],1.0)
         objcoloc(obj,'COCO_lTorso_rhip',pre+'_'+joma['lhip'],0.5)
 
-
     ID =pre+_lMDE["kTorso"]
     obj = bpy.data.objects.get(ID)
     if (obj):
-        cname = 'COCO_Torso_trackl'
-        co = obj.constraints.get(cname)
-        if co is None:
-            co = obj.constraints.new('TRACK_TO')
-            ID =pre+_lMDE["kTorsoL"]
-            tar = bpy.data.objects.get(ID)
-            if tar is None:
-                obj.constraints.remove(co)
-                return  
-            co.target = tar
-            co.track_axis="TRACK_X"
-            co.up_axis="UP_Z"
-            co.name = cname
+        objcoTrackTo(obj,'COTT_Torso_trackL',pre+_lMDE["kTorsoL"],'TRACK_X','UP_Z',1.0)
+        objcoTrackTo(obj,'COTT_Torso_trackR',pre+_lMDE["kTorsoR"],'TRACK_NEGATIVE_X','UP_Z',0.5)
+        objcoLockedTrack(obj,'COLT_Torso_neck',pre+'_'+joma['neck'],'TRACK_Z','LOCK_X',1.0)
 
-    ID =pre+_lMDE["kTorso"]
-    obj = bpy.data.objects.get(ID)
-    if (obj):
-        cname = 'COCO_Torso_trackr'
-        co = obj.constraints.get(cname)
-        if co is None:
-            co = obj.constraints.new('TRACK_TO')
-            ID =pre+_lMDE["kTorsoR"]
-            tar = bpy.data.objects.get(ID)
-            if tar is None:
-                obj.constraints.remove(co)
-                return  
-            co.target = tar
-            co.track_axis="TRACK_NEGATIVE_X"
-            co.up_axis="UP_Z"
-            co.name = cname
-            co.influence = 0.5
                  
 def makechestrot(parent,joma):
 
@@ -384,7 +313,7 @@ def makechestrot(parent,joma):
         objcoloc(obj,'COCO_chestrot_lcla',pre+'_'+joma['lcla'],1.0)
         objcoloc(obj,'COCO_chestrot_rcla',pre+'_'+joma['rcla'],0.5)
         objcoTrackTo(obj,'COTT_chestrot_lcla',pre+'_'+joma['lcla'],'TRACK_X','UP_Y',1.0)
-        objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',0.5)
+        objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',1.0)
                  
 def makeheadrot(parent,joma):
 
@@ -399,20 +328,9 @@ def makeheadrot(parent,joma):
     if (obj):
         objcoloc(obj,'COCO_HeadRot_lear',pre+'_'+joma['lear'],1.0)
         objcoloc(obj,'COCO_HeadRot_rear',pre+'_'+joma['rear'],0.5)
-
-        cname = 'COCO_HeadTrack'
-        co = obj.constraints.get(cname)
-        if co is None:
-            co = obj.constraints.new('TRACK_TO')
-            ID =pre+'_'+joma['nose']
-            tar = bpy.data.objects.get(ID)
-            if tar is None:
-                obj.constraints.remove(co)
-                return  
-            co.target = tar
-            co.track_axis="TRACK_Z"
-            co.up_axis="UP_Y"
-            co.name = cname
+        objcoTrackTo(obj,'COTT_HeadRot_nose',pre+'_'+joma['nose'],'TRACK_Z','UP_Y',1.0)
+        #objcoLockedTrack(obj,'COLT_HeadRot_htop',pre+'_'+joma['htop'],'TRACK_Y','LOCK_Z',1.0)
+        objcoLockedTrack(obj,'COLT_HeadRot_lear',pre+'_'+joma['lear'],'TRACK_X','LOCK_Z',1.0)
 
 def makefeetrot(parent,joma):
 
@@ -425,24 +343,10 @@ def makefeetrot(parent,joma):
     if (not obj):
         obj =createEmpty(ID,0.5,'ARROWS')
         obj.parent=parent
-    if (obj):
-        
+    if (obj):        
         objcoloc(obj,'COCO_FeetRot_lfoot',pre+'_'+joma['lfoo'],1.0)
         objcoloc(obj,'COCO_FeetRot_rfoot',pre+'_'+joma['rfoo'],0.5)
-
-        cname = 'COCO_FeetTrack'
-        co = obj.constraints.get(cname)
-        if co is None:
-            co = obj.constraints.new('TRACK_TO')
-            ID =pre+'_'+joma['lfoo']
-            tar = bpy.data.objects.get(ID)
-            if tar is None:
-                obj.constraints.remove(co)
-                return  
-            co.target = tar
-            co.track_axis="TRACK_Z"
-            co.up_axis="UP_Y"
-            co.name = cname
+        objcoTrackTo(obj,'COTT_FeetRot_lfoo',pre+'_'+joma['lfoo'],'TRACK_Z','UP_Y',1.0)
 
 def _clear_ArmatureConstraints(arm):
     print('_clear_ArmatureConstraints')
@@ -503,11 +407,12 @@ class UnLinkArmature(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         _Tar_clear_ArmatureConstraints(arm,pre)
-        '''
-        for mde in _lMDE:
-            print(mde,_lMDE[mde])
+        print('CleanUp:')
+        if(False):
+         for mde in _lMDE:
             deleteObject(pre+_lMDE[mde])
-        '''
+        else:
+         print('keep _lMDE for inspection')
 
         return {'FINISHED'}
 
@@ -785,26 +690,10 @@ class LinkArmature(bpy.types.Operator):
                 cname = pre+_lMDE['kHeadRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
-                cname = pre+'_'+joma['htop']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
-
-
-            '''
-
-            bone = self.findbone(arm,"chest")
-            if bone is not None:
-                IDtarget ='{:}{:}'.format(nameP,"_ChestRot")
-                target = bpy.data.objects.get(IDtarget)
-                if target is not None:
-                    cname = '_ChestRot2'
-                    crc = bone.constraints.get(nameP+cname)
-                    if crc is None:
-                        crc = bone.constraints.new('COPY_ROTATION')
-                        crc.target = target
-                        crc.name = nameP+cname
-            '''
+                #cname = pre+'_'+joma['htop']
+                #IDtarget ='{:}{:}'.format(nameP,cname)
+                #target = bpy.data.objects.get(IDtarget)
+                #self.cocoik(bone,cname,IDtarget,1,nameP)
         print('LinkArmature.execute done')
         return {'FINISHED'}
 
