@@ -518,12 +518,17 @@ def makejoints(parent,joints,pre):
             obj = createEmpty(objname,0.1,'SPHERE')
             obj.parent = parent
     
-def readMetrabsJoints(name):
+def readMetrabsJoints(name,pat):
     try: 
         with open(name) as json_file:
             data = json.load(json_file)
             joints = data['joints']
-            return(joints)
+            res =[]
+            for jo in joints:
+              print(pat,jo)
+              if pat in jo:
+              	res.append(jo)  
+            return(res)
     except:
         print('except',name)
         return (None)
@@ -919,7 +924,29 @@ class import_metrabs(bpy.types.Operator):
         print(file,start_frame,end_frame,incr)
         # read the joints from data 
         Name='{0:}{1:04d}.json'.format(file,start_frame)
-        joints = readMetrabsJoints(Name)
+        #When we have all here set a filter with label _XXXX to pick up only one skeleton/joint model 
+        pat= ''
+        #pat= '_smpl'
+        #pat= '_coco'
+        #pat= '__h36m'
+        #pat= '_gpa'
+        #pat= '_aspset'
+        #pat= '_smplx'
+        #pat= '_3doh'
+        #pat= '_3dpeople'
+        #pat= '_bmlmovi'
+        #pat= '_mads'
+        #pat= '_umpm'
+        #pat= '_bmhad'
+        #pat= '_totcap'
+        #pat= '_jta'
+        #pat= '_ikea'
+        #pat= '_human4d'
+        #pat= '_ghum'
+        #pat= '_kinectv2'
+        #pat= ''
+        
+        joints = readMetrabsJoints(Name,pat)
         print('joints from data')
         print(joints)
 
