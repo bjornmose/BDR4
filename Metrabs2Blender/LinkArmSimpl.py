@@ -4,6 +4,23 @@ from math import sin, cos, radians
 import mathutils
 import bmesh
 import numpy as np
+import os
+import sys
+
+
+
+dir = os.path.dirname(bpy.data.filepath)
+if not dir in sys.path:
+    sys.path.append(dir )
+    print(sys.path)
+
+import BVT
+
+# this next part forces a reload in case you edit the source after you first start the blender session
+import importlib
+importlib.reload(BVT)
+
+from BVT import *
 
 '''
 #look up info
@@ -156,36 +173,7 @@ joma_list ={
     "":joma_picked,
     }
     
-    
-    
-'''    
-def createEmpty(OName,draw_size,draw_type):
-    #print('Create {:}'.format(OName))
-    Cobj = bpy.data.objects.new( OName, None )
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    #print(ver)
-    if (ver < 80 and ver0 < 3):
-        bpy.context.scene.objects.link( Cobj )
-        Cobj.empty_draw_size = draw_size
-        Cobj.empty_draw_type = draw_type
-        Cobj.show_name=1
-    
-    if (ver > 79 and ver0 < 3):
-        bpy.context.scene.collection.objects.link( Cobj )
-        Cobj.empty_display_size = draw_size
-        Cobj.empty_display_type = draw_type
-        Cobj.show_name=1
 
-    if (ver < 99 and ver0 > 2):
-        view_layer = bpy.context.view_layer
-        view_layer.active_layer_collection.collection.objects.link( Cobj )
-        Cobj.empty_display_size = draw_size
-        Cobj.empty_display_type = draw_type
-        Cobj.show_name=1
-
-    return Cobj   
-'''
 
 def objcoloc(obj,cname,IDtarget,influence):
     crc = obj.constraints.get(cname)
