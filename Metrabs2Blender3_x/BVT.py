@@ -32,5 +32,47 @@ def createEmpty(OName,draw_size,draw_type):
 
     return Cobj   
 
+def deleteObject35(name):
+    try:
+        objs = [bpy.context.scene.objects[name]]
+        with bpy.context.temp_override(selected_objects=objs):
+            bpy.ops.object.delete()
+        return('FINISHED')
+
+    except:
+        print('NOT Deleted',name)
+        return('FAILED')
+    
+    
+def deleteObject(name):
+    obj = bpy.data.objects.get(name)
+    ver = bpy.app.version[1]
+    ver0 = bpy.app.version[0]
+    #print(ver)
+    if (ver < 80 and ver0 < 3):
+     if (obj is not None):
+        # Deselect all
+        bpy.ops.object.select_all(action='DESELECT')
+        # Select the object
+        bpy.data.objects[name].select = True    # Blender 2.7x        
+        # Delete the object
+        bpy.ops.object.delete() 
+        print('deleted',name)
+        return('FINISHED')
+        
+    if (ver < 99 and ver0 > 2):
+     try:
+        objs = [bpy.context.scene.objects[name]]
+        with bpy.context.temp_override(selected_objects=objs):
+            bpy.ops.object.delete()
+        print('deleted',name)
+        return('FINISHED')
+     except:
+        print('NOT Deleted',name)
+        return('FAILED')
+
+    
+    
+
 if __name__ == "__main__":
     createEmpty('CreateEmpty',0.5,'ARROWS')
