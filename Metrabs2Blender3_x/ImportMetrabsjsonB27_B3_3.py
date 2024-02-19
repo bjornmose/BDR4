@@ -870,34 +870,51 @@ class unlink_joints_action(bpy.types.Operator):
 
 class _ETA():
     def __init__(self,items):
-      self.starttick =time.monotonic_ns()
+      try:
+        self.starttick =time.monotonic_ns()
+      except:
+        self.starttick =time.monotonic()*1000000000.      
+      self.curtick = self.starttick 
+      self.prevtick = self.curtick  
       self.items =items
       self.itemsdone =0
-      self.tpi=0.
+      self.tpifs=0.
+      self.tpifloating=0.
       self.slope=0.01
+      self.timeleftraw=0.
+      
     
     #@classmethod
-    def guestpi(self,itdone):
-     ticknow = time.monotonic_ns()
-     self.tpi = (ticknow - self.starttick) / itdone
-     return(self.tpi/1000000) 
+    def ticknow(self,itdone,plen):
+     tpiold = self.tpifs
+     self.prevtick = self.curtick
+     self.itemsdone = itdone 
+     try:
+       ticknow = time.monotonic_ns()
+     except:
+       ticknow = time.monotonic()*1000000000.
+     self.curtick = ticknow  
+     self.tpifs = (ticknow - self.starttick) / itdone
+     self.tpifloating=((self.curtick-self.prevtick)+plen*self.tpifloating) /(plen+1)
+     self.slope = ((self.tpifs - tpiold) + plen*self.slope) /(plen+1)
+     self.timeleftfloating = self.tpifloating * (self.items - self.itemsdone)
      
-    def gettpi(self):
-      return(self.tpi/1000000)
+     
+    def gettpifs(self):
+      return(self.tpifs/1000000)
 
     def gettotal(self):
-      ticknow = time.monotonic_ns()
-      total = (ticknow - self.starttick)
+      total = (self.curtick - self.starttick)
       return(total/1000000000)
 
-    def guestleft(self,itdone,plen):
-     ticknow = time.monotonic_ns()
-     tpiold = self.tpi
-     self.tpi = (ticknow - self.starttick) / itdone
-     self.slope = ((self.tpi - tpiold) + plen*self.slope) /(plen+1)
-     tpi = self.tpi + self.slope * (self.items - itdone)
-     tl = (tpi * (self.items - itdone))/1000000000
-     return(tl) 
+    def timeleftfloating_sec(self):
+      tl = self.timeleftfloating/1000000000
+      return(tl) 
+
+    def guestleft(self):
+      tpi = self.tpifs + self.slope * (self.items - self.itemsdone)
+      tl = (tpi * (self.items - self.itemsdone))/1000000000
+      return(tl) 
 
 
     
@@ -999,14 +1016,18 @@ class import_metrabs(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
-            tpi=ETA.gettpi()
-            #tpi=ETA.guestpi(i-start_frame+1)
-            tl =ETA.guestleft(i-start_frame+1,9)
+            ETA.ticknow(i-start_frame+1,9)
+            tpi=ETA.gettpifs()
+            tl =ETA.guestleft()
             sl =ETA.slope/1000000
+            tpifloating =ETA.tpifloating/1000000
+            tlf =ETA.timeleftfloating_sec()
             box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
-            txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpi,tl) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpi,tl) 
+            txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f} sl{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tl) 
             print(txt, end="\r") 
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
