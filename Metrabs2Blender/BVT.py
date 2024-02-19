@@ -65,11 +65,11 @@ def deleteObject(name):
         objs = [bpy.context.scene.objects[name]]
         with bpy.context.temp_override(selected_objects=objs):
             bpy.ops.object.delete()
+        print('deleted',name)
         return('FINISHED')
      except:
         print('NOT Deleted',name)
         return('FAILED')
-
 
     
     

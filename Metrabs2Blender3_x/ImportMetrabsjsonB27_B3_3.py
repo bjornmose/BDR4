@@ -3,6 +3,7 @@ import json
 import os
 import inspect
 import sys
+import time
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -26,7 +27,6 @@ from bpy.types import Operator
 
 
 
-scale = 100
 
 joints_coco_19 =  [
         "neck",
@@ -519,7 +519,25 @@ def makejoints(parent,joints,pre):
             obj = createEmpty(objname,0.1,'SPHERE')
             obj.parent = parent
     
-def readmetrabs(name,frame,box,jPre):
+def readMetrabsJoints(name,pat):
+    try: 
+        with open(name) as json_file:
+            data = json.load(json_file)
+            joints = data['joints']
+            res =[]
+            for jo in joints:
+              print(pat,jo)
+              if pat in jo:
+              	res.append(jo)  
+            return(res)
+    except:
+        print('except',name)
+        return (None)
+
+
+
+
+def readmetrabs(name,frame,box,jPre,sf):
     d_min = 100000.0
     res_box = box
     pname = 'pose3d' 
@@ -574,9 +592,9 @@ def readmetrabs(name,frame,box,jPre):
         #print(jName)
         obj = bpy.data.objects.get(jName)
         if (obj):
-            lx = joint[1] / scale
-            ly = joint[2] / scale
-            lz = joint[3] / scale
+            lx = joint[1] / sf
+            ly = joint[2] / sf
+            lz = joint[3] / sf
             fcu_x = obj.animation_data.action.fcurves[0]
             fcu_y = obj.animation_data.action.fcurves[1]
             fcu_z = obj.animation_data.action.fcurves[2]
@@ -589,7 +607,7 @@ def readmetrabs(name,frame,box,jPre):
     #print('Joints UnUsed:',100*missmatch/len(p1),'%')
     return res_box
 
-def readmetrabs2D(name,frame,box,jPre,rx,ry):
+def readmetrabs2D(name,frame,box,jPre,rx,ry,sf):
     d_min = 100000.0
     res_box = box
     pname = 'pose2d' 
@@ -646,9 +664,9 @@ def readmetrabs2D(name,frame,box,jPre,rx,ry):
         #print(jName)
         obj = bpy.data.objects.get(jName)
         if (obj):
-            lx = (joint[1]-rx/2) / scale 
-            lz = (-joint[2]+ry/2) / scale
-            #lz = joint[3] / scale
+            lx = (joint[1]-rx/2) / sf 
+            lz = (-joint[2]+ry/2) / sf
+            #lz = joint[3] / sf
             ly = 0
             fcu_x = obj.animation_data.action.fcurves[0]
             fcu_y = obj.animation_data.action.fcurves[1]
@@ -849,6 +867,56 @@ class unlink_joints_action(bpy.types.Operator):
               
         
         return {'FINISHED'}        
+
+class _ETA():
+    def __init__(self,items):
+      try:
+        self.starttick =time.monotonic_ns()
+      except:
+        self.starttick =time.monotonic()*1000000000.      
+      self.curtick = self.starttick 
+      self.prevtick = self.curtick  
+      self.items =items
+      self.itemsdone =0
+      self.tpifs=0.
+      self.tpifloating=0.
+      self.slope=0.01
+      self.timeleftraw=0.
+      
+    
+    #@classmethod
+    def ticknow(self,itdone,plen):
+     tpiold = self.tpifs
+     self.prevtick = self.curtick
+     self.itemsdone = itdone 
+     try:
+       ticknow = time.monotonic_ns()
+     except:
+       ticknow = time.monotonic()*1000000000.
+     self.curtick = ticknow  
+     self.tpifs = (ticknow - self.starttick) / itdone
+     self.tpifloating=((self.curtick-self.prevtick)+plen*self.tpifloating) /(plen+1)
+     self.slope = ((self.tpifs - tpiold) + plen*self.slope) /(plen+1)
+     self.timeleftfloating = self.tpifloating * (self.items - self.itemsdone)
+     
+     
+    def gettpifs(self):
+      return(self.tpifs/1000000)
+
+    def gettotal(self):
+      total = (self.curtick - self.starttick)
+      return(total/1000000000)
+
+    def timeleftfloating_sec(self):
+      tl = self.timeleftfloating/1000000000
+      return(tl) 
+
+    def guestleft(self):
+      tpi = self.tpifs + self.slope * (self.items - self.itemsdone)
+      tl = (tpi * (self.items - self.itemsdone))/1000000000
+      return(tl) 
+
+
     
 def progbar(pv,blen):
   bar = ''
@@ -887,6 +955,7 @@ class import_metrabs(bpy.types.Operator):
     def execute (self,context):
         obj = context.active_object
         print('importMetrabsJson----------------Start' ) 
+        '''
         try:
             res = obj['skeleton']
             joints = skel_list[res]
@@ -896,25 +965,74 @@ class import_metrabs(bpy.types.Operator):
             joints = joints_coco_19
 #           joints = joints_smpl_head_30 
 #            joints = joints_mpi_inf_3dhp_28
-        print(joints)
+        '''
+
         pre = obj.name + '_'
-        makejoints(obj,joints,pre) 
-        makeactions_3d_res = makeactions_3d(joints,pre)
         file = obj['inpath']+obj["infile"] 
         start_frame = obj["start_frame"]
         incr = obj["incr"]
         end_frame = obj["end_frame"] + incr
         print(file,start_frame,end_frame,incr)
+        # read the joints from data 
+        Name='{0:}{1:04d}.json'.format(file,start_frame)
+        #When we have all here set a filter with label _XXXX to pick up only one skeleton/joint model 
+        pat= ''
+        #pat= '_smpl'
+        #pat= '_coco'
+        #pat= '__h36m'
+        #pat= '_gpa'
+        #pat= '_aspset'
+        #pat= '_smplx'
+        #pat= '_3doh'
+        #pat= '_3dpeople'
+        #pat= '_bmlmovi'
+        #pat= '_mads'
+        #pat= '_umpm'
+        #pat= '_bmhad'
+        #pat= '_totcap'
+        #pat= '_jta'
+        #pat= '_ikea'
+        #pat= '_human4d'
+        #pat= '_ghum'
+        #pat= '_kinectv2'
+        #pat= ''
+        
+        joints = readMetrabsJoints(Name,pat)
+        print('joints from data')
+        print(joints)
+
+        makejoints(obj,joints,pre) 
+        makeactions_3d_res = makeactions_3d(joints,pre)
         box = [0.0,0.0]
+        try:
+          sf = obj["scaledidvisor"]
+        except:
+          sf = 100
+          obj["scaledidvisor"] = sf
+          
+        ETA = _ETA(end_frame-start_frame)
+
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
-            box=readmetrabs(Name,i,box,pre)
+            ETA.ticknow(i-start_frame+1,9)
+            tpi=ETA.gettpifs()
+            tl =ETA.guestleft()
+            sl =ETA.slope/1000000
+            tpifloating =ETA.tpifloating/1000000
+            tlf =ETA.timeleftfloating_sec()
+            box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
-            txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50))
+            #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpi,tl) 
+            txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f} sl{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tl) 
             print(txt, end="\r") 
+            #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
+        txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+        print(txt)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
         return {'FINISHED'}        
@@ -947,9 +1065,6 @@ class import_metrabs2D(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        if (clearout == 1) :
-            clear = lambda: os.system('clear')
-            clear()
         print('importMetrabsJson----------------Start' ) 
         try:
             res = obj['skeleton']
@@ -970,13 +1085,18 @@ class import_metrabs2D(bpy.types.Operator):
         end_frame = obj["end_frame"] + incr
         print(file,start_frame,end_frame,incr)
         box = [0.0,0.0]
+        try:
+          sf = obj["scaledidvisor"]
+        except:
+          sf = 100
+          obj["scaledidvisor"] = sf
         rx=bpy.data.scenes[0].render.resolution_x
         ry=bpy.data.scenes[0].render.resolution_y
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             print(Name)
-            box=readmetrabs2D(Name,i,box,pre,rx,ry) 
+            box=readmetrabs2D(Name,i,box,pre,rx,ry,sf) 
             print(box)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
@@ -1199,6 +1319,8 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
             row.prop(obj, '["%s"]' % ("end_frame"),text="end")  
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
+            row = layout.row()
+            row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
             row = layout.row()
             row.operator("object.unlink_joints_action")
             row.operator("object.push_down_joints_action")
