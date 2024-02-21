@@ -3,6 +3,7 @@ import json
 import os
 import inspect
 import sys
+import time
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -866,6 +867,51 @@ class unlink_joints_action(bpy.types.Operator):
               
         
         return {'FINISHED'}        
+
+class _ETA():
+    def __init__(self,items):
+      try:
+        self.starttick =time.monotonic_ns()
+      except:
+        self.starttick =time.monotonic()*1000000000.      
+      self.items =items
+      self.itemsdone =0
+      self.tpi=0.
+      self.slope=0.01
+    
+    #@classmethod
+    def guestpi(self,itdone):
+     try:
+       ticknow = time.monotonic_ns()
+     except:
+       ticknow = time.monotonic()*1000000000.
+     self.tpi = (ticknow - self.starttick) / itdone
+     return(self.tpi/1000000) 
+     
+    def gettpi(self):
+      return(self.tpi/1000000)
+
+    def gettotal(self):
+      try:
+       ticknow = time.monotonic_ns()
+      except:
+       ticknow = time.monotonic()*1000000000.
+      total = (ticknow - self.starttick)
+      return(total/1000000000)
+
+    def guestleft(self,itdone,plen):
+      try:
+       ticknow = time.monotonic_ns()
+      except:
+       ticknow = time.monotonic()*1000000000.
+      tpiold = self.tpi
+      self.tpi = (ticknow - self.starttick) / itdone
+      self.slope = ((self.tpi - tpiold) + plen*self.slope) /(plen+1)
+      tpi = self.tpi + self.slope * (self.items - itdone)
+      tl = (tpi * (self.items - itdone))/1000000000
+      return(tl) 
+
+
     
 def progbar(pv,blen):
   bar = ''
@@ -958,16 +1004,26 @@ class import_metrabs(bpy.types.Operator):
         except:
           sf = 100
           obj["scaledidvisor"] = sf
+          
+        ETA = _ETA(end_frame-start_frame)
 
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
+            tpi=ETA.gettpi()
+            #tpi=ETA.guestpi(i-start_frame+1)
+            tl =ETA.guestleft(i-start_frame+1,9)
+            sl =ETA.slope/1000000
             box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
-            txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50))
+            #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
+            txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpi,tl) 
             print(txt, end="\r") 
+            #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
+        txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+        print(txt)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
         return {'FINISHED'}        
