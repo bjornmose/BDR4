@@ -1040,7 +1040,10 @@ class import_metrabs(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
-            ETA.ticknow(i-start_frame+1,9)
+            etapre = (i - start_frame)/10
+            if etapre > 200 : etapre =200
+            if etapre < 5 : etpre =5
+            ETA.ticknow(i-start_frame+1,etapre)
             tpifs=ETA.gettpifs()
             tpifloating =ETA.tpifloating/1000000
             tlf =ETA.timeleftfloating_sec()
@@ -1061,6 +1064,7 @@ class import_metrabs(bpy.types.Operator):
             #expecting changing rate
             #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfs,tls) 
             #expecting changing rate V2
+            progress = 100.-(tlsf/ttsfl)*100.
             txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfl,tlsf) 
             print(txt, end="\r") 
             #print(txt) 
