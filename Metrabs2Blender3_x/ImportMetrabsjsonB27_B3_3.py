@@ -882,8 +882,9 @@ class _ETA():
       self.tpifloating=0.
       self.slopefs=0.
       self.slopefloating=0.
-      self.timeleftraw=0.
+      self.timelefs=0.
       self.timeelapsed=0
+      self.timeleftfloating=0.
       
     
     #@classmethod
@@ -899,10 +900,13 @@ class _ETA():
      self.curtick = ticknow 
      self.timeelapsed = (ticknow - self.starttick)
      self.tpifs = self.timeelapsed / itdone
-     self.tpifloating=((self.curtick-self.prevtick)+plen*self.tpifloating) /(plen+1)
-     self.slopefs = ((self.tpifs - prevtpifs) + plen*self.slopefs) /(plen+1)
-     self.slopefloating= ((self.tpifloating-prevtpifloating) + plen*self.slopefloating) /(plen+1)
-     self.timeleftfloating = self.tpifloating * (self.items - self.itemsdone)
+     #we need to have previos values
+     if (itdone > 1):
+       self.tpifloating=((self.curtick-self.prevtick)+plen*self.tpifloating) /(plen+1)
+       self.slopefs = ((self.tpifs - prevtpifs) + plen*self.slopefs) /(plen+1)
+       self.slopefloating= ((self.tpifloating-prevtpifloating) + plen*self.slopefloating) /(plen+1)
+       self.timeleftfloating = self.tpifloating * (self.items - self.itemsdone)
+       self.timelefs = self.tpifs * (self.items - self.itemsdone)
      
      
     def gettpifs(self):
@@ -1040,7 +1044,11 @@ class import_metrabs(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
-            ETA.ticknow(i-start_frame+1,9)
+            etapre = (i - start_frame)
+            if etapre > 200 : etapre =200
+            if etapre > i : etapre =i
+            if etapre < 5 : etpre =5
+            ETA.ticknow(i-start_frame+1,etapre)
             tpifs=ETA.gettpifs()
             tpifloating =ETA.tpifloating/1000000
             tlf =ETA.timeleftfloating_sec()
@@ -1057,10 +1065,14 @@ class import_metrabs(bpy.types.Operator):
             #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}:{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tls) 
             #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETA{4: >7.1f}+-{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,abs(tls-tlf)) 
             #expecting constant rate
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tt,tlf) 
+            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >9.1f}ETA{5: >9.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tt,tlf) 
             #expecting changing rate
             #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfs,tls) 
             #expecting changing rate V2
+            try:
+              progress = 100.-(tlsf/ttsfl)*100.
+            except:
+              pass
             txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfl,tlsf) 
             print(txt, end="\r") 
             #print(txt) 
