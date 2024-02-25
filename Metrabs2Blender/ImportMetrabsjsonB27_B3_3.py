@@ -874,41 +874,74 @@ class _ETA():
         self.starttick =time.monotonic_ns()
       except:
         self.starttick =time.monotonic()*1000000000.      
+      self.curtick = self.starttick 
+      self.prevtick = self.curtick  
       self.items =items
       self.itemsdone =0
-      self.tpi=0.
-      self.slope=0.01
+      self.tpifs=0.
+      self.tpifloating=0.
+      self.slopefs=0.
+      self.slopefloating=0.
+      self.timelefs=0.
+      self.timeelapsed=0
+      self.timeleftfloating=0.
+      
     
     #@classmethod
-    def guestpi(self,itdone):
+    def ticknow(self,itdone,plen):
+     prevtpifs = self.tpifs
+     prevtpifloating = self.tpifloating
+     self.prevtick = self.curtick
+     self.itemsdone = itdone 
      try:
        ticknow = time.monotonic_ns()
      except:
        ticknow = time.monotonic()*1000000000.
-     self.tpi = (ticknow - self.starttick) / itdone
-     return(self.tpi/1000000) 
+     self.curtick = ticknow 
+     self.timeelapsed = (ticknow - self.starttick)
+     self.tpifs = self.timeelapsed / itdone
+     #we need to have previos values
+     if (itdone > 1):
+       self.tpifloating=((self.curtick-self.prevtick)+plen*self.tpifloating) /(plen+1)
+       self.slopefs = ((self.tpifs - prevtpifs) + plen*self.slopefs) /(plen+1)
+       self.slopefloating= ((self.tpifloating-prevtpifloating) + plen*self.slopefloating) /(plen+1)
+       self.timeleftfloating = self.tpifloating * (self.items - self.itemsdone)
+       self.timelefs = self.tpifs * (self.items - self.itemsdone)
      
-    def gettpi(self):
-      return(self.tpi/1000000)
+     
+    def gettpifs(self):
+      return(self.tpifs/1000000)
 
     def gettotal(self):
-      try:
-       ticknow = time.monotonic_ns()
-      except:
-       ticknow = time.monotonic()*1000000000.
-      total = (ticknow - self.starttick)
+      total = (self.curtick - self.starttick)
       return(total/1000000000)
 
-    def guestleft(self,itdone,plen):
-      try:
-       ticknow = time.monotonic_ns()
-      except:
-       ticknow = time.monotonic()*1000000000.
-      tpiold = self.tpi
-      self.tpi = (ticknow - self.starttick) / itdone
-      self.slope = ((self.tpi - tpiold) + plen*self.slope) /(plen+1)
-      tpi = self.tpi + self.slope * (self.items - itdone)
-      tl = (tpi * (self.items - itdone))/1000000000
+    def timeleftfloating_sec(self):
+      tl = self.timeleftfloating/1000000000
+      return(tl) 
+      
+    def guesttotal(self):
+      tt = (self.timeelapsed + self.timeleftfloating)/1000000000 
+      return(tt)
+
+    def guesttotalslopefs(self):
+      tpi = self.tpifs + self.slopefs * (self.items - self.itemsdone)
+      tt = (self.timeelapsed + tpi * (self.items - self.itemsdone))/1000000000
+      return(tt)
+
+    def guesttotalslopefloating(self):
+      tpi = self.tpifloating+ self.slopefloating * (self.items - self.itemsdone)
+      tt = (self.timeelapsed + tpi * (self.items - self.itemsdone))/1000000000
+      return(tt)
+
+    def guestleft(self):
+      tpi = self.tpifs + self.slopefs * (self.items - self.itemsdone)
+      tl = (tpi * (self.items - self.itemsdone))/1000000000
+      return(tl) 
+
+    def guestleftfloating(self):
+      tpi = self.tpifloating+ self.slopefloating * (self.items - self.itemsdone)
+      tl = (tpi * (self.items - self.itemsdone))/1000000000
       return(tl) 
 
 
@@ -1011,14 +1044,36 @@ class import_metrabs(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             #print(Name)
-            tpi=ETA.gettpi()
-            #tpi=ETA.guestpi(i-start_frame+1)
-            tl =ETA.guestleft(i-start_frame+1,9)
-            sl =ETA.slope/1000000
+            etapre = (i - start_frame)
+            if etapre > 200 : etapre =200
+            if etapre > i : etapre =i
+            if etapre < 5 : etpre =5
+            ETA.ticknow(i-start_frame+1,etapre)
+            tpifs=ETA.gettpifs()
+            tpifloating =ETA.tpifloating/1000000
+            tlf =ETA.timeleftfloating_sec()
+            tt  =ETA.guesttotal()
+            ttsfs =ETA.guesttotalslopefs()
+            ttsfl =ETA.guesttotalslopefloating()
+            tls =ETA.guestleft()
+            tlsf =ETA.guestleftfloating()
             box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
-            txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpi,tl) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf) 
+            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}:{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tls) 
+            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETA{4: >7.1f}+-{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,abs(tls-tlf)) 
+            #expecting constant rate
+            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >9.1f}ETA{5: >9.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tt,tlf) 
+            #expecting changing rate
+            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfs,tls) 
+            #expecting changing rate V2
+            try:
+              progress = 100.-(tlsf/ttsfl)*100.
+            except:
+              pass
+            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfl,tlsf) 
             print(txt, end="\r") 
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))

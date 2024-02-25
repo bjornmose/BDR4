@@ -7,7 +7,7 @@ import numpy as np
 import os
 import sys
 
-
+#today 2024/02/17
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -22,6 +22,13 @@ importlib.reload(BVT)
 
 from BVT import *
 
+class _Carmlinkoptions:
+   linktoes = True
+   linkhand = True
+   #rigversions = [armlinksto2_7,armlinksto3_5]
+   rigversion = 27
+   
+armlinkoptions = _Carmlinkoptions
 '''
 #look up info
 ''' 
@@ -142,9 +149,10 @@ armlinksto2_7= {
     "KneeTargetIK_L" :"knee_target.ik.L",
     "Head":"headproxy"
     }
-
-armlinksto = armlinksto2_7
-
+if (armlinkoptions.rigversion == 27):
+  armlinksto = armlinksto2_7
+else:
+  armlinksto = armlinksto3_5
 #Library Metrabs Derived Empties 
 _lMDE = {
     "kHipRot":"ZD_HipRot",
@@ -246,7 +254,10 @@ def makehiprot(parent,joma):
         objcoloc(obj,'COL_HipRot_lhip',pre+'_'+joma['lhip'],1.0)
         objcoloc(obj,'COL_HipRot_rhip',pre+'_'+joma['rhip'],0.5)
         objcoTrackTo(obj,'COTT_HipRot_lhip',pre+'_'+joma['lhip'],'TRACK_X','UP_Y',1.0)
-        objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',1.0)
+        if (armlinkoptions.rigversion == 27):
+          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',1.0)
+        else:
+          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Z','LOCK_X',1.0)
 
 def maketorso(parent,joma):
 
@@ -301,7 +312,10 @@ def makechestrot(parent,joma):
         objcoloc(obj,'COCO_chestrot_lcla',pre+'_'+joma['lcla'],1.0)
         objcoloc(obj,'COCO_chestrot_rcla',pre+'_'+joma['rcla'],0.5)
         objcoTrackTo(obj,'COTT_chestrot_lcla',pre+'_'+joma['lcla'],'TRACK_X','UP_Y',1.0)
-        objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+        if (armlinkoptions.rigversion == 27):
+          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+        else:
+          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Z','LOCK_X',1.0)
                  
 def makeheadrot(parent,joma):
 
@@ -464,6 +478,30 @@ class LinkArmature(bpy.types.Operator):
             print(bone.name,IDtarget, 'rot_update')
             return('FINISHED')
 
+    def cocolockedtrack(self,bone,cname,IDtarget,pxname,track_axis,lock_axis):
+        crc = bone.constraints.get('LT_'+pxname+cname)
+        if crc is None:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                return('FAILED')
+            crc = bone.constraints.new('LOCKED_TRACK')
+            crc.target = target
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            crc.name = 'LT_'+pxname+cname
+        else:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                bone.constraints.remove(crc)
+                return('FAILED')
+            crc.target = target
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            print(bone.name,IDtarget, 'LOCKED_TRACK_update')
+            return('FINISHED')
+
 
     def cocoik(self,bone,cname,IDtarget,len,pxname):
         crc = bone.constraints.get('I_'+pxname+cname)
@@ -509,6 +547,7 @@ class LinkArmature(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         if(arm is not None):
+            arm['bakestep']=1
             _clear_ArmatureConstraints(arm)
 
         # see if 'rwri' element of jome is there
@@ -545,9 +584,13 @@ class LinkArmature(bpy.types.Operator):
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+'_'+joma['rhan']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
+                if (armlinkoptions.linkhand):
+                  cname = pre+'_'+joma['rhan']
+                  IDtarget ='{:}{:}'.format(nameP,cname)
+                  self.cocoik(bone,cname,IDtarget,1,nameP)
+                  #if (armlinkoptions.rigversion == 27):
+                    #self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X') 
+                  
 
                     
             bone = self.findbone(arm,armlinksto["HandIK_L"])
@@ -555,27 +598,35 @@ class LinkArmature(bpy.types.Operator):
                 cname = pre+'_'+joma['lwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+'_'+joma['lhan']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
+                if (armlinkoptions.linkhand):
+                  cname = pre+'_'+joma['lhan']
+                  IDtarget ='{:}{:}'.format(nameP,cname)
+                  self.cocoik(bone,cname,IDtarget,1,nameP)
+                  #if (armlinkoptions.rigversion == 27):
+                    #self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
+                  
 
             bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+'_'+joma['ltoe']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
+                if (armlinkoptions.linktoes):
+                  cname = pre+'_'+joma['ltoe']
+                  IDtarget ='{:}{:}'.format(nameP,cname)
+                  if (armlinkoptions.rigversion == 27):
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
 
             bone = self.findbone(arm,armlinksto["FootIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rank']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+'_'+joma['rtoe']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
+                if (armlinkoptions.linktoes):
+                  cname = pre+'_'+joma['rtoe']
+                  IDtarget ='{:}{:}'.format(nameP,cname)
+                  if (armlinkoptions.rigversion == 27):
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
 
             bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
             if bone is not None:
@@ -609,6 +660,9 @@ class LinkArmature(bpy.types.Operator):
                 cname = pre+_lMDE['kHipRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,0.5)
+                cname = pre+'_'+joma['bell']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 cname = pre+_lMDE['kTorso']
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocorot(bone,cname,IDtarget,nameP)
@@ -616,10 +670,27 @@ class LinkArmature(bpy.types.Operator):
 
             bone = self.findbone(arm,"hips")
             if bone is not None:
-                cname =pre+_lMDE['kHipRot']
+                cname =pre+_lMDE['kChestRot']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                cname = pre+_lMDE['kHipRot']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
                 self.cocorot(bone,cname,IDtarget,nameP)
+                cname = pre+'_'+joma['bell']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+
+            bone = self.findbone(arm,"chest")
+            if bone is not None:
+                cname =pre+_lMDE['kChestRot']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocorot(bone,cname,IDtarget,nameP)
+                
+                cname = pre+_lMDE['kHipRot']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
 
                     
             '''
@@ -646,16 +717,9 @@ class LinkArmature(bpy.types.Operator):
                 target = bpy.data.objects.get(IDtarget)
                 self.cocoik(bone,cname,IDtarget,1,nameP)
             
-            bone = self.findbone(arm,"chest")
-            if bone is not None:
-                cname = pre+_lMDE['kChestRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                #self.cocoik(bone,cname,IDtarget,1,nameP)
-
             bone = self.findbone(arm,"root")
             if bone is not None:
+
                 #cname = pre+'_FeetRot'
                 cname = pre+_lMDE['kTorso']
                 IDtarget ='{:}{:}'.format(nameP,cname)
@@ -710,8 +774,10 @@ class LinkArmPanel(bpy.types.Panel):
             row = layout.row()
         else:
             try:
-                row = layout.row()
-                row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                a=obj["~armature"]
+                if a is not None:
+                    row = layout.row()
+                    row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
             except: 
                 pass
             row = layout.row()
