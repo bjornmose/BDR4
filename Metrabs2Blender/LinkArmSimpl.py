@@ -23,12 +23,13 @@ importlib.reload(BVT)
 from BVT import *
 
 class _Carmlinkoptions:
-   linktoes = True
-   linkhand = True
-   #rigversions = [armlinksto2_7,armlinksto3_5]
-   rigversion = 27
+   def __init__(self) -> None:
+       self.linktoes = True
+       self.linkhand = True
+       #rigversions = [armlinksto2_7,armlinksto3_5]
+       self.rigversion = 27
    
-armlinkoptions = _Carmlinkoptions
+armlinkoptions = _Carmlinkoptions()
 '''
 #look up info
 ''' 
