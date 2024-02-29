@@ -326,15 +326,6 @@ skel_list ={
     }
 
 
-def obj_check_intCP(object,CP):
-    i = 0
-    try:
-        cp=obj['CP']
-        i = 1
-    except: 
-        i = 0
-    return i
-
 
 def cocoloc(bone,cname,IDtarget,pxname):
     crc = bone.constraints.get('L_'+pxname+cname)
@@ -400,6 +391,7 @@ def readArmatureRestPos(name,box,jPre,link):
     
     p1 = data[pname]
     if (not p1): return res_box
+    
     C = bpy.context
     D = bpy.data
     aPre = 'Arm_R'
@@ -741,6 +733,14 @@ def completeObjectProperties(obj):
         T=obj["A_link"] 
     except:
         obj["A_link"]   = 1
+    try:
+        T=obj["scaledidvisor"] 
+    except:
+        obj["scaledidvisor"]   = 1
+    try:
+        T=obj["ZBA"] 
+    except:
+        obj["ZBA"]   = 1
     obj["metrabs"] = 1  
       
                 
@@ -801,7 +801,6 @@ class push_down_joints_action(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        #i = obj_check_intCP(object,"metrabs")
         i = 0
         try:
             i=obj["metrabs"]
@@ -840,7 +839,6 @@ class unlink_joints_action(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        #i = obj_check_intCP(object,"metrabs")
         i = 0
         try:
             i=obj["metrabs"]
@@ -1037,12 +1035,17 @@ class import_metrabs(bpy.types.Operator):
         except:
           sf = 100
           obj["scaledidvisor"] = sf
+        try:
+          zba=obj["ZBA"] 
+        except:
+          zba=0
+            
           
         ETA = _ETA(end_frame-start_frame)
 
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
-            bpy.context.scene.frame_set(i)
+            #bpy.context.scene.frame_set(i)
             #print(Name)
             etapre = (i - start_frame)
             if etapre > 200 : etapre =200
@@ -1057,7 +1060,10 @@ class import_metrabs(bpy.types.Operator):
             ttsfl =ETA.guesttotalslopefloating()
             tls =ETA.guestleft()
             tlsf =ETA.guestleftfloating()
-            box=readmetrabs(Name,i,box,pre,sf)
+            if zba > 0:
+              box=readmetrabs(Name,i - start_frame,box,pre,sf)
+            else:
+              box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
             #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
@@ -1187,6 +1193,7 @@ class make_metrabs(bpy.types.Operator):
 def set_importpath(context, filepath, use_some_setting):
     print("Data in ",filepath)
     obj = context.active_object
+    completeObjectProperties(obj)
     obj["inpath"] = os.path.dirname(filepath)+'/'
     try:
         f = open(filepath, 'r', encoding='utf-8')
@@ -1213,9 +1220,6 @@ def set_importpath(context, filepath, use_some_setting):
             print('automacik DONE')
     except:
         print('automacik failed')
-
-
-
     return {'FINISHED'}
 
 
