@@ -736,7 +736,7 @@ def completeObjectProperties(obj):
     try:
         T=obj["scaledidvisor"] 
     except:
-        obj["scaledidvisor"]   = 1
+        obj["scaledidvisor"]   = 100
     try:
         T=obj["ZBA"] 
     except:
