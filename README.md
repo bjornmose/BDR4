@@ -117,8 +117,9 @@ At this point you are free to go where ever you want. Data is JSON and can be im
 
 
 ## 2. Metrabs2Blender Cropping results in Blender 2.79a
-However I decided to proceed with blender.
-Blender files are 2.79 
+Most of the work happens here.
+Wrapper classes are used to match latest Blender Versions.
+
 
 ## 3. Metrabs2Blender3_x Cropping results in Blender 3.x (3.2, 3.5 worked fine for me)
 For some reasons I prefer to use 2.79 for some tasks in my tiny shell .. so this folder will update less frequently on this topic.
