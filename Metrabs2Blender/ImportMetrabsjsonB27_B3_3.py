@@ -350,7 +350,7 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,box,jPre,link):
+def readArmatureRestPos(name,box,jPre,link,scalediv):
     d_min = 100000.0
     res_box = box
     pname = 'pose3d' 
@@ -430,9 +430,9 @@ def readArmatureRestPos(name,box,jPre,link):
         jName = joint[0]
         print(jName)
         bone = bones.new(jName)
-        lx = joint[1] / scale
-        ly = joint[2] / scale
-        lz = joint[3] / scale
+        lx = joint[1] / scalediv
+        ly = joint[2] / scalediv
+        lz = joint[3] / scalediv
         bone.head = (lx,ly,lz)
         bone.tail = (lx,ly,lz+1.0)
         
@@ -447,60 +447,9 @@ def readArmatureRestPos(name,box,jPre,link):
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
         armature_object.name =aPre+jPre+'_linked'
+        armature_object["bakestep"]=1
         armature.name=aPre+jPre+'_Rig_linked'
     return res_box
-
-
-def createArmature(joints,alink,aName):
-    C = bpy.context
-    D = bpy.data
-    #Create armature object
-    armature = D.armatures.new('Arm'+aName+'_Host_Rig')
-    armature_object = D.objects.new('Arm'+aName+'_Host', armature)
-    #Link armature object to our scene
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    if (ver < 99 and ver0 > 2):
-        C.collection.objects.link(armature_object)
-        armature_object.show_name=1 
-        armature_data = D.objects[armature_object.name]
-        C.view_layer.objects.active = armature_data
-        armature_object.select_set(True)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-
-    if (ver > 79 and ver0 < 3):
-        print('Sorry no 2.8x')
-        return None
-
-    
-    if (ver < 80 and ver0 < 3):
-        C.scene.objects.link(armature_object)
-        armature_object.show_name=1
-        C.scene.objects.active = armature_object
-        armature_object.select=True
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-
-    n = 0
-    for name in joints:
-        bone = bones.new(name)
-        bone.head = (n,0,0)
-        bone.tail = (n,0,1)
-        n = n +1
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    if (alink > 0):
-        for name in joints:
-            bone = armature_object.pose.bones.get(name)
-            if bone is not None:
-                cname = 'L_'+name
-                IDtarget = aName+'_'+name
-                cocoloc(bone,cname,IDtarget,aName)
-        armature_object.name ='Arm'+aName+'_linked'
-        armature.name='Arm'+aName+'_Rig_linked'
-    return armature_object 
-
 
 
 def makejoints(parent,joints,pre):
@@ -793,7 +742,9 @@ class read_metrabs_info(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
+'''
+pretty much pointless that way removed from UI 
+'''
 class push_down_joints_action(bpy.types.Operator):
     bl_idname = "object.push_down_joints_action"
     bl_label = "push_down_joints_action"
@@ -832,6 +783,9 @@ class push_down_joints_action(bpy.types.Operator):
         
         return {'FINISHED'}        
     
+'''
+Better replace that with someting like Delete_Actions_of_Children
+'''
 class unlink_joints_action(bpy.types.Operator):
     bl_idname = "object.unlink_joints_action"
     bl_label = "delete_joints_actions"
@@ -861,9 +815,6 @@ class unlink_joints_action(bpy.types.Operator):
             if (obj) :
                 if obj.animation_data is not None:
                     obj.animation_data.action = None
-
-              
-        
         return {'FINISHED'}        
 
 class _ETA():
@@ -1256,41 +1207,6 @@ class findMETRABData(Operator, ImportHelper):
     def execute(self, context):
         return set_importpath(context, self.filepath, self.use_setting)
     
-class op_CreateArmature(bpy.types.Operator):
-    """Tooltip"""
-    bl_idname = "object.create_armature"
-    bl_label = "Create Armature"
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        i = 0
-        try:
-            i=obj["metrabs"]
-        except: 
-            i = 0
-        return (i > 0)
-
-    def execute(self, context):
-        print('op_CreateArmature----------------Start' ) 
-        obj = context.active_object
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-            print('Object defined joints',res)
-        except:
-            print('ERR###NO JOINTS####')
-            return {'FINISHED'}
-            
-        try:
-            link = obj['A_link']
-            print('Object defined joints',res)
-        except:
-            link = 0
-        aName = obj.name
-
-        createArmature(joints,link,aName)
-        print('op_CreateArmature----------------End' ) 
-        return {'FINISHED'}
     
 class op_CreateArmatureRest(bpy.types.Operator):
     """Tooltip"""
@@ -1333,7 +1249,8 @@ class op_CreateArmatureRest(bpy.types.Operator):
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
         path='{0:}{1:04d}.json'.format(file,rFrame)
-        readArmatureRestPos(path,box,aName,link)
+        scalediv = obj["scaledidvisor"]
+        readArmatureRestPos(path,box,aName,link,scalediv)
 
         #createArmature(joints,link,aName)
         print('op_CreateArmatureRest-----------End' ) 
@@ -1373,11 +1290,10 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
             row = layout.row()
             row.operator("object.unlink_joints_action")
-            row.operator("object.push_down_joints_action")
+            #row.operator("object.push_down_joints_action")
             row = layout.row()
             row.operator("object.import_metrabs2d_operator")
             row = layout.row()
-            row.operator("object.create_armature")
             row.operator("object.create_armature_rest")
             row.prop(obj, '["%s"]' % ("A_link"),text="A_Link")  
             row = layout.row()
@@ -1399,9 +1315,8 @@ def register():
     bpy.utils.register_class(import_metrabs2D)
     bpy.utils.register_class(MetrabsPanel)
     bpy.utils.register_class(findMETRABData)
-    bpy.utils.register_class(push_down_joints_action)
+    #bpy.utils.register_class(push_down_joints_action)
     bpy.utils.register_class(unlink_joints_action)
-    bpy.utils.register_class(op_CreateArmature)
     bpy.utils.register_class(op_CreateArmatureRest)
     print('Import Mertabs register DONE')
 
@@ -1413,9 +1328,8 @@ def unregister():
     bpy.utils.unregister_class(import_metrabs2D)
     bpy.utils.unregister_class(MetrabsPanel)
     bpy.utils.unregister_class(findMETRABData)
-    bpy.utils.unregister_class(push_down_joints_action)
+    #bpy.utils.unregister_class(push_down_joints_action)
     bpy.utils.unregister_class(unlink_joints_action)
-    bpy.utils.unregister_class(op_CreateArmature)
     bpy.utils.unregister_class(op_CreateArmatureRest)
     
 def main():
