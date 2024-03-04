@@ -117,8 +117,9 @@ At this point you are free to go where ever you want. Data is JSON and can be im
 
 
 ## 2. Metrabs2Blender Cropping results in Blender 2.79a
-However I decided to proceed with blender.
-Blender files are 2.79 
+Most of the work happens here.
+Wrapper classes are used to match latest Blender Versions.
+
 
 ## 3. Metrabs2Blender3_x Cropping results in Blender 3.x (3.2, 3.5 worked fine for me)
 For some reasons I prefer to use 2.79 for some tasks in my tiny shell .. so this folder will update less frequently on this topic.
@@ -129,16 +130,19 @@ Blender files are 3.5
 
 ### Reading data to a bunch of 'empies'
 On 2023 I decided to take another way:
-ImportMetrabsjsonB27_B3xWork.py should work fine with b2.7x and b3.x most 2.8x will fail. 
+ImportMetrabsjsonB27_B3_3.py should work fine with b2.7x and b3.x most 2.8x will fail. 
 The new version has buttons:
 #### to set the input path 'Find Data'
+hidden features:
+ZBA=1 import starting at frame 0 otherways the frame range given by the jobfile will be used
 #### to read jobinfo.json 'read metrabs job'
+
 #### to create the bunch of empties 'import metrabs data'
-with actions which can be 'pushed down' or deleted .. to give room for splitting things in more than one actions on the frame scale.
-#### to create an armature with bones according the skeleton definiton in the jobinfo file 'Create Armature'
-if A_link is set it will create constraints to the empties
+hidden features:
+all the joints given in the first 'posedataxxxx.json' given wil be created unless a filter inside the py script is given
+
+####
 #### to create an armature with bones according the first posedata.json file given 'Create Armature Rest'
-like the function b4re but bones are created at the position given in the file
 if A_link is set it will create constraints to the empties
 #### baking armature actions
 i do with my tiny clonemotion.py script
