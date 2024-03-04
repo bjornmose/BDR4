@@ -350,7 +350,7 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,box,jPre,link,scalediv):
+def readArmatureRestPos(name,box,jPre,scalediv):
     d_min = 100000.0
     res_box = box
     pname = 'pose3d' 
@@ -394,7 +394,7 @@ def readArmatureRestPos(name,box,jPre,link,scalediv):
     
     C = bpy.context
     D = bpy.data
-    aPre = 'Arm_R'
+    aPre = 'Arm_'
     #Create armature object
     armature = D.armatures.new(aPre+jPre+'_Host_Rig')
     armature_object = D.objects.new(aPre+jPre+'_Host', armature)
@@ -438,7 +438,7 @@ def readArmatureRestPos(name,box,jPre,link,scalediv):
         
             
     bpy.ops.object.mode_set(mode='OBJECT')
-    if (link > 0):
+    if (True):
         for joint in p1:
             jname = joint[0]
             bone = armature_object.pose.bones.get(jname)
@@ -679,10 +679,6 @@ def completeObjectProperties(obj):
     except:
         obj["incr"]   = 1
     try:
-        T=obj["A_link"] 
-    except:
-        obj["A_link"]   = 1
-    try:
         T=obj["scaledidvisor"] 
     except:
         obj["scaledidvisor"]   = 100
@@ -783,12 +779,10 @@ class push_down_joints_action(bpy.types.Operator):
         
         return {'FINISHED'}        
     
-'''
-Better replace that with someting like Delete_Actions_of_Children
-'''
-class unlink_joints_action(bpy.types.Operator):
-    bl_idname = "object.unlink_joints_action"
-    bl_label = "delete_joints_actions"
+
+class delete_childen_actions(bpy.types.Operator):
+    bl_idname = "object.delete_children_actions"
+    bl_label = "delete_children_actions"
 
     @classmethod
     def poll(cls, context):
@@ -802,20 +796,12 @@ class unlink_joints_action(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        pre = obj.name + '_'
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-        except:
-            print('missing joint list')
-            return {'CANCELLED'}
-            
-        for joint in joints:
-            obj = bpy.data.objects.get(pre+joint)
-            if (obj) :
-                if obj.animation_data is not None:
-                    obj.animation_data.action = None
+        for ch in obj.children:
+          if ch.animation_data is not None:
+            ch.animation_data.action = None
         return {'FINISHED'}        
+
+
 
 class _ETA():
     def __init__(self,items):
@@ -1208,10 +1194,10 @@ class findMETRABData(Operator, ImportHelper):
         return set_importpath(context, self.filepath, self.use_setting)
     
     
-class op_CreateArmatureRest(bpy.types.Operator):
+class op_CreateArmature(bpy.types.Operator):
     """Tooltip"""
-    bl_idname = "object.create_armature_rest"
-    bl_label = "Create Armature Rest"
+    bl_idname = "object.create_armature"
+    bl_label = "Create Armature"
     @classmethod
     def poll(cls, context):
         obj = context.active_object
@@ -1223,25 +1209,11 @@ class op_CreateArmatureRest(bpy.types.Operator):
         return (i > 0)
 
     def execute(self, context):
-        print('op_CreateArmatureRest--------Start' ) 
+        print('op_CreateArmature--------Start' ) 
         obj = context.active_object
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-            print('Object defined joints',res)
-        except:
-            print('ERR###NO JOINTS####')
-            return {'FINISHED'}
-            
-        try:
-            link = obj['A_link']
-            print('Link To Empties',res)
-        except:
-            link = 0
-    
+         
         try:
             rFrame = obj['start_frame']
-            print('Link To Empties',res)
         except:
             rFrame = 1
         aName = obj.name
@@ -1249,11 +1221,10 @@ class op_CreateArmatureRest(bpy.types.Operator):
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
         path='{0:}{1:04d}.json'.format(file,rFrame)
+        print(self.bl_idname,path)
         scalediv = obj["scaledidvisor"]
-        readArmatureRestPos(path,box,aName,link,scalediv)
-
-        #createArmature(joints,link,aName)
-        print('op_CreateArmatureRest-----------End' ) 
+        readArmatureRestPos(path,box,aName,scalediv)
+        print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
 
@@ -1289,13 +1260,12 @@ class MetrabsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
             row = layout.row()
-            row.operator("object.unlink_joints_action")
+            #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             row = layout.row()
-            row.operator("object.import_metrabs2d_operator")
+            row.operator(delete_childen_actions.bl_idname)
             row = layout.row()
-            row.operator("object.create_armature_rest")
-            row.prop(obj, '["%s"]' % ("A_link"),text="A_Link")  
+            row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
 
@@ -1316,8 +1286,8 @@ def register():
     bpy.utils.register_class(MetrabsPanel)
     bpy.utils.register_class(findMETRABData)
     #bpy.utils.register_class(push_down_joints_action)
-    bpy.utils.register_class(unlink_joints_action)
-    bpy.utils.register_class(op_CreateArmatureRest)
+    bpy.utils.register_class(delete_childen_actions)
+    bpy.utils.register_class(op_CreateArmature)
     print('Import Mertabs register DONE')
 
 
@@ -1329,8 +1299,8 @@ def unregister():
     bpy.utils.unregister_class(MetrabsPanel)
     bpy.utils.unregister_class(findMETRABData)
     #bpy.utils.unregister_class(push_down_joints_action)
-    bpy.utils.unregister_class(unlink_joints_action)
-    bpy.utils.unregister_class(op_CreateArmatureRest)
+    bpy.utils.register_class(delete_childen_actions)
+    bpy.utils.unregister_class(op_CreateArmature)
     
 def main():
     register()
