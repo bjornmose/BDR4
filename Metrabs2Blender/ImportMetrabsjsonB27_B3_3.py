@@ -391,39 +391,27 @@ def readArmatureRestPos(name,box,jPre,scalediv):
     
     p1 = data[pname]
     if (not p1): return res_box
-    
-    C = bpy.context
-    D = bpy.data
     aPre = 'Arm_'
-    #Create armature object
-    armature = D.armatures.new(aPre+jPre+'_Host_Rig')
-    armature_object = D.objects.new(aPre+jPre+'_Host', armature)
-    #Link armature object to our scene
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    
-    if (ver < 99 and ver0 > 2):
-        C.collection.objects.link(armature_object)
-        armature_object.show_name=1 
-        armature_data = D.objects[armature_object.name]
-        C.view_layer.objects.active = armature_data
-        armature_object.select_set(True)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
+    myarm = create_armature(aPre+jPre,'TestBone')
 
-    if (ver > 79 and ver0 < 3):
-        print('Sorry no 2.8x')
-        return None
-
-    
-    if (ver < 80 and ver0 < 3):
-        C.scene.objects.link(armature_object)
-        armature_object.show_name=1
-        C.scene.objects.active = armature_object
-        armature_object.select=True
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try: #B2.7 style
+        bpy.context.scene.objects.active = myarm
+        myarm.select=True
         bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-        
+        bones = bpy.context.active_object.data.edit_bones
+    except:
+        try: #B3xx style
+          print('B2.7 failed')
+          bpy.context.scene.objects.active = myarm
+          myarm.select_set(True)
+          bpy.ops.object.mode_set(mode='EDIT')
+          bones = bpy.context.active_object.data.edit_bones
+        except:
+            print('ERROR')
+
+   
+
 
     
     for joint in p1:
@@ -441,14 +429,14 @@ def readArmatureRestPos(name,box,jPre,scalediv):
     if (True):
         for joint in p1:
             jname = joint[0]
-            bone = armature_object.pose.bones.get(jname)
+            bone = myarm.pose.bones.get(jname)
             if bone is not None:
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
-        armature_object.name =aPre+jPre+'_linked'
-        armature_object["bakestep"]=1
-        armature.name=aPre+jPre+'_Rig_linked'
+        myarm.name =aPre+jPre+'_linked'
+        myarm["bakestep"]=1
+        myarm.name=aPre+jPre+'_Rig_linked'
     return res_box
 
 
