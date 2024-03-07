@@ -350,9 +350,9 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,box,jPre,scalediv):
+def readArmatureRestPos(name,jPre,scalediv):
     d_min = 100000.0
-    res_box = box
+    res_arm = None
     pname = 'pose3d' 
     boxes = None
     try: 
@@ -360,70 +360,37 @@ def readArmatureRestPos(name,box,jPre,scalediv):
             data = json.load(json_file)
     except:
         print('except',name)
-        return res_box
+        return res_arm
     try:
         gotpose = data[pname]
     except:
         print('no pose')
-        return res_box
-    try:
-        boxes = data['boxes']
-    except:
-        print('no boxes')
-    if (boxes):
-        print('DO BOXES')                
-        l =len(boxes)
-        if l>0:
-          xb = boxes[0][0]
-          yb = boxes[0][1]
-          res_box = [xb,yb]
-          d_min = (xb - box[0])*(xb - box[0]) +(yb - box[1])*(yb - box[1]) 
-        for nb in range(1,l):
-            xn = boxes[nb][0]
-            yn = boxes[nb][1]
-            dn = (xn - box[0])*(xn - box[0]) +(yn - box[1])*(yn - box[1])
-            print('dn',dn,'d_min',d_min)
-            if dn < d_min:
-                res_box = [xn,yn]
-                d_min = dn
-                pname='pose3d{0:d}'.format(nb+1)
-                print(pname)        
+        return res_arm
     
     p1 = data[pname]
-    if (not p1): return res_box
-    
-    C = bpy.context
-    D = bpy.data
+    if (not p1): return res_arm
     aPre = 'Arm_'
-    #Create armature object
-    armature = D.armatures.new(aPre+jPre+'_Host_Rig')
-    armature_object = D.objects.new(aPre+jPre+'_Host', armature)
-    #Link armature object to our scene
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    
-    if (ver < 99 and ver0 > 2):
-        C.collection.objects.link(armature_object)
-        armature_object.show_name=1 
-        armature_data = D.objects[armature_object.name]
-        C.view_layer.objects.active = armature_data
-        armature_object.select_set(True)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
+    res_arm = create_armature(aPre+jPre,'TestBone')
 
-    if (ver > 79 and ver0 < 3):
-        print('Sorry no 2.8x')
-        return None
-
-    
-    if (ver < 80 and ver0 < 3):
-        C.scene.objects.link(armature_object)
-        armature_object.show_name=1
-        C.scene.objects.active = armature_object
-        armature_object.select=True
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try: #B2.7 style
+        bpy.context.scene.objects.active = res_arm
+        res_arm.select=True
         bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-        
+        bones = bpy.context.active_object.data.edit_bones
+    except:
+        try: #B3xx style
+          print('B2.7 failed')
+          bpy.context.scene.objects.active = res_arm
+          res_arm.select_set(True)
+          bpy.ops.object.mode_set(mode='EDIT')
+          bones = bpy.context.active_object.data.edit_bones
+        except:
+            print('ERROR')
+            return res_arm
+
+   
+
 
     
     for joint in p1:
@@ -441,15 +408,14 @@ def readArmatureRestPos(name,box,jPre,scalediv):
     if (True):
         for joint in p1:
             jname = joint[0]
-            bone = armature_object.pose.bones.get(jname)
+            bone = res_arm.pose.bones.get(jname)
             if bone is not None:
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
-        armature_object.name =aPre+jPre+'_linked'
-        armature_object["bakestep"]=1
-        armature.name=aPre+jPre+'_Rig_linked'
-    return res_box
+        res_arm.name =aPre+jPre+'_linked'
+        res_arm["bakestep"]=1
+    return res_arm
 
 
 def makejoints(parent,joints,pre):
@@ -1016,11 +982,19 @@ class import_metrabs(bpy.types.Operator):
               progress = 100.-(tlsf/ttsfl)*100.
             except:
               pass
-            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfl,tlsf) 
+            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,30),tpifloating,ttsfl,tlsf) 
             print(txt, end="\r") 
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+        if zba > 0:
+            bpy.context.scene.frame_start = 0
+            bpy.context.scene.frame_end = end_frame-start_frame
+        else:
+            bpy.context.scene.frame_start = start_frame
+            bpy.context.scene.frame_end = end_frame
+
+
         print(txt)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
@@ -1223,7 +1197,8 @@ class op_CreateArmature(bpy.types.Operator):
         path='{0:}{1:04d}.json'.format(file,rFrame)
         print(self.bl_idname,path)
         scalediv = obj["scaledidvisor"]
-        readArmatureRestPos(path,box,aName,scalediv)
+        arm_obj=readArmatureRestPos(path,aName,scalediv)
+        arm_obj['skeleton'] = obj['skeleton']
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
