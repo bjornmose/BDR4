@@ -1199,6 +1199,8 @@ class op_CreateArmature(bpy.types.Operator):
         scalediv = obj["scaledidvisor"]
         arm_obj=readArmatureRestPos(path,aName,scalediv)
         arm_obj['skeleton'] = obj['skeleton']
+        arm_obj["metrabs"] = 2
+        arm_obj["~armature"] = "*None*"
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
@@ -1211,6 +1213,17 @@ class MetrabsPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return (i in [0,1])
+
 
     def draw(self, context):
         layout = self.layout
