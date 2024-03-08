@@ -439,13 +439,16 @@ class LinkArmature2A(bpy.types.Operator):
 
     def coarmloc(self,bone,cname,target,IDbone,influence):
         crc = bone.constraints.get('L_'+cname)
+        print(bone.name)
         if crc is None:
+            print('new constraint to',target.name)
             if target is None:
                 print('MISSING TARGET:',IDtarget)
                 return('FAILED')
             crc = bone.constraints.new('COPY_LOCATION')
             crc.target = target
-            crc.subtarget = self.findbone(target,IDbone)
+            crc.subtarget = IDbone
+            #crc.subtarget = self.findbone(target,IDbone)
             crc.name = 'L_'+cname
             crc.influence = influence
         else:
@@ -454,7 +457,7 @@ class LinkArmature2A(bpy.types.Operator):
                 bone.constraints.remove(crc)
                 return('FAILED')
             crc.target = target
-            crc.subtarget = self.findbone(target,IDbone)
+            #crc.subtarget = self.findbone(target,IDbone)
             crc.influence = influence
             print(bone.name,IDtarget, 'loc_update')
             return('FINISHED')
@@ -601,19 +604,16 @@ class LinkArmature2A(bpy.types.Operator):
                 makechestrot(obj,joma)
                 maketorso(obj,joma)
                 makeheadrot(obj,joma)
+
+            IDbone =  armlinksto["HandIK_R"]   
+            bone = self.findbone(arm,IDbone)
+            #bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['rwri']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                if (armlinkoptions.linkhand):
-                  #cname = pre+'_'+joma['rhan']
-                  #IDtarget ='{:}{:}'.format(nameP,cname)
-                  #self.cocoik(bone,cname,IDtarget,1,nameP)
-                  cname = pre+'_'+joma['relb']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+                self.coarmloc(bone,cname,obj,joma['rwri'],1.0)
+            print('DebugStop done')
+            return {'FINISHED'}
 
                     
             bone = self.findbone(arm,armlinksto["HandIK_L"])
@@ -622,7 +622,8 @@ class LinkArmature2A(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 if (armlinkoptions.linkhand):
-                  #cname = pre+'_'+joma['lhan']
+                  #cname = pre+'_'+joma['lhan']            target = bpy.data.objects.get(IDtarget)
+
                   #IDtarget ='{:}{:}'.format(nameP,cname)
                   #self.cocoik(bone,cname,IDtarget,1,nameP)
                   cname = pre+'_'+joma['lelb']
@@ -822,7 +823,6 @@ class LinkArm2ArmPanel(bpy.types.Panel):
             row = layout.row()
             row.operator("object.linka2armature_operator")
             row.operator("object.unlinka2armature_operator")
-
 
 """   
         row = layout.row()
