@@ -419,7 +419,38 @@ class UnLinkArmature2A(bpy.types.Operator):
 
         return {'FINISHED'}
 
+def coboneloc(bone,cname,target,IDbone,influence):
+        crc = bone.constraints.get('L_'+cname)
+        if crc is None:
+            crc = bone.constraints.new('COPY_LOCATION')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = 'L_'+cname
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.influence = influence
+            return('FINISHED')
 
+def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
+        lcname = 'LT_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('LOCKED_TRACK')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            crc.influence = influence
+            return('FINISHED')
 
 
 class LinkArmature2A(bpy.types.Operator):
@@ -436,32 +467,6 @@ class LinkArmature2A(bpy.types.Operator):
         except: 
             i = 0
         return i>0
-
-    def coarmloc(self,bone,cname,target,IDbone,influence):
-        crc = bone.constraints.get('L_'+cname)
-        print(bone.name)
-        if crc is None:
-            print('new constraint to',target.name)
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                return('FAILED')
-            crc = bone.constraints.new('COPY_LOCATION')
-            crc.target = target
-            crc.subtarget = IDbone
-            #crc.subtarget = self.findbone(target,IDbone)
-            crc.name = 'L_'+cname
-            crc.influence = influence
-        else:
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                bone.constraints.remove(crc)
-                return('FAILED')
-            crc.target = target
-            #crc.subtarget = self.findbone(target,IDbone)
-            crc.influence = influence
-            print(bone.name,IDtarget, 'loc_update')
-            return('FINISHED')
-
 
     
     def cocoloc(self,bone,cname,IDtarget,pxname,influence):
@@ -596,41 +601,52 @@ class LinkArmature2A(bpy.types.Operator):
         
         if arm is not None:
             
-            
-            n_probe = pre+'_'+joma['rwri']
-            o_probe = bpy.data.objects.get(n_probe)
-            if o_probe is not None:
+            if(False):
+             n_probe = pre+'_'+joma['rwri']
+             o_probe = bpy.data.objects.get(n_probe)
+             if o_probe is not None:
                 makehiprot(obj,joma)
                 makechestrot(obj,joma)
                 maketorso(obj,joma)
                 makeheadrot(obj,joma)
 
-            IDbone =  armlinksto["HandIK_R"]   
-            bone = self.findbone(arm,IDbone)
-            #bone = self.findbone(arm,armlinksto["HandIK_L"])
+            bone = self.findbone(arm,armlinksto["HandIK_R"])
             if bone is not None:
-                cname = pre+'_'+joma['rwri']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.coarmloc(bone,cname,obj,joma['rwri'],1.0)
-            print('DebugStop done')
-            return {'FINISHED'}
+                subtarget = joma['rwri']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                if (armlinkoptions.linkhand):
+                    subtarget = joma['relb']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
 
-                    
             bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
-                cname = pre+'_'+joma['lwri']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                subtarget = joma['lwri']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linkhand):
-                  #cname = pre+'_'+joma['lhan']            target = bpy.data.objects.get(IDtarget)
+                    subtarget = joma['lelb']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
 
-                  #IDtarget ='{:}{:}'.format(nameP,cname)
-                  #self.cocoik(bone,cname,IDtarget,1,nameP)
-                  cname = pre+'_'+joma['lelb']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+            subtarget = joma['relb']   
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
+            cname = pre+'_'+subtarget
+            if bone is not None:
+                coboneloc(bone,cname,obj,subtarget,1.0)
+
+            subtarget = joma['lelb']   
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
+            cname = pre+'_'+subtarget
+            if bone is not None:
+                coboneloc(bone,cname,obj,subtarget,1.0)
+
+            print('DebugStop done')
+            return {'FINISHED'}
+            
 
             bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
