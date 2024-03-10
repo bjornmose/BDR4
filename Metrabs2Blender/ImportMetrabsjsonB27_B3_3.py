@@ -395,13 +395,15 @@ def readArmatureRestPos(name,jPre,scalediv):
     
     for joint in p1:
         jName = joint[0]
-        print(jName)
         bone = bones.new(jName)
         lx = joint[1] / scalediv
         ly = joint[2] / scalediv
         lz = joint[3] / scalediv
         bone.head = (lx,ly,lz)
         bone.tail = (lx,ly,lz+1.0)
+        bone.layers=(True, False , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                     False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+
         
             
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -427,19 +429,20 @@ def makejoints(parent,joints,pre):
             obj.parent = parent
     
 def readMetrabsJoints(name,pat):
+    res =[]
+    print('Filter:',pat)
     try: 
         with open(name) as json_file:
             data = json.load(json_file)
             joints = data['joints']
-            res =[]
             for jo in joints:
-              print(pat,jo)
-              if pat in jo:
-              	res.append(jo)  
-            return(res)
+                #print('Filter',pat,jo)
+                if pat in jo:
+              	   res.append(jo)  
     except:
         print('except',name)
         return (None)
+    return(res)
 
 
 
