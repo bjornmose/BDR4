@@ -545,10 +545,11 @@ def createbones(arm,bnames):
            bone = bones.new(bname)
            bone.head = (lx,0.,0.)
            bone.tail = (lx,0.,1.)
+           bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                        False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
              
     bpy.ops.object.mode_set(mode='OBJECT')
     return (0)
-
 
 
 
