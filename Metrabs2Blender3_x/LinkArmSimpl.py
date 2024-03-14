@@ -27,7 +27,7 @@ class _Carmlinkoptions:
        self.linktoes = True
        self.linkhand = True
        #rigversions = [armlinksto2_7,armlinksto3_5]
-       self.rigversion = 27
+       self.rigversion = 35
    
 armlinkoptions = _Carmlinkoptions()
 '''
@@ -586,11 +586,13 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 if (armlinkoptions.linkhand):
-                  cname = pre+'_'+joma['rhan']
+                  #cname = pre+'_'+joma['rhan']
+                  #IDtarget ='{:}{:}'.format(nameP,cname)
+                  #self.cocoik(bone,cname,IDtarget,1,nameP)
+                  cname = pre+'_'+joma['relb']
                   IDtarget ='{:}{:}'.format(nameP,cname)
-                  self.cocoik(bone,cname,IDtarget,1,nameP)
-                  #if (armlinkoptions.rigversion == 27):
-                    #self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X') 
+                  if (armlinkoptions.rigversion == 27):
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
                   
 
                     
@@ -600,11 +602,13 @@ class LinkArmature(bpy.types.Operator):
                 IDtarget ='{:}{:}'.format(nameP,cname)
                 self.cocoloc(bone,cname,IDtarget,nameP,1.0)
                 if (armlinkoptions.linkhand):
-                  cname = pre+'_'+joma['lhan']
+                  #cname = pre+'_'+joma['lhan']
+                  #IDtarget ='{:}{:}'.format(nameP,cname)
+                  #self.cocoik(bone,cname,IDtarget,1,nameP)
+                  cname = pre+'_'+joma['lelb']
                   IDtarget ='{:}{:}'.format(nameP,cname)
-                  self.cocoik(bone,cname,IDtarget,1,nameP)
-                  #if (armlinkoptions.rigversion == 27):
-                    #self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
+                  if (armlinkoptions.rigversion == 27):
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
                   
 
             bone = self.findbone(arm,armlinksto["FootIK_L"])
@@ -758,6 +762,17 @@ class LinkArmPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
+    
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+
 
     def draw(self, context):
         layout = self.layout
