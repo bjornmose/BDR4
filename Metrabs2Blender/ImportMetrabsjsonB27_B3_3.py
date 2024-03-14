@@ -380,13 +380,13 @@ def readArmatureRestPos(name,jPre,scalediv):
         bones = bpy.context.active_object.data.edit_bones
     except:
         try: #B3xx style
-          print('B2.7 failed')
-          bpy.context.scene.objects.active = res_arm
+          print('B3.xx style')
+          bpy.context.view_layer.objects.active = res_arm
           res_arm.select_set(True)
           bpy.ops.object.mode_set(mode='EDIT')
           bones = bpy.context.active_object.data.edit_bones
-        except:
-            print('ERROR')
+        except Exception as error:
+            print('ERROR',error)
             return res_arm
 
    
@@ -1204,6 +1204,7 @@ class op_CreateArmature(bpy.types.Operator):
         arm_obj['skeleton'] = obj['skeleton']
         arm_obj["metrabs"] = 2
         arm_obj["~armature"] = "*None*"
+        obj["~armature"] = arm_obj.name
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
@@ -1250,13 +1251,13 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
-            row = layout.row()
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
-            row = layout.row()
-            row.operator(delete_childen_actions.bl_idname)
-            row = layout.row()
-            row.operator(op_CreateArmature.bl_idname)
+            if len(obj.children): 
+              row = layout.row()
+              row.operator(delete_childen_actions.bl_idname)
+              row = layout.row()
+              row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
 
