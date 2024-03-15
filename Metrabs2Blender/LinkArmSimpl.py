@@ -768,10 +768,11 @@ class LinkArmPanel(bpy.types.Panel):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            if len(obj.children): 
+              i=obj["metrabs"]
         except: 
             i = 0
-        return i>0
+        return i==1
 
 
     def draw(self, context):

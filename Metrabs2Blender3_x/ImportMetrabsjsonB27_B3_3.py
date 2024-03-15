@@ -326,15 +326,6 @@ skel_list ={
     }
 
 
-def obj_check_intCP(object,CP):
-    i = 0
-    try:
-        cp=obj['CP']
-        i = 1
-    except: 
-        i = 0
-    return i
-
 
 def cocoloc(bone,cname,IDtarget,pxname):
     crc = bone.constraints.get('L_'+pxname+cname)
@@ -359,9 +350,9 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,box,jPre,link):
+def readArmatureRestPos(name,jPre,scalediv):
     d_min = 100000.0
-    res_box = box
+    res_arm = None
     pname = 'pose3d' 
     boxes = None
     try: 
@@ -369,146 +360,64 @@ def readArmatureRestPos(name,box,jPre,link):
             data = json.load(json_file)
     except:
         print('except',name)
-        return res_box
+        return res_arm
     try:
         gotpose = data[pname]
     except:
         print('no pose')
-        return res_box
-    try:
-        boxes = data['boxes']
-    except:
-        print('no boxes')
-    if (boxes):
-        print('DO BOXES')                
-        l =len(boxes)
-        if l>0:
-          xb = boxes[0][0]
-          yb = boxes[0][1]
-          res_box = [xb,yb]
-          d_min = (xb - box[0])*(xb - box[0]) +(yb - box[1])*(yb - box[1]) 
-        for nb in range(1,l):
-            xn = boxes[nb][0]
-            yn = boxes[nb][1]
-            dn = (xn - box[0])*(xn - box[0]) +(yn - box[1])*(yn - box[1])
-            print('dn',dn,'d_min',d_min)
-            if dn < d_min:
-                res_box = [xn,yn]
-                d_min = dn
-                pname='pose3d{0:d}'.format(nb+1)
-                print(pname)        
+        return res_arm
     
     p1 = data[pname]
-    if (not p1): return res_box
-    C = bpy.context
-    D = bpy.data
-    aPre = 'Arm_R'
-    #Create armature object
-    armature = D.armatures.new(aPre+jPre+'_Host_Rig')
-    armature_object = D.objects.new(aPre+jPre+'_Host', armature)
-    #Link armature object to our scene
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    
-    if (ver < 99 and ver0 > 2):
-        C.collection.objects.link(armature_object)
-        armature_object.show_name=1 
-        armature_data = D.objects[armature_object.name]
-        C.view_layer.objects.active = armature_data
-        armature_object.select_set(True)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
+    if (not p1): return res_arm
+    aPre = 'Arm_'
+    res_arm = create_armature(aPre+jPre,'TestBone')
 
-    if (ver > 79 and ver0 < 3):
-        print('Sorry no 2.8x')
-        return None
-
-    
-    if (ver < 80 and ver0 < 3):
-        C.scene.objects.link(armature_object)
-        armature_object.show_name=1
-        C.scene.objects.active = armature_object
-        armature_object.select=True
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try: #B2.7 style
+        bpy.context.scene.objects.active = res_arm
+        res_arm.select=True
         bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-        
+        bones = bpy.context.active_object.data.edit_bones
+    except:
+        try: #B3xx style
+          print('B3.xx style')
+          bpy.context.view_layer.objects.active = res_arm
+          res_arm.select_set(True)
+          bpy.ops.object.mode_set(mode='EDIT')
+          bones = bpy.context.active_object.data.edit_bones
+        except Exception as error:
+            print('ERROR',error)
+            return res_arm
+
+   
+
 
     
     for joint in p1:
         jName = joint[0]
-        print(jName)
         bone = bones.new(jName)
-        lx = joint[1] / scale
-        ly = joint[2] / scale
-        lz = joint[3] / scale
+        lx = joint[1] / scalediv
+        ly = joint[2] / scalediv
+        lz = joint[3] / scalediv
         bone.head = (lx,ly,lz)
         bone.tail = (lx,ly,lz+1.0)
+        bone.layers=(True, False , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                     False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+
         
             
     bpy.ops.object.mode_set(mode='OBJECT')
-    if (link > 0):
+    if (True):
         for joint in p1:
             jname = joint[0]
-            bone = armature_object.pose.bones.get(jname)
+            bone = res_arm.pose.bones.get(jname)
             if bone is not None:
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
-        armature_object.name =aPre+jPre+'_linked'
-        armature.name=aPre+jPre+'_Rig_linked'
-    return res_box
-
-
-def createArmature(joints,alink,aName):
-    C = bpy.context
-    D = bpy.data
-    #Create armature object
-    armature = D.armatures.new('Arm'+aName+'_Host_Rig')
-    armature_object = D.objects.new('Arm'+aName+'_Host', armature)
-    #Link armature object to our scene
-    ver = bpy.app.version[1]
-    ver0 = bpy.app.version[0]
-    if (ver < 99 and ver0 > 2):
-        C.collection.objects.link(armature_object)
-        armature_object.show_name=1 
-        armature_data = D.objects[armature_object.name]
-        C.view_layer.objects.active = armature_data
-        armature_object.select_set(True)
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-
-    if (ver > 79 and ver0 < 3):
-        print('Sorry no 2.8x')
-        return None
-
-    
-    if (ver < 80 and ver0 < 3):
-        C.scene.objects.link(armature_object)
-        armature_object.show_name=1
-        C.scene.objects.active = armature_object
-        armature_object.select=True
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = C.active_object.data.edit_bones
-
-    n = 0
-    for name in joints:
-        bone = bones.new(name)
-        bone.head = (n,0,0)
-        bone.tail = (n,0,1)
-        n = n +1
-    bpy.ops.object.mode_set(mode='OBJECT')
-    
-    if (alink > 0):
-        for name in joints:
-            bone = armature_object.pose.bones.get(name)
-            if bone is not None:
-                cname = 'L_'+name
-                IDtarget = aName+'_'+name
-                cocoloc(bone,cname,IDtarget,aName)
-        armature_object.name ='Arm'+aName+'_linked'
-        armature.name='Arm'+aName+'_Rig_linked'
-    return armature_object 
-
+        res_arm.name =aPre+jPre+'_linked'
+        res_arm["bakestep"]=1
+    return res_arm
 
 
 def makejoints(parent,joints,pre):
@@ -520,19 +429,20 @@ def makejoints(parent,joints,pre):
             obj.parent = parent
     
 def readMetrabsJoints(name,pat):
+    res =[]
+    print('Filter:',pat)
     try: 
         with open(name) as json_file:
             data = json.load(json_file)
             joints = data['joints']
-            res =[]
             for jo in joints:
-              print(pat,jo)
-              if pat in jo:
-              	res.append(jo)  
-            return(res)
+                #print('Filter',pat,jo)
+                if pat in jo:
+              	   res.append(jo)  
     except:
         print('except',name)
         return (None)
+    return(res)
 
 
 
@@ -738,9 +648,13 @@ def completeObjectProperties(obj):
     except:
         obj["incr"]   = 1
     try:
-        T=obj["A_link"] 
+        T=obj["scaledidvisor"] 
     except:
-        obj["A_link"]   = 1
+        obj["scaledidvisor"]   = 100
+    try:
+        T=obj["ZBA"] 
+    except:
+        obj["ZBA"]   = 1
     obj["metrabs"] = 1  
       
                 
@@ -793,7 +707,9 @@ class read_metrabs_info(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
+'''
+pretty much pointless that way removed from UI 
+'''
 class push_down_joints_action(bpy.types.Operator):
     bl_idname = "object.push_down_joints_action"
     bl_label = "push_down_joints_action"
@@ -801,7 +717,6 @@ class push_down_joints_action(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        #i = obj_check_intCP(object,"metrabs")
         i = 0
         try:
             i=obj["metrabs"]
@@ -833,14 +748,14 @@ class push_down_joints_action(bpy.types.Operator):
         
         return {'FINISHED'}        
     
-class unlink_joints_action(bpy.types.Operator):
-    bl_idname = "object.unlink_joints_action"
-    bl_label = "delete_joints_actions"
+
+class delete_childen_actions(bpy.types.Operator):
+    bl_idname = "object.delete_children_actions"
+    bl_label = "delete_children_actions"
 
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        #i = obj_check_intCP(object,"metrabs")
         i = 0
         try:
             i=obj["metrabs"]
@@ -850,23 +765,12 @@ class unlink_joints_action(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        pre = obj.name + '_'
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-        except:
-            print('missing joint list')
-            return {'CANCELLED'}
-            
-        for joint in joints:
-            obj = bpy.data.objects.get(pre+joint)
-            if (obj) :
-                if obj.animation_data is not None:
-                    obj.animation_data.action = None
-
-              
-        
+        for ch in obj.children:
+          if ch.animation_data is not None:
+            ch.animation_data.action = None
         return {'FINISHED'}        
+
+
 
 class _ETA():
     def __init__(self,items):
@@ -1037,12 +941,17 @@ class import_metrabs(bpy.types.Operator):
         except:
           sf = 100
           obj["scaledidvisor"] = sf
+        try:
+          zba=obj["ZBA"] 
+        except:
+          zba=0
+            
           
         ETA = _ETA(end_frame-start_frame)
 
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
-            bpy.context.scene.frame_set(i)
+            #bpy.context.scene.frame_set(i)
             #print(Name)
             etapre = (i - start_frame)
             if etapre > 200 : etapre =200
@@ -1057,7 +966,10 @@ class import_metrabs(bpy.types.Operator):
             ttsfl =ETA.guesttotalslopefloating()
             tls =ETA.guestleft()
             tlsf =ETA.guestleftfloating()
-            box=readmetrabs(Name,i,box,pre,sf)
+            if zba > 0:
+              box=readmetrabs(Name,i - start_frame,box,pre,sf)
+            else:
+              box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
             #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
@@ -1073,11 +985,19 @@ class import_metrabs(bpy.types.Operator):
               progress = 100.-(tlsf/ttsfl)*100.
             except:
               pass
-            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfl,tlsf) 
+            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,30),tpifloating,ttsfl,tlsf) 
             print(txt, end="\r") 
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+        if zba > 0:
+            bpy.context.scene.frame_start = 0
+            bpy.context.scene.frame_end = end_frame-start_frame
+        else:
+            bpy.context.scene.frame_start = start_frame
+            bpy.context.scene.frame_end = end_frame
+
+
         print(txt)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
         print('importMetrabsJson----------------End' )
@@ -1187,6 +1107,7 @@ class make_metrabs(bpy.types.Operator):
 def set_importpath(context, filepath, use_some_setting):
     print("Data in ",filepath)
     obj = context.active_object
+    completeObjectProperties(obj)
     obj["inpath"] = os.path.dirname(filepath)+'/'
     try:
         f = open(filepath, 'r', encoding='utf-8')
@@ -1213,9 +1134,6 @@ def set_importpath(context, filepath, use_some_setting):
             print('automacik DONE')
     except:
         print('automacik failed')
-
-
-
     return {'FINISHED'}
 
 
@@ -1252,6 +1170,7 @@ class findMETRABData(Operator, ImportHelper):
     def execute(self, context):
         return set_importpath(context, self.filepath, self.use_setting)
     
+    
 class op_CreateArmature(bpy.types.Operator):
     """Tooltip"""
     bl_idname = "object.create_armature"
@@ -1267,61 +1186,11 @@ class op_CreateArmature(bpy.types.Operator):
         return (i > 0)
 
     def execute(self, context):
-        print('op_CreateArmature----------------Start' ) 
+        print('op_CreateArmature--------Start' ) 
         obj = context.active_object
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-            print('Object defined joints',res)
-        except:
-            print('ERR###NO JOINTS####')
-            return {'FINISHED'}
-            
-        try:
-            link = obj['A_link']
-            print('Object defined joints',res)
-        except:
-            link = 0
-        aName = obj.name
-
-        createArmature(joints,link,aName)
-        print('op_CreateArmature----------------End' ) 
-        return {'FINISHED'}
-    
-class op_CreateArmatureRest(bpy.types.Operator):
-    """Tooltip"""
-    bl_idname = "object.create_armature_rest"
-    bl_label = "Create Armature Rest"
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        i = 0
-        try:
-            i=obj["metrabs"]
-        except: 
-            i = 0
-        return (i > 0)
-
-    def execute(self, context):
-        print('op_CreateArmatureRest--------Start' ) 
-        obj = context.active_object
-        try:
-            res = obj['skeleton']
-            joints = skel_list[res]
-            print('Object defined joints',res)
-        except:
-            print('ERR###NO JOINTS####')
-            return {'FINISHED'}
-            
-        try:
-            link = obj['A_link']
-            print('Link To Empties',res)
-        except:
-            link = 0
-    
+         
         try:
             rFrame = obj['start_frame']
-            print('Link To Empties',res)
         except:
             rFrame = 1
         aName = obj.name
@@ -1329,10 +1198,14 @@ class op_CreateArmatureRest(bpy.types.Operator):
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
         path='{0:}{1:04d}.json'.format(file,rFrame)
-        readArmatureRestPos(path,box,aName,link)
-
-        #createArmature(joints,link,aName)
-        print('op_CreateArmatureRest-----------End' ) 
+        print(self.bl_idname,path)
+        scalediv = obj["scaledidvisor"]
+        arm_obj=readArmatureRestPos(path,aName,scalediv)
+        arm_obj['skeleton'] = obj['skeleton']
+        arm_obj["metrabs"] = 2
+        arm_obj["~armature"] = "*None*"
+        obj["~armature"] = arm_obj.name
+        print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
 
@@ -1344,6 +1217,17 @@ class MetrabsPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return (i in [0,1])
+
 
     def draw(self, context):
         layout = self.layout
@@ -1367,15 +1251,13 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
-            row = layout.row()
-            row.operator("object.unlink_joints_action")
-            row.operator("object.push_down_joints_action")
-            row = layout.row()
-            row.operator("object.import_metrabs2d_operator")
-            row = layout.row()
-            row.operator("object.create_armature")
-            row.operator("object.create_armature_rest")
-            row.prop(obj, '["%s"]' % ("A_link"),text="A_Link")  
+            #row.operator("object.delete_joints_action")
+            #row.operator("object.push_down_joints_action")
+            if len(obj.children): 
+              row = layout.row()
+              row.operator(delete_childen_actions.bl_idname)
+              row = layout.row()
+              row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")  
 
@@ -1395,10 +1277,9 @@ def register():
     bpy.utils.register_class(import_metrabs2D)
     bpy.utils.register_class(MetrabsPanel)
     bpy.utils.register_class(findMETRABData)
-    bpy.utils.register_class(push_down_joints_action)
-    bpy.utils.register_class(unlink_joints_action)
+    #bpy.utils.register_class(push_down_joints_action)
+    bpy.utils.register_class(delete_childen_actions)
     bpy.utils.register_class(op_CreateArmature)
-    bpy.utils.register_class(op_CreateArmatureRest)
     print('Import Mertabs register DONE')
 
 
@@ -1409,10 +1290,9 @@ def unregister():
     bpy.utils.unregister_class(import_metrabs2D)
     bpy.utils.unregister_class(MetrabsPanel)
     bpy.utils.unregister_class(findMETRABData)
-    bpy.utils.unregister_class(push_down_joints_action)
-    bpy.utils.unregister_class(unlink_joints_action)
+    #bpy.utils.unregister_class(push_down_joints_action)
+    bpy.utils.register_class(delete_childen_actions)
     bpy.utils.unregister_class(op_CreateArmature)
-    bpy.utils.unregister_class(op_CreateArmatureRest)
     
 def main():
     register()
