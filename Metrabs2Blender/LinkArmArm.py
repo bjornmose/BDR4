@@ -26,8 +26,16 @@ class _Carmlinkoptions:
    def __init__(self) -> None:
        self.linktoes = True
        self.linkhand = True
-       #rigversions = [armlinksto2_7,armlinksto3_5]
        self.rigversion = 35
+    
+   def getlinkdict(self):
+       if self.rigversion == 27 :
+           return dictarmlink2_7
+       if self.rigversion == 35 :
+           return dictarmlink3_5
+       return None
+       
+       
    
 armlinkoptions = _Carmlinkoptions()
 '''
@@ -127,7 +135,7 @@ joma_picked = {
 
     }
     
-armlinksto3_5 = {
+dictarmlink3_5 = {
     "HandIK_R":"hand_ik.R",
     "HandIK_L":"hand_ik.L",
     "FootIK_R":"foot_ik.R",
@@ -143,10 +151,9 @@ armlinksto3_5 = {
     "Torso":"torso",
     "Chest":"chest",
     "Hips":"hips"
-
     }
 
-armlinksto2_7= {
+dictarmlink2_7= {
     "HandIK_R":"hand.ik.R",
     "HandIK_L":"hand.ik.L",
     "FootIK_R":"foot.ik.R",
@@ -163,10 +170,7 @@ armlinksto2_7= {
     "Chest":"chest",
     "Hips":"hips"
     }
-if (armlinkoptions.rigversion == 27):
-  armlinksto = armlinksto2_7
-else:
-  armlinksto = armlinksto3_5
+
 #Library Metrabs Derived Empties 
 _lMDE = {
     "kHipRot":"ZD_HipRot",
@@ -690,6 +694,8 @@ class LinkArmature2A(bpy.types.Operator):
         if(arm is not None):
             arm['bakestep']=1
             _clear_ArmatureConstraints(arm)
+            armlinkoptions.rigversion = arm['RV']
+            armlinksto = armlinkoptions.getlinkdict()
 
         # see if 'rwri' element of jome is there
         '''
@@ -1158,6 +1164,14 @@ class LinkArm2ArmPanel(bpy.types.Panel):
                 if a is not None:
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    arm = bpy.data.objects.get(a)
+                    row = layout.row()
+                    try:
+                      arm["RV"]
+                      row.prop(arm, '["%s"]' % ("RV"),text="RigVersion")
+                    except:
+                      row.label('OOPS no rig version')  
+        
             except: 
                 pass
             row = layout.row()
