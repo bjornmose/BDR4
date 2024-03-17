@@ -397,8 +397,6 @@ def _Tar_clear_ArmatureConstraints(arm,pat):
                     print('remove',_na,'from',bone.name)
     print('_Tar_clear_ArmatureConstraints Done')
 
-
-
 class UnLinkArmature2A(bpy.types.Operator):
     """UnLinkArmatureToSimpl"""
     bl_idname = "object.unlinka2armature_operator"
@@ -1121,6 +1119,18 @@ class LinkArmature2A(bpy.types.Operator):
         print('LinkArmature.execute done')
         return {'FINISHED'}
 
+class makeRigVersion(bpy.types.Operator):
+    """UnLinkArmatureToSimpl"""
+    bl_idname = "metrabs.makerigversion"
+    bl_label = "RegisterRigVersion"
+
+    def execute(self,context):
+        obj = context.active_object
+        arm = bpy.data.objects.get(obj["~armature"])
+        arm["RV"] = 27
+        return {'FINISHED'}
+
+
 
 class LinkArm2ArmPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
@@ -1165,18 +1175,18 @@ class LinkArm2ArmPanel(bpy.types.Panel):
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
                     arm = bpy.data.objects.get(a)
-                    row = layout.row()
-                    try:
-                      arm["RV"]
-                      row.prop(arm, '["%s"]' % ("RV"),text="RigVersion")
-                    except:
-                      row.label('OOPS no rig version')  
+                    if arm is not None: 
+                      try:
+                        arm["RV"]
+                        row.prop(arm, '["%s"]' % ("RV"),text="RigVersion")
+                        row = layout.row()
+                        row.operator(LinkArmature2A.bl_idname)
+                        row.operator(UnLinkArmature2A.bl_idname)
+                      except:
+                        row.operator(makeRigVersion.bl_idname)
         
             except: 
                 pass
-            row = layout.row()
-            row.operator("object.linka2armature_operator")
-            row.operator("object.unlinka2armature_operator")
 
 """   
         row = layout.row()
@@ -1190,6 +1200,7 @@ def register():
     bpy.utils.register_class(LinkArmature2A)
     bpy.utils.register_class(UnLinkArmature2A)
     bpy.utils.register_class(LinkArm2ArmPanel)
+    bpy.utils.register_class(makeRigVersion)
     print('register LinkA2ArmVxxx Done')
 
 
@@ -1197,6 +1208,7 @@ def unregister():
     bpy.utils.unregister_class(LinkArmature2A)
     bpy.utils.unregister_class(UnLinkArmature2A)
     bpy.utils.unregister_class(LinkArm2ArmPanel)
+    bpy.utils.unregister_class(makeRigVersion)
     del theGen
 
 #run from run
