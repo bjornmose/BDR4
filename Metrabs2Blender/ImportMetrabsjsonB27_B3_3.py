@@ -770,6 +770,25 @@ class delete_childen_actions(bpy.types.Operator):
             ch.animation_data.action = None
         return {'FINISHED'}        
 
+class delete_childen(bpy.types.Operator):
+    bl_idname = "mtr.delete_children"
+    bl_label = "delete_children"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute (self,context):
+        obj = context.active_object
+        for ch in obj.children:
+          deleteObject(ch.name)
+        return {'FINISHED'}        
 
 
 class _ETA():
@@ -1254,8 +1273,9 @@ class MetrabsPanel(bpy.types.Panel):
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             if len(obj.children): 
-              row = layout.row()
               row.operator(delete_childen_actions.bl_idname)
+              row = layout.row()
+              row.operator(delete_childen.bl_idname)
               row = layout.row()
               row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
@@ -1279,6 +1299,7 @@ def register():
     bpy.utils.register_class(findMETRABData)
     #bpy.utils.register_class(push_down_joints_action)
     bpy.utils.register_class(delete_childen_actions)
+    bpy.utils.register_class(delete_childen)
     bpy.utils.register_class(op_CreateArmature)
     print('Import Mertabs register DONE')
 
@@ -1292,6 +1313,7 @@ def unregister():
     bpy.utils.unregister_class(findMETRABData)
     #bpy.utils.unregister_class(push_down_joints_action)
     bpy.utils.register_class(delete_childen_actions)
+    bpy.utils.register_class(delete_childen)
     bpy.utils.unregister_class(op_CreateArmature)
     
 def main():
