@@ -26,8 +26,16 @@ class _Carmlinkoptions:
    def __init__(self) -> None:
        self.linktoes = True
        self.linkhand = True
-       #rigversions = [armlinksto2_7,armlinksto3_5]
        self.rigversion = 35
+    
+   def getlinkdict(self):
+       if self.rigversion == 27 :
+           return dictarmlink2_7
+       if self.rigversion == 35 :
+           return dictarmlink3_5
+       return None
+       
+       
    
 armlinkoptions = _Carmlinkoptions()
 '''
@@ -127,7 +135,7 @@ joma_picked = {
 
     }
     
-armlinksto3_5 = {
+dictarmlink3_5 = {
     "HandIK_R":"hand_ik.R",
     "HandIK_L":"hand_ik.L",
     "FootIK_R":"foot_ik.R",
@@ -143,10 +151,9 @@ armlinksto3_5 = {
     "Torso":"torso",
     "Chest":"chest",
     "Hips":"hips"
-
     }
 
-armlinksto2_7= {
+dictarmlink2_7= {
     "HandIK_R":"hand.ik.R",
     "HandIK_L":"hand.ik.L",
     "FootIK_R":"foot.ik.R",
@@ -163,10 +170,7 @@ armlinksto2_7= {
     "Chest":"chest",
     "Hips":"hips"
     }
-if (armlinkoptions.rigversion == 27):
-  armlinksto = armlinksto2_7
-else:
-  armlinksto = armlinksto3_5
+
 #Library Metrabs Derived Empties 
 _lMDE = {
     "kHipRot":"ZD_HipRot",
@@ -392,8 +396,6 @@ def _Tar_clear_ArmatureConstraints(arm,pat):
                     bone.constraints.remove(co)
                     print('remove',_na,'from',bone.name)
     print('_Tar_clear_ArmatureConstraints Done')
-
-
 
 class UnLinkArmature2A(bpy.types.Operator):
     """UnLinkArmatureToSimpl"""
@@ -690,6 +692,8 @@ class LinkArmature2A(bpy.types.Operator):
         if(arm is not None):
             arm['bakestep']=1
             _clear_ArmatureConstraints(arm)
+            armlinkoptions.rigversion = arm['RV']
+            armlinksto = armlinkoptions.getlinkdict()
 
         # see if 'rwri' element of jome is there
         '''
@@ -1115,6 +1119,18 @@ class LinkArmature2A(bpy.types.Operator):
         print('LinkArmature.execute done')
         return {'FINISHED'}
 
+class makeRigVersion(bpy.types.Operator):
+    """UnLinkArmatureToSimpl"""
+    bl_idname = "metrabs.makerigversion"
+    bl_label = "RegisterRigVersion"
+
+    def execute(self,context):
+        obj = context.active_object
+        arm = bpy.data.objects.get(obj["~armature"])
+        arm["RV"] = 27
+        return {'FINISHED'}
+
+
 
 class LinkArm2ArmPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
@@ -1158,11 +1174,19 @@ class LinkArm2ArmPanel(bpy.types.Panel):
                 if a is not None:
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    arm = bpy.data.objects.get(a)
+                    if arm is not None: 
+                      try:
+                        arm["RV"]
+                        row.prop(arm, '["%s"]' % ("RV"),text="RigVersion")
+                        row = layout.row()
+                        row.operator(LinkArmature2A.bl_idname)
+                        row.operator(UnLinkArmature2A.bl_idname)
+                      except:
+                        row.operator(makeRigVersion.bl_idname)
+        
             except: 
                 pass
-            row = layout.row()
-            row.operator("object.linka2armature_operator")
-            row.operator("object.unlinka2armature_operator")
 
 """   
         row = layout.row()
@@ -1176,6 +1200,7 @@ def register():
     bpy.utils.register_class(LinkArmature2A)
     bpy.utils.register_class(UnLinkArmature2A)
     bpy.utils.register_class(LinkArm2ArmPanel)
+    bpy.utils.register_class(makeRigVersion)
     print('register LinkA2ArmVxxx Done')
 
 
@@ -1183,6 +1208,7 @@ def unregister():
     bpy.utils.unregister_class(LinkArmature2A)
     bpy.utils.unregister_class(UnLinkArmature2A)
     bpy.utils.unregister_class(LinkArm2ArmPanel)
+    bpy.utils.unregister_class(makeRigVersion)
     del theGen
 
 #run from run

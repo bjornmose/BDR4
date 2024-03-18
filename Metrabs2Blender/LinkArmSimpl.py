@@ -795,11 +795,20 @@ class LinkArmPanel(bpy.types.Panel):
                 if a is not None:
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    arm = bpy.data.objects.get(a)
+                    if arm is not None:
+                      try:
+                        row = layout.row()
+                        row.operator(LinkArmature.bl_idname)
+                        row.operator(UnLinkArmature.bl_idname)
+                      except:
+                        pass
+                    else:
+                      row = layout.row()
+                      row.label("Nix Finden : "+a)
+            
             except: 
                 pass
-            row = layout.row()
-            row.operator("object.linkarmature_operator")
-            row.operator("object.unlinkarmature_operator")
 
 
 """   
