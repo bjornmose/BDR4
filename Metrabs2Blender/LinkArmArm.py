@@ -176,11 +176,11 @@ _lMDE = {
     "kHipRot":"ZD_HipRot",
     "kChestRot":"ZD_ChestRot",
     "kTorso":"ZD_Torso",
-    "kTorsoL":"ZD_TorsoL",
     "kTorsoR":"ZD_TorsoR",
+    "kTorsoL":"ZD_TorsoL",
     "kHeadRot":"ZD_HeadRot",
-    "k11":"ZD_11",
-    "k12":"ZD_12",
+    "kHandRotR":"ZD_HandRotR",
+    "kHandRotL":"ZD_HandRotL",
     "k13":"ZD_13",
     "k14":"ZD_14",
     "kFeetRot":"ZD_FeetRot"
@@ -258,115 +258,6 @@ def objcoTrackTo(obj,cname,IDtarget,track_axis,up_axis,influence):
         crc.influence=influence
     return('FINISHED')
 
-
-def makehiprot(parent,joma):
-    
-    pre = parent.name
-    ID =pre+_lMDE["kHipRot"]
-    #brute force update what ever happend since 
-    deleteObject(ID)
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-        objcoloc(obj,'COL_HipRot_lhip',pre+'_'+joma['lhip'],1.0)
-        objcoloc(obj,'COL_HipRot_rhip',pre+'_'+joma['rhip'],0.5)
-        objcoTrackTo(obj,'COTT_HipRot_lhip',pre+'_'+joma['lhip'],'TRACK_X','UP_Y',1.0)
-        if (armlinkoptions.rigversion == 27):
-          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',1.0)
-        else:
-          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Z','LOCK_X',1.0)
-
-def maketorso(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kTorso"]
-    deleteObject(ID)
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_Torso_HipRot',pre+_lMDE["kHipRot"],1.0)
-        objcoloc(obj,'COCO_Torso_ChestRot',pre+_lMDE["kChestRot"],0.5)
-
-    ID =pre+_lMDE["kTorsoR"]
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_rTorso_rsho',pre+'_'+joma['rsho'],1.0)
-        objcoloc(obj,'COCO_rTorso_rhip',pre+'_'+joma['rhip'],0.5)
-
-    ID =pre+_lMDE["kTorsoL"]
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_lTorso_rsho',pre+'_'+joma['lsho'],1.0)
-        objcoloc(obj,'COCO_lTorso_rhip',pre+'_'+joma['lhip'],0.5)
-
-    ID =pre+_lMDE["kTorso"]
-    obj = bpy.data.objects.get(ID)
-    if (obj):
-        objcoTrackTo(obj,'COTT_Torso_trackL',pre+_lMDE["kTorsoL"],'TRACK_X','UP_Z',1.0)
-        objcoTrackTo(obj,'COTT_Torso_trackR',pre+_lMDE["kTorsoR"],'TRACK_NEGATIVE_X','UP_Z',0.5)
-        objcoLockedTrack(obj,'COLT_Torso_neck',pre+'_'+joma['neck'],'TRACK_Z','LOCK_X',1.0)
-
-                 
-def makechestrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kChestRot"]
-    #brute force update what ever happend since 
-    deleteObject(ID)
-
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-        objcoloc(obj,'COCO_chestrot_lcla',pre+'_'+joma['lcla'],1.0)
-        objcoloc(obj,'COCO_chestrot_rcla',pre+'_'+joma['rcla'],0.5)
-        objcoTrackTo(obj,'COTT_chestrot_lcla',pre+'_'+joma['lcla'],'TRACK_X','UP_Y',1.0)
-        if (armlinkoptions.rigversion == 27):
-          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',1.0)
-        else:
-          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Z','LOCK_X',1.0)
-                 
-def makeheadrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kHeadRot"]
-    deleteObject(ID)
-
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_HeadRot_lear',pre+'_'+joma['lear'],1.0)
-        objcoloc(obj,'COCO_HeadRot_rear',pre+'_'+joma['rear'],0.5)
-        objcoTrackTo(obj,'COTT_HeadRot_nose',pre+'_'+joma['nose'],'TRACK_Z','UP_Y',1.0)
-        #objcoLockedTrack(obj,'COLT_HeadRot_htop',pre+'_'+joma['htop'],'TRACK_Y','LOCK_Z',1.0)
-        objcoLockedTrack(obj,'COLT_HeadRot_lear',pre+'_'+joma['lear'],'TRACK_X','LOCK_Z',1.0)
-
-def makefeetrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kFeetRot"]
-    deleteObject(ID)
-
-    
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):        
-        objcoloc(obj,'COCO_FeetRot_lfoot',pre+'_'+joma['lfoo'],1.0)
-        objcoloc(obj,'COCO_FeetRot_rfoot',pre+'_'+joma['rfoo'],0.5)
-        objcoTrackTo(obj,'COTT_FeetRot_lfoo',pre+'_'+joma['lfoo'],'TRACK_Z','UP_Y',1.0)
 
 def _clear_ArmatureConstraints(arm):
     print('_clear_ArmatureConstraints')
@@ -815,6 +706,29 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
 
+            '''kHandRotR'''
+            bone = self.findbone(homearm,_lMDE["kHandRotR"])
+            if bone is not None:
+                subtarget = joma["rwri"]
+                cname = pre+' '+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma["rhan"]
+                cname = pre+' '+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_Y','LOCK_X',1)
+                
+            '''kHandRotL'''
+            bone = self.findbone(homearm,_lMDE["kHandRotL"])
+            if bone is not None:
+                subtarget = joma["lwri"]
+                cname = pre+' '+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma["lhan"]
+                cname = pre+' '+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_Y','LOCK_X',1)
+                
+
 
             '''helpers done'''
             
@@ -836,12 +750,18 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linkhand):
-                    subtarget = joma['relb']
+                    subtarget =_lMDE["kHandRotR"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+
+                    '''
+                    subtarget = joma['rhan']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
                     else:
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                    '''
 
             bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
@@ -849,12 +769,17 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linkhand):
-                    subtarget = joma['lelb']
+                    subtarget =_lMDE["kHandRotL"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+                    '''
+                    subtarget = joma['lhan']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
                     else:
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                    '''
 
             subtarget = joma['relb']   
             bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
