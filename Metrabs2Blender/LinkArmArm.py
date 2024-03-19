@@ -171,6 +171,25 @@ dictarmlink2_7= {
     "Hips":"hips"
     }
 
+
+
+#Library Metrabs Derived Bones
+_lMDB = {
+    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
+    "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
+    "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
+    "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
+    "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
+    "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
+    "kHandRotR":{"name":"ZD_HandRotR","tail":[1.,0.,0.]},
+    "kHandRotL":{"name":"ZD_HandRotL","tail":[-1.,0.,0.]},
+    "kFeetRot":{"name":"ZD_FeetRot","tail":[0.,1.,0.]}
+}
+    
+
+
+
+
 #Library Metrabs Derived Empties 
 _lMDE = {
     "kHipRot":"ZD_HipRot",
@@ -189,6 +208,8 @@ _lMDE = {
 def listMDE():
     for mde in _lMDE:
         print(mde,_lMDE[mde])
+
+
         
 
     
@@ -441,10 +462,46 @@ def createbones(arm,bnames):
     for bname in bnames:
         bone = arm.pose.bones.get(bname)
         if bone is None:
-           lx += 0.5
+           lx += 1.5
            bone = bones.new(bname)
            bone.head = (lx,0.,0.)
            bone.tail = (lx,0.,1.)
+           bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                        False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+             
+    bpy.ops.object.mode_set(mode='OBJECT')
+    return (0)
+
+def createbones_ex(arm,dicbones):
+    print('dicbones',dicbones)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try: #B2.7 style
+        bpy.context.scene.objects.active = arm
+        arm.select=True
+        bpy.ops.object.mode_set(mode='EDIT')
+        bones = bpy.context.active_object.data.edit_bones
+    except:
+        try: #B3xx style
+          print('B2.7 failed')
+          bpy.context.view_layer.objects.active = arm
+          arm.select_set(True)
+          bpy.ops.object.mode_set(mode='EDIT')
+          bones = bpy.context.active_object.data.edit_bones
+        except Exception as error:
+         print('ERROR',error)
+         return(1)
+        
+    lx = 0.
+    for key in dicbones:
+        item = dicbones[key]
+        t = item["tail"]
+        bname = item["name"]
+        bone = arm.pose.bones.get(bname)
+        if bone is None:
+           lx += 1.5
+           bone = bones.new(bname)
+           bone.head = (lx,0.,0.)
+           bone.tail = (lx+t[0],t[1],t[2])
            bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
                         False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
              
@@ -610,7 +667,8 @@ class LinkArmature2A(bpy.types.Operator):
               print(mde,_lMDE[mde])
               MDEbones.append(_lMDE[mde])
             print(MDEbones)
-            createbones(homearm,MDEbones)
+            #createbones(homearm,MDEbones)
+            createbones_ex(homearm,_lMDB)
             '''build constraints for helpers'''
             '''ktorso'''
             bone = self.findbone(homearm,_lMDE["kTorsoR"])
@@ -1053,6 +1111,8 @@ class makeRigVersion(bpy.types.Operator):
         obj = context.active_object
         arm = bpy.data.objects.get(obj["~armature"])
         arm["RV"] = 27
+        createbones_ex(obj,_lMDB)
+
         return {'FINISHED'}
 
 
