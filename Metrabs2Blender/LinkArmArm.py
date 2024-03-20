@@ -430,39 +430,6 @@ def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
             crc.influence = influence
             return('FINISHED')
         
-def createbones(arm,bnames):
-    print('createbones',bnames)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    try: #B2.7 style
-        bpy.context.scene.objects.active = arm
-        arm.select=True
-        bpy.ops.object.mode_set(mode='EDIT')
-        bones = bpy.context.active_object.data.edit_bones
-    except:
-        try: #B3xx style
-          print('B2.7 failed')
-          bpy.context.view_layer.objects.active = arm
-          arm.select_set(True)
-          bpy.ops.object.mode_set(mode='EDIT')
-          bones = bpy.context.active_object.data.edit_bones
-        except Exception as error:
-         print('ERROR',error)
-         return(1)
-        
-    lx = 0.
-    for bname in bnames:
-        bone = arm.pose.bones.get(bname)
-        if bone is None:
-           lx += 1.5
-           bone = bones.new(bname)
-           bone.head = (lx,0.,0.)
-           bone.tail = (lx,0.,1.)
-           bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
-                        False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
-             
-    bpy.ops.object.mode_set(mode='OBJECT')
-    return (0)
-
 def createbones_ex(arm,dicbones):
     print('dicbones',dicbones)
     bpy.ops.object.mode_set(mode='OBJECT')
