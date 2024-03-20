@@ -415,7 +415,6 @@ def readArmatureRestPos(name,jPre,scalediv):
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
-        res_arm.name =aPre+jPre+'_linked'
         res_arm["bakestep"]=1
     return res_arm
 

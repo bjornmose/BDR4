@@ -497,6 +497,7 @@ def createbones_ex(arm,dicbones):
                         False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
              
     bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.data.armatures[arm.name].layers[1] = True
     return (0)
 
 
@@ -656,7 +657,7 @@ class LinkArmature2A(bpy.types.Operator):
             createbones_ex(homearm,_lMDB)
             '''build constraints for helpers'''
             '''ktorso'''
-            bone = self.findbone(homearm,_lMDE["kTorsoR"])
+            bone = self.findbone(homearm,_nMDB("kTorsoR"))
             if bone is not None:
                 subtarget = joma['rsho']
                 cname = pre+'_'+subtarget
@@ -665,7 +666,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
             
-            bone = self.findbone(homearm,_lMDE["kTorsoL"])
+            bone = self.findbone(homearm,_nMDB("kTorsoL"))
             if bone is not None:
                 subtarget = joma['lsho']
                 cname = pre+'_'+subtarget
@@ -674,22 +675,22 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
 
-            bone = self.findbone(homearm,_lMDE["kTorso"])
+            bone = self.findbone(homearm,_nMDB("kTorso"))
             if bone is not None:
                 '''position'''
-                subtarget = _lMDE["kTorsoR"]
+                subtarget = _nMDB("kTorsoR")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
-                subtarget = _lMDE["kTorsoL"]
+                subtarget = _nMDB("kTorsoL")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
                 '''rotation'''
-                subtarget = _lMDE["kTorsoL"]
+                subtarget = _nMDB("kTorsoL")
                 cname = pre+'_'+subtarget
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
 
             '''kHipRot'''
-            bone = self.findbone(homearm,_lMDE["kHipRot"])
+            bone = self.findbone(homearm,_nMDB("kHipRot"))
             if bone is not None:
                 subtarget = joma['rhip']
                 cname = pre+'_'+subtarget
@@ -706,7 +707,7 @@ class LinkArmature2A(bpy.types.Operator):
                   cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
 
             '''kChestRot'''
-            bone = self.findbone(homearm,_lMDE["kChestRot"])
+            bone = self.findbone(homearm,_nMDB("kChestRot"))
             if bone is not None:
                 subtarget = joma['rcla']
                 cname = pre+'_'+subtarget
@@ -723,7 +724,7 @@ class LinkArmature2A(bpy.types.Operator):
                   cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Z','LOCK_X',1.0)
 
             '''kFeetRot'''
-            bone = self.findbone(homearm,_lMDE["kFeetRot"])
+            bone = self.findbone(homearm,_nMDB("kFeetRot"))
             if bone is not None:
                 subtarget = joma['rank']
                 cname = pre+'_'+subtarget
@@ -734,7 +735,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
 
             '''kHeadRot'''
-            bone = self.findbone(homearm,_lMDE["kHeadRot"])
+            bone = self.findbone(homearm,_nMDB("kHeadRot"))
             if bone is not None:
                 subtarget = joma['rear']
                 cname = pre+'_'+subtarget
@@ -750,7 +751,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
 
             '''kHandRotR'''
-            bone = self.findbone(homearm,_lMDE["kHandRotR"])
+            bone = self.findbone(homearm,_nMDB("kHandRotR"))
             if bone is not None:
                 subtarget = joma["rwri"]
                 cname = pre+' '+subtarget
@@ -761,7 +762,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_Y','LOCK_X',1)
                 
             '''kHandRotL'''
-            bone = self.findbone(homearm,_lMDE["kHandRotL"])
+            bone = self.findbone(homearm,_nMDB("kHandRotL"))
             if bone is not None:
                 subtarget = joma["lwri"]
                 cname = pre+' '+subtarget
@@ -782,7 +783,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linkhand):
-                    subtarget =_lMDE["kHandRotR"]
+                    subtarget =_nMDB("kHandRotR")
                     cname = pre+'_'+subtarget
                     cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
 
@@ -801,7 +802,7 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linkhand):
-                    subtarget =_lMDE["kHandRotL"]
+                    subtarget =_nMDB("kHandRotL")
                     cname = pre+'_'+subtarget
                     cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
                     '''
@@ -878,39 +879,39 @@ class LinkArmature2A(bpy.types.Operator):
             
             bone = self.findbone(arm,armlinksto["Root"])
             if bone is not None:
-                subtarget = _lMDE["kTorso"]
+                subtarget = _nMDB("kTorso")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 cobonerot(bone,cname,obj,subtarget,0,0,1,1.0)
 
-            bone = self.findbone(arm,armlinksto["Torso"])
+            bone = self.findbone(arm,armlinksto["Torso"])    
             if bone is not None:
-                subtarget = _lMDE["kChestRot"]
+                subtarget = _nMDB("kChestRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = _lMDE["kHipRot"]
+                subtarget = _nMDB("kHipRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,0.5)
-                subtarget = _lMDE["kTorso"]
+                subtarget = _nMDB("kTorso")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
 
             bone = self.findbone(arm,armlinksto["Chest"])
             if bone is not None:
-                subtarget = _lMDE["kChestRot"]
+                subtarget = _nMDB("kChestRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
-                subtarget = _lMDE["kHipRot"]
+                subtarget = _nMDB("kHipRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,0.5)
 
             bone = self.findbone(arm,armlinksto["Hips"])
             if bone is not None:
-                subtarget = _lMDE["kChestRot"]
+                subtarget = _nMDB("kChestRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = _lMDE["kHipRot"]
+                subtarget = _nMDB("kHipRot")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,0.5)
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
@@ -922,7 +923,7 @@ class LinkArmature2A(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Head"])
             if bone is not None:
-                subtarget = _lMDE["kHeadRot"]
+                subtarget = _nMDB("kHeadRot")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
         else:
