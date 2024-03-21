@@ -1221,7 +1221,10 @@ class op_CreateArmature(bpy.types.Operator):
         arm_obj=readArmatureRestPos(path,aName,scalediv)
         arm_obj['skeleton'] = obj['skeleton']
         arm_obj["metrabs"] = 2
-        arm_obj["~armature"] = "*None*"
+        try:
+          arm_obj["~armature"] = obj["~armature"]
+        except:
+          arm_obj["~armature"] = "*none*"   
         obj["~armature"] = arm_obj.name
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
