@@ -173,8 +173,8 @@ dictarmlink2_7= {
 
 
 
-#Library Metrabs Derived Bones
-_lMDB = {
+#Dictionary Metrabs Derived Bones
+_dMDB = {
     "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
     "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
     "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
@@ -186,29 +186,9 @@ _lMDB = {
     "kFeetRot":{"name":"ZD_FeetRot","tail":[0.,1.,0.]}
 }
 
-# replaces old _lMDE calls for name
+# get the name of a _dMDB bone
 def _nMDB(key):
-    return (_lMDB[key]["name"])
-
-
-
-
-
-
-#Library Metrabs Derived Empties 
-_lMDE = {
-    "kHipRot":"ZD_HipRot",
-    "kChestRot":"ZD_ChestRot",
-    "kTorso":"ZD_Torso",
-    "kTorsoR":"ZD_TorsoR",
-    "kTorsoL":"ZD_TorsoL",
-    "kHeadRot":"ZD_HeadRot",
-    "kHandRotR":"ZD_HandRotR",
-    "kHandRotL":"ZD_HandRotL",
-    "k13":"ZD_13",
-    "k14":"ZD_14",
-    "kFeetRot":"ZD_FeetRot"
-}
+    return (_dMDB[key]["name"])
     
     
 joma_list ={
@@ -621,7 +601,7 @@ class LinkArmature2A(bpy.types.Operator):
         if arm is not None:
             '''create helper bones'''
             homearm = obj
-            createbones_ex(homearm,_lMDB)
+            createbones_ex(homearm,_dMDB)
             '''build constraints for helpers'''
             '''ktorso'''
             bone = self.findbone(homearm,_nMDB("kTorsoR"))
@@ -725,8 +705,7 @@ class LinkArmature2A(bpy.types.Operator):
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma["rhan"]
                 cname = pre+' '+subtarget
-                coboneloc(bone,cname,homearm,subtarget,0.5)
-                cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_Y','LOCK_X',1)
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
                 
             '''kHandRotL'''
             bone = self.findbone(homearm,_nMDB("kHandRotL"))
@@ -736,8 +715,7 @@ class LinkArmature2A(bpy.types.Operator):
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma["lhan"]
                 cname = pre+' '+subtarget
-                coboneloc(bone,cname,homearm,subtarget,0.5)
-                cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_Y','LOCK_X',1)
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
                 
 
 
@@ -907,7 +885,9 @@ class makeRigVersion(bpy.types.Operator):
         obj = context.active_object
         arm = bpy.data.objects.get(obj["~armature"])
         arm["RV"] = 27
-        createbones_ex(obj,_lMDB)
+        #no need to create here -- however nice to see them b4 they get linked
+        if (1):
+          createbones_ex(obj,_dMDB)
 
         return {'FINISHED'}
 
