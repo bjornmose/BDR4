@@ -24,8 +24,9 @@ from BVT import *
 
 class _Carmlinkoptions:
    def __init__(self) -> None:
-       self.linktoes = True
-       self.linkhand = True
+       self.linktoes = False
+       self.linkhand = False
+       self.stiffhand = True
        self.rigversion = 35
     
    def getlinkdict(self):
@@ -776,7 +777,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                if (armlinkoptions.linkhand):
+                if (armlinkoptions.linktoes):
                     subtarget = joma['rtoe']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
@@ -789,7 +790,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                if (armlinkoptions.linkhand):
+                if (armlinkoptions.linktoes):
                     subtarget = joma['ltoe']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
