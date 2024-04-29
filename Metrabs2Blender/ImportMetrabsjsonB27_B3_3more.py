@@ -1,3 +1,4 @@
+from token import EQUAL
 import bpy
 import json
 import os
@@ -530,10 +531,28 @@ class C_rawMeterasData():
                 data = json.load(json_file)
                 boxes = data['boxes'] # at least on box must be there
                 self.myData[frame] = data[pname] #quick and dirty .. no box selction
-                
         except:
             print('except',name)
         return
+    
+    def extract_channel(self,chname,start,end):
+        channel = {}
+        for frame in range (start,end):
+            try:
+              f = self.myData[frame]
+              for joint in f:
+                chn = joint[0]
+                if chn == chname:
+                  x = joint[1]
+                  y = joint[2]
+                  z = joint[3]
+              channel[frame] = (x,y,z)
+            except: 
+                pass
+            channel[frame] = (x,y,z)
+        return channel
+    
+        
     
     def _dump(self):
         print(self.myData)
@@ -1036,7 +1055,9 @@ class import_metrabs(bpy.types.Operator):
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
-        TheFilterCass._dump()
+        ##TheFilterCass._dump()
+        ch = TheFilterCass.extract_channel('neck_smpl',1,end_frame-start_frame)
+        print(ch)
         if zba > 0:
             bpy.context.scene.frame_start = 0
             bpy.context.scene.frame_end = end_frame-start_frame
