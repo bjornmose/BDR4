@@ -24,8 +24,9 @@ from BVT import *
 
 class _Carmlinkoptions:
    def __init__(self) -> None:
-       self.linktoes = True
-       self.linkhand = True
+       self.linktoes = False
+       self.linkhand = False
+       self.stiffhand = True
        self.rigversion = 35
     
    def getlinkdict(self):
@@ -150,7 +151,9 @@ dictarmlink3_5 = {
     "Root":"root",
     "Torso":"torso",
     "Chest":"chest",
-    "Hips":"hips"
+    "Hips":"hips",
+    "ForearmR":"DEF-forearm.02.R",
+    "ForearmL":"DEF-forearm.02.L"
     }
 
 dictarmlink2_7= {
@@ -168,7 +171,9 @@ dictarmlink2_7= {
     "Root":"root",
     "Torso":"torso",
     "Chest":"chest",
-    "Hips":"hips"
+    "Hips":"hips",
+    "ForearmR":"DEF-forearm.02.R",
+    "ForearmL":"DEF-forearm.02.L"
     }
 
 
@@ -727,6 +732,13 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rwri']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                # not really happy with either option play with it and bring better solution 
+
+                if (armlinkoptions.stiffhand): #deps circle
+                    subtarget = armlinksto["ForearmR"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
+        
                 if (armlinkoptions.linkhand):
                     subtarget =_nMDB("kHandRotR")
                     cname = pre+'_'+subtarget
@@ -746,10 +758,17 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lwri']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                #see hand right
+                if (armlinkoptions.stiffhand): #deps circle
+                    subtarget = armlinksto["ForearmL"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
+
                 if (armlinkoptions.linkhand):
                     subtarget =_nMDB("kHandRotL")
                     cname = pre+'_'+subtarget
                     cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+
                     '''
                     subtarget = joma['lhan']
                     cname = pre+'_'+subtarget
@@ -776,7 +795,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                if (armlinkoptions.linkhand):
+                if (armlinkoptions.linktoes):
                     subtarget = joma['rtoe']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
@@ -789,7 +808,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                if (armlinkoptions.linkhand):
+                if (armlinkoptions.linktoes):
                     subtarget = joma['ltoe']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):

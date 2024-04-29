@@ -516,6 +516,31 @@ def readmetrabs(name,frame,box,jPre,sf):
     #print('Joints UnUsed:',100*missmatch/len(p1),'%')
     return res_box
 
+
+
+class C_rawMeterasData():
+    def __init__(self) -> None:
+        self.myData = {}
+        pass
+
+    def addframe(self,name,frame):
+        pname = 'pose3d' 
+        try: 
+            with open(name) as json_file:
+                data = json.load(json_file)
+                boxes = data['boxes'] # at least on box must be there
+                self.myData[frame] = data[pname] #quick and dirty .. no box selction
+                
+        except:
+            print('except',name)
+        return
+    
+    def _dump(self):
+        print(self.myData)
+        return
+
+
+
 def readmetrabs2D(name,frame,box,jPre,rx,ry,sf):
     d_min = 100000.0
     res_box = box
@@ -966,6 +991,7 @@ class import_metrabs(bpy.types.Operator):
             
           
         ETA = _ETA(end_frame-start_frame)
+        TheFilterCass = C_rawMeterasData()
 
         for i in range (start_frame ,end_frame,incr):
             Name='{0:}{1:04d}.json'.format(file,i)
@@ -985,8 +1011,10 @@ class import_metrabs(bpy.types.Operator):
             tls =ETA.guestleft()
             tlsf =ETA.guestleftfloating()
             if zba > 0:
+              TheFilterCass.addframe(Name,i-start_frame)
               box=readmetrabs(Name,i - start_frame,box,pre,sf)
             else:
+              TheFilterCass.addframe(Name,i)
               box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
@@ -1008,6 +1036,7 @@ class import_metrabs(bpy.types.Operator):
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+        TheFilterCass._dump()
         if zba > 0:
             bpy.context.scene.frame_start = 0
             bpy.context.scene.frame_end = end_frame-start_frame
