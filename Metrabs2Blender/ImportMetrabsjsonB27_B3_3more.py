@@ -518,10 +518,18 @@ def readmetrabs(name,frame,box,jPre,sf):
     return res_box
 
 
-
+''' 
+kind of man in the middle aproach
+collect a 3D track: (time[frame] location(x.y,z)) for each METRABS joint
+the place to apply fiters
+'''
 class C_rawMeterasData():
     def __init__(self) -> None:
         self.myData = {}
+        self.firstframe = 1000
+        self.lastframe = -1000
+        self.channels = {}
+        self.joints = []
         pass
 
     def addframe(self,name,frame):
@@ -531,13 +539,23 @@ class C_rawMeterasData():
                 data = json.load(json_file)
                 boxes = data['boxes'] # at least on box must be there
                 self.myData[frame] = data[pname] #quick and dirty .. no box selction
+                self.joints = data['joints']
+                if self.firstframe > frame : self.firstframe = frame
+                if self.lastframe < frame : self.lastframe = frame
         except:
             print('except',name)
         return
     
-    def extract_channel(self,chname,start,end):
+    def extract_all(self):
+        for ch in self.joints:
+            print('Processing',ch)
+            chdata = self.extract_channel(ch)
+            self.channels[ch] = chdata
+            #print('\n****xx***',ch,chdata,) // ok that works
+
+    def extract_channel(self,chname):
         channel = {}
-        for frame in range (start,end):
+        for frame in range (self.firstframe,self.lastframe+1):
             try:
               f = self.myData[frame]
               for joint in f:
@@ -1056,8 +1074,14 @@ class import_metrabs(bpy.types.Operator):
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
         ##TheFilterCass._dump()
-        ch = TheFilterCass.extract_channel('neck_smpl',1,end_frame-start_frame)
-        print(ch)
+        print('First',TheFilterCass.firstframe,'Last',TheFilterCass.lastframe)
+        #ch = TheFilterCass.extract_channel('neck_smpl')
+        #print(ch)
+        TheFilterCass.extract_all()
+        tj = 'neck_smpl'
+        print(tj,'oooooooooooooooooooooooooooo check point0000000000000000\n')
+        tc = TheFilterCass.channels[tj]
+        print(tc)
         if zba > 0:
             bpy.context.scene.frame_start = 0
             bpy.context.scene.frame_end = end_frame-start_frame
