@@ -1,3 +1,4 @@
+from operator import eq
 from token import EQUAL
 import bpy
 import json
@@ -570,6 +571,41 @@ class C_rawMeterasData():
             channel[frame] = (x,y,z)
         return channel
     
+    def inject_action(self,obj,chdata,sf):
+        fcu_x = obj.animation_data.action.fcurves[0]
+        fcu_y = obj.animation_data.action.fcurves[1]
+        fcu_z = obj.animation_data.action.fcurves[2]
+        for frame in range (self.firstframe,self.lastframe+1):
+          try:  
+            loc = chdata[frame] 
+            lx = loc[0]/ sf
+            ly = loc[1]/ sf
+            lz = loc[2]/ sf
+            fcu_x.keyframe_points.insert(frame,lx,options={'NEEDED','FAST'})
+            fcu_y.keyframe_points.insert(frame,ly,options={'NEEDED','FAST'})
+            fcu_z.keyframe_points.insert(frame,lz,options={'NEEDED','FAST'})
+          except (KeyError):
+            pass  
+        
+    def redavg(self,chdata,w):
+        res = {}
+        lx = ly = lz = 0
+        n = 0
+        for frame in range (self.firstframe,self.lastframe+1):
+          try:  
+            loc = chdata[frame] 
+            lx += loc[0]
+            ly += loc[1]
+            lz += loc[2]            
+            n  += 1
+          except (KeyError):
+            pass 
+          if ( (n > 0) and  (frame % w ) == 0):
+              res[frame] = (lx/n,ly/n,lz/n)
+              n = 0
+              lx = ly = lz = 0
+        return res
+        
         
     
     def _dump(self):
@@ -1030,7 +1066,8 @@ class import_metrabs(bpy.types.Operator):
         ETA = _ETA(end_frame-start_frame)
         TheFilterCass = C_rawMeterasData()
 
-        for i in range (start_frame ,end_frame,incr):
+        #for i in range (start_frame ,end_frame,incr):
+        for i in range (start_frame ,end_frame):
             Name='{0:}{1:04d}.json'.format(file,i)
             #bpy.context.scene.frame_set(i)
             #print(Name)
@@ -1049,10 +1086,10 @@ class import_metrabs(bpy.types.Operator):
             tlsf =ETA.guestleftfloating()
             if zba > 0:
               TheFilterCass.addframe(Name,i-start_frame)
-              box=readmetrabs(Name,i - start_frame,box,pre,sf)
+              #box=readmetrabs(Name,i - start_frame,box,pre,sf)
             else:
               TheFilterCass.addframe(Name,i)
-              box=readmetrabs(Name,i,box,pre,sf)
+              #box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
             #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
@@ -1078,10 +1115,22 @@ class import_metrabs(bpy.types.Operator):
         #ch = TheFilterCass.extract_channel('neck_smpl')
         #print(ch)
         TheFilterCass.extract_all()
-        tj = 'neck_smpl'
-        print(tj,'oooooooooooooooooooooooooooo check point0000000000000000\n')
-        tc = TheFilterCass.channels[tj]
-        print(tc)
+        #tj = 'neck_smpl'
+        #print(tj,'oooooooooooooooooooooooooooo check point0000000000000000\n')
+        #tc = TheFilterCass.channels[tj]
+        #print(tc)
+        for ch in TheFilterCass.joints:
+            print('Processing',ch)
+            jName = pre + ch
+            #print(jName)
+            obj = bpy.data.objects.get(jName)
+            chdata = TheFilterCass.channels[ch]
+            #apply filter here +++           
+            res = TheFilterCass.redavg(chdata,incr)
+            #apply filter here ----
+            TheFilterCass.inject_action(obj,res,sf)
+
+
         if zba > 0:
             bpy.context.scene.frame_start = 0
             bpy.context.scene.frame_end = end_frame-start_frame
