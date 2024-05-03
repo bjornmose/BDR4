@@ -1,5 +1,3 @@
-from operator import eq
-from token import EQUAL
 import bpy
 import json
 import os
@@ -549,7 +547,7 @@ class C_rawMeterasData():
     
     def extract_all(self):
         for ch in self.joints:
-            print('Processing',ch)
+            print('Extracting',ch)
             chdata = self.extract_channel(ch)
             self.channels[ch] = chdata
             #print('\n****xx***',ch,chdata,) // ok that works
@@ -604,6 +602,49 @@ class C_rawMeterasData():
               res[frame] = (lx/n,ly/n,lz/n)
               n = 0
               lx = ly = lz = 0
+        return res
+
+    def redmedian(self,chdata,w):
+        res = {}
+        for step in range (self.firstframe,self.lastframe+1,w):
+          lx = []
+          ly = []
+          lz = []
+          for frame in range(1,w+1):
+              try:  
+                loc = chdata[step+frame - w//2] 
+                lx.append(loc[0])
+                ly.append(loc[1])
+                lz.append(loc[2])            
+              except (KeyError):
+                pass 
+        
+          lx.sort()
+          ly.sort()
+          lz.sort()
+          l = len(lx)
+          res[step] = (lx[l//2],ly[l//2],lz[l//2])
+        return res
+
+    def redfilter(self,chdata,filter,w):
+        res = {}
+        fl = len (filter)
+        for step in range (self.firstframe,self.lastframe+1,w):
+          lx = 0
+          ly = 0
+          lz = 0
+          k = 0
+          for n in range(0,fl):
+              try:  
+                loc = chdata[step+n - fl//2] 
+                lx += filter[n] * loc[0]
+                ly += filter[n] * loc[1]
+                lz += filter[n] * loc[2]     
+                k  += filter[n]
+              except (KeyError):
+                pass 
+          res[step] = (lx/k,ly/k,lz/k)
+        
         return res
         
         
@@ -1061,6 +1102,12 @@ class import_metrabs(bpy.types.Operator):
           zba=obj["ZBA"] 
         except:
           zba=0
+
+        try:
+          tof=obj["tof"] 
+        except:
+          obj["tof"]=3
+          tof=3
             
           
         ETA = _ETA(end_frame-start_frame)
@@ -1110,25 +1157,36 @@ class import_metrabs(bpy.types.Operator):
             #print(txt) 
             #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
         txt = "Total{0:8.1f}".format(ETA.gettotal()) 
-        ##TheFilterCass._dump()
         print('First',TheFilterCass.firstframe,'Last',TheFilterCass.lastframe)
-        #ch = TheFilterCass.extract_channel('neck_smpl')
-        #print(ch)
         TheFilterCass.extract_all()
-        #tj = 'neck_smpl'
-        #print(tj,'oooooooooooooooooooooooooooo check point0000000000000000\n')
-        #tc = TheFilterCass.channels[tj]
-        #print(tc)
         for ch in TheFilterCass.joints:
-            print('Processing',ch)
             jName = pre + ch
-            #print(jName)
             obj = bpy.data.objects.get(jName)
             chdata = TheFilterCass.channels[ch]
             #apply filter here +++           
-            res = TheFilterCass.redavg(chdata,incr)
-            #apply filter here ----
-            TheFilterCass.inject_action(obj,res,sf)
+            
+            if (incr > 0):
+                if tof == 1:
+                      print('->AverageFilter->Action',ch)
+                      res = TheFilterCass.redavg(chdata,incr)
+                elif tof == 2:
+                      print('->MedianFilter->Action',ch)
+                      res = TheFilterCass.redmedian(chdata,incr)
+                elif tof == 3:
+                      print('->KernelFilter5->Action',ch)
+                      filter = [1.0,2.0,6.0,2.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+                else:
+                      print('->KernelFilter3->Action',ch)
+                      filter = [1.0,4.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+            
+                #apply filter here ----
+                TheFilterCass.inject_action(obj,res,sf)
+            else:
+                print('->Raw->Action',ch)
+                TheFilterCass.inject_action(obj,chdata,sf)
+                
 
 
         if zba > 0:
@@ -1395,6 +1453,7 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
+            row.prop(obj, '["%s"]' % ("tof"),text="filter")  
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             if len(obj.children): 
