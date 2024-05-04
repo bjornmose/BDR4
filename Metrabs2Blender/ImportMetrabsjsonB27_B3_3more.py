@@ -1440,9 +1440,9 @@ class MetrabsPanel(bpy.types.Panel):
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             if len(obj.children): 
-              row.operator(delete_childen_actions.bl_idname)
               row = layout.row()
               row.operator(delete_childen.bl_idname)
+              row.operator(delete_childen_actions.bl_idname)
               row = layout.row()
               row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
