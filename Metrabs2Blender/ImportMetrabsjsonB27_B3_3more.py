@@ -604,9 +604,9 @@ class C_rawMeterasData():
               lx = ly = lz = 0
         return res
 
-    def redmedian(self,chdata,w):
+    def redmedian(self,chdata,incr,w):
         res = {}
-        for step in range (self.firstframe,self.lastframe+1,w):
+        for step in range (self.firstframe,self.lastframe+1,incr):
           lx = []
           ly = []
           lz = []
@@ -623,7 +623,8 @@ class C_rawMeterasData():
           ly.sort()
           lz.sort()
           l = len(lx)
-          res[step] = (lx[l//2],ly[l//2],lz[l//2])
+          if l > 0:
+            res[step] = (lx[l//2],ly[l//2],lz[l//2])
         return res
 
     def redfilter(self,chdata,filter,w):
@@ -794,6 +795,17 @@ def completeObjectProperties(obj):
     except:
         obj["ZBA"]   = 1
     obj["metrabs"] = 1  
+    try:
+        tof=obj["tof"] 
+    except:
+        obj["tof"]=3
+        tof=3
+    try:
+        frw=obj["frw"] 
+    except:
+        frw=100
+        obj["frw"]=frw
+        
       
                 
                 
@@ -1055,6 +1067,11 @@ class import_metrabs(bpy.types.Operator):
 #           joints = joints_smpl_head_30 
 #            joints = joints_mpi_inf_3dhp_28
         '''
+        completeObjectProperties(obj)
+        sf = obj["scaledidvisor"]
+        tof=obj["tof"] 
+        frw=obj["frw"] 
+        zba=obj["ZBA"]
 
         pre = obj.name + '_'
         file = obj['inpath']+obj["infile"] 
@@ -1093,44 +1110,14 @@ class import_metrabs(bpy.types.Operator):
         makejoints(obj,joints,pre) 
         makeactions_3d_res = makeactions_3d(joints,pre)
         box = [0.0,0.0]
-        try:
-          sf = obj["scaledidvisor"]
-        except:
-          sf = 100
-          obj["scaledidvisor"] = sf
-        try:
-          zba=obj["ZBA"] 
-        except:
-          zba=0
-
-        try:
-          tof=obj["tof"] 
-        except:
-          obj["tof"]=3
-          tof=3
             
           
         ETA = _ETA(end_frame-start_frame)
         TheFilterCass = C_rawMeterasData()
 
-        #for i in range (start_frame ,end_frame,incr):
+        #read all frames from source
         for i in range (start_frame ,end_frame):
             Name='{0:}{1:04d}.json'.format(file,i)
-            #bpy.context.scene.frame_set(i)
-            #print(Name)
-            etapre = (i - start_frame)
-            if etapre > 200 : etapre =200
-            if etapre > i : etapre =i
-            if etapre < 5 : etpre =5
-            ETA.ticknow(i-start_frame+1,etapre)
-            tpifs=ETA.gettpifs()
-            tpifloating =ETA.tpifloating/1000000
-            tlf =ETA.timeleftfloating_sec()
-            tt  =ETA.guesttotal()
-            ttsfs =ETA.guesttotalslopefs()
-            ttsfl =ETA.guesttotalslopefloating()
-            tls =ETA.guestleft()
-            tlsf =ETA.guestleftfloating()
             if zba > 0:
               TheFilterCass.addframe(Name,i-start_frame)
               #box=readmetrabs(Name,i - start_frame,box,pre,sf)
@@ -1138,44 +1125,39 @@ class import_metrabs(bpy.types.Operator):
               TheFilterCass.addframe(Name,i)
               #box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
-            #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}:{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tls) 
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETA{4: >7.1f}+-{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,abs(tls-tlf)) 
-            #expecting constant rate
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >9.1f}ETA{5: >9.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tt,tlf) 
-            #expecting changing rate
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfs,tls) 
-            #expecting changing rate V2
-            try:
-              progress = 100.-(tlsf/ttsfl)*100.
-            except:
-              pass
-            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,30),tpifloating,ttsfl,tlsf) 
+            txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,30)) 
             print(txt, end="\r") 
-            #print(txt) 
-            #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
-        txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+
         print('First',TheFilterCass.firstframe,'Last',TheFilterCass.lastframe)
         TheFilterCass.extract_all()
         for ch in TheFilterCass.joints:
             jName = pre + ch
             obj = bpy.data.objects.get(jName)
             chdata = TheFilterCass.channels[ch]
-            #apply filter here +++           
+            #apply filter here +++     
+            #calculated filters
+            avfilter = []
+            fw = int (incr * frw / 100)      
+            for i in range (0 ,fw+1):
+                avfilter.append(1.0)
+
+            
             
             if (incr > 0):
                 if tof == 1:
                       print('->AverageFilter->Action',ch)
                       res = TheFilterCass.redavg(chdata,incr)
                 elif tof == 2:
-                      print('->MedianFilter->Action',ch)
-                      res = TheFilterCass.redmedian(chdata,incr)
+                      print("->MedianFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
+                      #print(txt)
+                      res = TheFilterCass.redmedian(chdata,incr,fw)
                 elif tof == 3:
                       print('->KernelFilter5->Action',ch)
                       filter = [1.0,2.0,6.0,2.0,1.0]
                       res = TheFilterCass.redfilter(chdata,filter,incr)
+                elif tof == 4:
+                      print("->AverageFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
+                      res = TheFilterCass.redfilter(chdata,avfilter,incr)
                 else:
                       print('->KernelFilter3->Action',ch)
                       filter = [1.0,4.0,1.0]
@@ -1454,6 +1436,7 @@ class MetrabsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
             row.prop(obj, '["%s"]' % ("tof"),text="filter")  
+            row.prop(obj, '["%s"]' % ("frw"),text="frw")  
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             if len(obj.children): 
