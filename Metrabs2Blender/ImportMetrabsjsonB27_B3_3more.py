@@ -529,7 +529,30 @@ class C_rawMeterasData():
         self.lastframe = -1000
         self.channels = {}
         self.joints = []
+        self.box = [0.0,0.0]
+        self.boxindex=999
         pass
+
+    def choose_box(self,pname,boxes):
+        l =len(boxes)
+        if l>1:
+          xb = boxes[0][0]
+          yb = boxes[0][1]
+          d_min = (xb - self.box[0])*(xb - self.box[0]) +(yb - self.box[1])*(yb - self.box[1]) 
+          for nb in range(1,l):
+            xn = boxes[nb][0]
+            yn = boxes[nb][1]
+            dn = (xn - self.box[0])*(xn - self.box[0]) +(yn - self.box[1])*(yn - self.box[1])
+            #print('dn',dn,'d_min',d_min)
+            if dn < d_min:
+                self.box = [xn,yn]
+                d_min = dn
+                pname='pose3d{0:d}'.format(nb+1)
+                if (self.boxindex != nb):
+                  print('Box Switch',pname)        
+                  self.boxindex = nb
+        return (pname) 
+        
 
     def addframe(self,name,frame):
         pname = 'pose3d' 
@@ -537,6 +560,7 @@ class C_rawMeterasData():
             with open(name) as json_file:
                 data = json.load(json_file)
                 boxes = data['boxes'] # at least on box must be there
+                pname = self.choose_box(pname,boxes)
                 self.myData[frame] = data[pname] #quick and dirty .. no box selction
                 self.joints = data['joints']
                 if self.firstframe > frame : self.firstframe = frame
