@@ -27,7 +27,6 @@ from bpy.types import Operator
 
 
 
-
 joints_coco_19 =  [
         "neck",
         "nose",
@@ -368,7 +367,7 @@ def readArmatureRestPos(name,jPre,scalediv):
         return res_arm
     
     p1 = data[pname]
-    if (not p1): return res_arm
+    if (not p1): return res_armf
     aPre = 'Arm_'
     res_arm = create_armature(aPre+jPre,'TestBone')
 
@@ -611,7 +610,7 @@ class C_rawMeterasData():
         
     def redavg(self,chdata,w):
         res = {}
-        lx = ly = lz = 0
+        lx = ly = lz = 0.
         n = 0
         for frame in range (self.firstframe,self.lastframe+1):
           try:  
@@ -625,7 +624,7 @@ class C_rawMeterasData():
           if ( (n > 0) and  (frame % w ) == 0):
               res[frame] = (lx/n,ly/n,lz/n)
               n = 0
-              lx = ly = lz = 0
+              lx = ly = lz = 0.
         return res
 
     def redmedian(self,chdata,incr,w):
@@ -655,9 +654,9 @@ class C_rawMeterasData():
         res = {}
         fl = len (filter)
         for step in range (self.firstframe,self.lastframe+1,w):
-          lx = 0
-          ly = 0
-          lz = 0
+          lx = 0.
+          ly = 0.
+          lz = 0.
           k = 0
           for n in range(0,fl):
               try:  
@@ -1154,6 +1153,7 @@ class import_metrabs(bpy.types.Operator):
 
         print('First',TheFilterCass.firstframe,'Last',TheFilterCass.lastframe)
         TheFilterCass.extract_all()
+        fw = int (incr * frw / 100)      
         for ch in TheFilterCass.joints:
             jName = pre + ch
             obj = bpy.data.objects.get(jName)
@@ -1161,7 +1161,6 @@ class import_metrabs(bpy.types.Operator):
             #apply filter here +++     
             #calculated filters
             avfilter = []
-            fw = int (incr * frw / 100)      
             for i in range (0 ,fw+1):
                 avfilter.append(1.0)
 
@@ -1395,11 +1394,19 @@ class op_CreateArmature(bpy.types.Operator):
         obj = context.active_object
          
         try:
+          tof=obj["tof"] 
+          frw=obj["frw"]
+          incr = obj["incr"] 
+          dName = "_F{0:1d}W{1:03d}S{2:02d} ".format(tof,frw,incr) 
+        except:
+          dName = "oops"
+            
+        try:
             rFrame = obj['start_frame']
         except:
             rFrame = 1
         aName = obj.name
-        
+                
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
         path='{0:}{1:04d}.json'.format(file,rFrame)
@@ -1411,7 +1418,9 @@ class op_CreateArmature(bpy.types.Operator):
         try:
           arm_obj["~armature"] = obj["~armature"]
         except:
-          arm_obj["~armature"] = "*none*"   
+          arm_obj["~armature"] = "*none*" 
+        """ decorate after linking to empty objects is done """
+        arm_obj.name = aName+dName 
         obj["~armature"] = arm_obj.name
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
