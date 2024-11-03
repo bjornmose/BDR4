@@ -40,7 +40,7 @@ def _ListTargetless_ArmatureConstraints(arm):
 
 class PutzAllArmature(bpy.types.Operator):
     bl_idname = "object.putzallarmature_operator"
-    bl_label = "Remove Lost ALL Bone Constraints"
+    bl_label = "Remove ALL Bone Constraints"
 
     def execute(self,context):
         obj = context.active_object

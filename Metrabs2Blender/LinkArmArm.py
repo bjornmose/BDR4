@@ -25,8 +25,8 @@ from BVT import *
 class _Carmlinkoptions:
    def __init__(self) -> None:
        self.linktoes = False
-       self.linkhand = False
-       self.stiffhand = True
+       self.linkhand = True
+       self.stiffhand = False
        self.rigversion = 35
     
    def getlinkdict(self):
@@ -740,18 +740,18 @@ class LinkArmature2A(bpy.types.Operator):
                     cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
         
                 if (armlinkoptions.linkhand):
+                    '''
                     subtarget =_nMDB("kHandRotR")
                     cname = pre+'_'+subtarget
                     cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
-
                     '''
-                    subtarget = joma['rhan']
+
+                    subtarget = joma['relb']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
-                    else:
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                    else: #fix me 
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
-                    '''
 
             bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
@@ -765,18 +765,20 @@ class LinkArmature2A(bpy.types.Operator):
                     cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
 
                 if (armlinkoptions.linkhand):
+                    '''
                     subtarget =_nMDB("kHandRotL")
                     cname = pre+'_'+subtarget
                     cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
-
                     '''
-                    subtarget = joma['lhan']
+
+                    
+                    subtarget = joma['lelb']
                     cname = pre+'_'+subtarget
                     if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
-                    else:
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                    else: # fix me
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
-                    '''
+                    
 
             subtarget = joma['relb']   
             bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])

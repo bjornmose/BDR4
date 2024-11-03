@@ -349,7 +349,7 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,jPre,scalediv):
+def readArmatureRestPos(name,jPre,deko,scalediv):
     d_min = 100000.0
     res_arm = None
     pname = 'pose3d' 
@@ -369,7 +369,7 @@ def readArmatureRestPos(name,jPre,scalediv):
     p1 = data[pname]
     if (not p1): return res_armf
     aPre = 'Arm_'
-    res_arm = create_armature(aPre+jPre,'TestBone')
+    res_arm = create_armature(aPre+jPre+deko,'TestBone')
 
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
@@ -1181,6 +1181,10 @@ class import_metrabs(bpy.types.Operator):
                 elif tof == 4:
                       print("->AverageFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
                       res = TheFilterCass.redfilter(chdata,avfilter,incr)
+                elif tof == 5:
+                      print('->KernelFilter9->Action',ch)
+                      filter = [1.0,1.0,2.0,4.0,6.0,4.0,2.0,1.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
                 else:
                       print('->KernelFilter3->Action',ch)
                       filter = [1.0,4.0,1.0]
@@ -1412,15 +1416,13 @@ class op_CreateArmature(bpy.types.Operator):
         path='{0:}{1:04d}.json'.format(file,rFrame)
         print(self.bl_idname,path)
         scalediv = obj["scaledidvisor"]
-        arm_obj=readArmatureRestPos(path,aName,scalediv)
+        arm_obj=readArmatureRestPos(path,aName,dName,scalediv)
         arm_obj['skeleton'] = obj['skeleton']
         arm_obj["metrabs"] = 2
         try:
           arm_obj["~armature"] = obj["~armature"]
         except:
           arm_obj["~armature"] = "*none*" 
-        """ decorate after linking to empty objects is done """
-        arm_obj.name = aName+dName 
         obj["~armature"] = arm_obj.name
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
