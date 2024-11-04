@@ -7,7 +7,7 @@ import numpy as np
 import os
 import sys
 
-#today 2024/02/17
+#today 2024/11/03
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -27,6 +27,8 @@ class _Carmlinkoptions:
        self.linktoes = False
        self.linkhand = True
        self.stiffhand = False
+       self.influenceEllbow = 0.75
+       self.influenceKnee = 0.75
        self.rigversion = 35
     
    def getlinkdict(self):
@@ -784,13 +786,13 @@ class LinkArmature2A(bpy.types.Operator):
             bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
             cname = pre+'_'+subtarget
             if bone is not None:
-                coboneloc(bone,cname,obj,subtarget,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceEllbow)
 
             subtarget = joma['lelb']   
             bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
             cname = pre+'_'+subtarget
             if bone is not None:
-                coboneloc(bone,cname,obj,subtarget,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["FootIK_R"])
             if bone is not None:
@@ -822,13 +824,13 @@ class LinkArmature2A(bpy.types.Operator):
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             cname = pre+'_'+subtarget
             if bone is not None:
-                coboneloc(bone,cname,obj,subtarget,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
             subtarget = joma['lkne']   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
             cname = pre+'_'+subtarget
             if bone is not None:
-                coboneloc(bone,cname,obj,subtarget,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,armlinksto["Shoulder_R"])
             if bone is not None:

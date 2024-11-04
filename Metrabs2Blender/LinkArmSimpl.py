@@ -7,7 +7,7 @@ import numpy as np
 import os
 import sys
 
-#today 2024/02/17
+#today 2024/11/03
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -26,6 +26,9 @@ class _Carmlinkoptions:
    def __init__(self) -> None:
        self.linktoes = True
        self.linkhand = True
+       self.influenceEllbow = 0.75
+       self.influenceKnee = 0.75
+
        #rigversions = [armlinksto2_7,armlinksto3_5]
        self.rigversion = 27
    
@@ -637,25 +640,25 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['relb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lelb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,"torso")
             if bone is not None:
