@@ -139,7 +139,11 @@ armlinksto3_5 = {
     "EllowTargetIK_L":"upper_arm_ik_target.L",
     "KneeTargetIK_R" :"thigh_ik_target.R",
     "KneeTargetIK_L" :"thigh_ik_target.L",
-    "Head":"head"
+    "Head":"head",
+    "UpArmFK_R":"upper_arm.fk.R",
+    "UpArmFK_L":"upper_arm.fk.L",
+    "ForeArmFK_R":"forearm.fk.R",
+    "ForeArmFK_L":"forearm.fk.L"
     }
 
 armlinksto2_7= {
@@ -151,7 +155,11 @@ armlinksto2_7= {
     "EllowTargetIK_L":"elbow_target.ik.L",
     "KneeTargetIK_R" :"knee_target.ik.R",
     "KneeTargetIK_L" :"knee_target.ik.L",
-    "Head":"headproxy"
+    "Head":"headproxy",
+    "UpArmFK_R":"upper_arm.fk.R",
+    "UpArmFK_L":"upper_arm.fk.L",
+    "ForeArmFK_R":"forearm.fk.R",
+    "ForeArmFK_L":"forearm.fk.L"
     }
 if (armlinkoptions.rigversion == 27):
   armlinksto = armlinksto2_7
@@ -527,7 +535,27 @@ class LinkArmature(bpy.types.Operator):
             crc.target = target
             print(bone.name,IDtarget, 'ik_update')
             return('FINISHED')
- 
+            
+    def cocostretch(self,bone,cname,IDtarget,pxname):
+        crc = bone.constraints.get('ST_'+pxname+cname)
+        if crc is None:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                return('FAILED')
+            crc = bone.constraints.new('STRETCH_TO')
+            crc.target = target
+            crc.name = 'ST_'+pxname+cname
+        else:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                bone.constraints.remove(crc)
+                return('FAILED')
+            crc.target = target
+            print(bone.name,IDtarget, 'stretch_update')
+            return('FINISHED')
+
             
     def findbone(self,arm,name):
             bone = arm.pose.bones.get(name)
@@ -611,8 +639,67 @@ class LinkArmature(bpy.types.Operator):
                   cname = pre+'_'+joma['lelb']
                   IDtarget ='{:}{:}'.format(nameP,cname)
                   if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z')
+#
+# Forward upper,lower arm with preconditining
+#
+#begin
+                   
+            bone = self.findbone(arm,armlinksto["UpArmFK_L"])
+            if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_X','LOCK_Z')
+
+            bone = self.findbone(arm,armlinksto["UpArmFK_L"])
+            if bone is not None:
+                cname = pre+'_'+joma['lelb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+ 
+            bone = self.findbone(arm,armlinksto["ForeArmFK_L"])
+            if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_X','LOCK_Z')
+
+            bone = self.findbone(arm,armlinksto["ForeArmFK_L"])
+            if bone is not None:
+                cname = pre+'_'+joma['lwri']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+
+            bone = self.findbone(arm,armlinksto["UpArmFK_R"])
+            if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_X','LOCK_Z')
+
+
+            bone = self.findbone(arm,armlinksto["UpArmFK_R"])
+            if bone is not None:
+                cname = pre+'_'+joma['relb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+
+            bone = self.findbone(arm,armlinksto["ForeArmFK_R"])
+            if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_X','LOCK_Z')
+
+            bone = self.findbone(arm,armlinksto["ForeArmFK_R"])
+            if bone is not None:
+                cname = pre+'_'+joma['rwri']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+#
+# Forward upper,lower arm with preconditining
+#
+#end
+                
+                
+
 
             bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
