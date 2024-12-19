@@ -353,6 +353,7 @@ def _dokey(step):
     bpy.ops.anim.keyframe_insert()
     actual += step
     bpy.context.scene.frame_set(actual)
+    return(actual)
      
 
 
@@ -371,6 +372,9 @@ class Rigify_Arm_FK2IKEX(bpy.types.Operator):
     uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
     farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+    start = bpy.props.IntProperty(name="Start")
+    end = bpy.props.IntProperty(name="End")
+    step = bpy.props.IntProperty(name="Step")
 
     @classmethod
     def poll(cls, context):
@@ -379,11 +383,15 @@ class Rigify_Arm_FK2IKEX(bpy.types.Operator):
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
-        try:
+        f = self.start
+        bpy.context.scene.frame_set(f)
+        while (f < self.end - self.step):
+         try:
             fk2ik_arm(context.active_object, fk=[self.uarm_fk, self.farm_fk, self.hand_fk], ik=[self.uarm_ik, self.farm_ik, self.hand_ik])
-        finally:
+         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        _dokey(10)
+         f=_dokey(self.step)
+         print("Frame",f)
         return {'FINISHED'}
 
 
@@ -430,7 +438,7 @@ class Rigify_Leg_FK2IKEX(bpy.types.Operator):
 class RigUIEX(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_label = "Rig FK_Snap"
+    bl_label = "Rig FK_Snap_N_Bake"
     bl_idname = rig_id + "_PT_rig_uiex"
 
     @classmethod
@@ -498,13 +506,22 @@ class RigUIEX(bpy.types.Panel):
         fk_arm = ["upper_arm.fk.L", "forearm.fk.L", "hand.fk.L"]
         ik_arm = ["MCH-upper_arm.ik.L", "MCH-forearm.ik.L", "hand.ik.L", "elbow_target.ik.L"]
         if is_selected(fk_arm+ik_arm):
-            props = layout.operator("pose.rigify_arm_fk2ikex_" + rig_id, text="Snap FK->IK (" + fk_arm[0] + ")")
-            props.uarm_fk = fk_arm[0]
-            props.farm_fk = fk_arm[1]
-            props.hand_fk = fk_arm[2]
-            props.uarm_ik = ik_arm[0]
-            props.farm_ik = ik_arm[1]
-            props.hand_ik = ik_arm[2]
+            p = layout.operator("pose.rigify_arm_fk2ikex_" + rig_id, text="Bake FK from IK (" + fk_arm[0] + ")")
+            p.uarm_fk = fk_arm[0]
+            p.farm_fk = fk_arm[1]
+            p.hand_fk = fk_arm[2]
+            p.uarm_ik = ik_arm[0]
+            p.farm_ik = ik_arm[1]
+            p.hand_ik = ik_arm[2]
+            p.start = bpy.context.scene.frame_current
+            p.end = bpy.context.scene.frame_end
+            obj = bpy.context.active_object
+            row= layout.row(align=True)
+            row.label("start: {0}".format(p.start))
+            row.label("end: {0}".format(p.end))
+            row.prop(obj, '["%s"]' % ("bakestep"),text="Step")
+            p.step = obj["bakestep"]
+
         
 
         
@@ -518,6 +535,8 @@ class RigUIEX(bpy.types.Panel):
             props.uarm_ik = ik_arm[0]
             props.farm_ik = ik_arm[1]
             props.hand_ik = ik_arm[2]
+            props.step = 5
+            layout.prop(props,"step")
             
      
             
