@@ -372,6 +372,7 @@ class Rigify_Arm_FK2IKEX(bpy.types.Operator):
     uarm_ik = bpy.props.StringProperty(name="Upper Arm IK Name")
     farm_ik = bpy.props.StringProperty(name="Forearm IK Name")
     hand_ik = bpy.props.StringProperty(name="Hand IK Name")
+    
     start = bpy.props.IntProperty(name="Start")
     end = bpy.props.IntProperty(name="End")
     step = bpy.props.IntProperty(name="Step")
@@ -413,6 +414,10 @@ class Rigify_Leg_FK2IKEX(bpy.types.Operator):
     shin_ik  = bpy.props.StringProperty(name="Shin IK Name")
     foot_ik  = bpy.props.StringProperty(name="Foot IK Name")
     mfoot_ik = bpy.props.StringProperty(name="MFoot IK Name")
+    
+    start = bpy.props.IntProperty(name="Start")
+    end = bpy.props.IntProperty(name="End")
+    step = bpy.props.IntProperty(name="Step")
 
     @classmethod
     def poll(cls, context):
@@ -421,11 +426,15 @@ class Rigify_Leg_FK2IKEX(bpy.types.Operator):
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
-        try:
+        f = self.start
+        bpy.context.scene.frame_set(f)
+        while (f < self.end - self.step):
+         try:
             fk2ik_leg(context.active_object, fk=[self.thigh_fk, self.shin_fk, self.foot_fk, self.mfoot_fk], ik=[self.thigh_ik, self.shin_ik, self.foot_ik, self.mfoot_ik])
-        finally:
+         finally:
             context.user_preferences.edit.use_global_undo = use_global_undo
-        _dokey(10)
+         _dokey(self.step)
+         print("Frame",f)         
         return {'FINISHED'}
 
 
@@ -485,7 +494,15 @@ class RigUIEX(bpy.types.Panel):
             p.shin_ik  = ik_leg[1]
             p.foot_ik = ik_leg[2]
             p.mfoot_ik = ik_leg[5]
-        
+            p.start = bpy.context.scene.frame_current
+            p.end = bpy.context.scene.frame_end
+            obj = bpy.context.active_object
+            row= layout.row(align=True)
+            row.label("start: {0}".format(p.start))
+            row.label("end: {0}".format(p.end))
+            row.prop(obj, '["%s"]' % ("bakestep"),text="Step")
+            p.step = obj["bakestep"]
+
 
         
         fk_leg = ["thigh.fk.R", "shin.fk.R", "foot.fk.R", "MCH-foot.R"]
@@ -500,6 +517,14 @@ class RigUIEX(bpy.types.Panel):
             p.shin_ik  = ik_leg[1]
             p.foot_ik = ik_leg[2]
             p.mfoot_ik = ik_leg[5]
+            p.start = bpy.context.scene.frame_current
+            p.end = bpy.context.scene.frame_end
+            obj = bpy.context.active_object
+            row= layout.row(align=True)
+            row.label("start: {0}".format(p.start))
+            row.label("end: {0}".format(p.end))
+            row.prop(obj, '["%s"]' % ("bakestep"),text="Step")
+            p.step = obj["bakestep"]
         
 
         
@@ -528,15 +553,22 @@ class RigUIEX(bpy.types.Panel):
         fk_arm = ["upper_arm.fk.R", "forearm.fk.R", "hand.fk.R"]
         ik_arm = ["MCH-upper_arm.ik.R", "MCH-forearm.ik.R", "hand.ik.R", "elbow_target.ik.R"]
         if is_selected(fk_arm+ik_arm):
-            props = layout.operator("pose.rigify_arm_fk2ikex_" + rig_id, text="Snap FK->IK (" + fk_arm[0] + ")")
-            props.uarm_fk = fk_arm[0]
-            props.farm_fk = fk_arm[1]
-            props.hand_fk = fk_arm[2]
-            props.uarm_ik = ik_arm[0]
-            props.farm_ik = ik_arm[1]
-            props.hand_ik = ik_arm[2]
-            props.step = 5
-            layout.prop(props,"step")
+            p = layout.operator("pose.rigify_arm_fk2ikex_" + rig_id, text="Snap FK->IK (" + fk_arm[0] + ")")
+            p.uarm_fk = fk_arm[0]
+            p.farm_fk = fk_arm[1]
+            p.hand_fk = fk_arm[2]
+            p.uarm_ik = ik_arm[0]
+            p.farm_ik = ik_arm[1]
+            p.hand_ik = ik_arm[2]
+            p.start = bpy.context.scene.frame_current
+            p.end = bpy.context.scene.frame_end
+            obj = bpy.context.active_object
+            row= layout.row(align=True)
+            row.label("start: {0}".format(p.start))
+            row.label("end: {0}".format(p.end))
+            row.prop(obj, '["%s"]' % ("bakestep"),text="Step")
+            p.step = obj["bakestep"]
+
             
      
             
