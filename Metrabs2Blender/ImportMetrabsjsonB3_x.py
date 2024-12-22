@@ -1513,7 +1513,7 @@ class ADDONAME_OT_TemplateOperator(bpy.types.Operator):
     bl_label = "Filter"
     bl_idname = "wm.template_operator"
     
-    id_filter : bpy.props.EnumProperty(
+    id_filter = bpy.props.EnumProperty(
        name = "Filter",
        description ="Choose Filter",
        items = [
