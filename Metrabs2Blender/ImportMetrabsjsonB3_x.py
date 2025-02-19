@@ -1513,7 +1513,7 @@ class ADDONAME_OT_TemplateOperator(bpy.types.Operator):
     bl_label = "Filter"
     bl_idname = "wm.template_operator"
     
-    id_filter = bpy.props.EnumProperty(
+    id_filter : EnumProperty(
        name = "Filter",
        description ="Choose Filter",
        items = [
@@ -1522,7 +1522,7 @@ class ADDONAME_OT_TemplateOperator(bpy.types.Operator):
          ("f2",_filternames[2],""),
          ("f3",_filternames[3],""),
          ("f4",_filternames[4],""),         
-         ("f5",_filternames[5],"")
+         ("f5",_filternames[5],"") 
        ]
     )
     
