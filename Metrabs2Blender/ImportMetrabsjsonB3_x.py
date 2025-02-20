@@ -1524,7 +1524,7 @@ class Filter_OT_Operator(bpy.types.Operator):
          ("f2",_filternames[2],""),
          ("f3",_filternames[3],""),
          ("f4",_filternames[4],""),         
-         ("f5",_filternames[5],"")
+         ("f5",_filternames[5],"") 
        ]
     )
     
