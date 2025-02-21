@@ -1173,7 +1173,7 @@ class import_metrabs(bpy.types.Operator):
                 elif tof == 2:
                       print("->MedianFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
                       #print(txt)
-                      res = TheFFCass.redmedian(chdata,incr,fw)
+                      res = TheFilterCass.redmedian(chdata,incr,fw)
                 elif tof == 3:
                       print('->KernelFilter5->Action',ch)
                       filter = [1.0,2.0,6.0,2.0,1.0]
@@ -1346,7 +1346,7 @@ def set_importpath(context, filepath, use_some_setting):
 
 
 class findMETRABData(Operator, ImportHelper):
-    """This appears in the tooltip of the operator and in the generated docs"""
+    """Browse for METRABS data"""
     bl_idname = "operator.findmetabsdata"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Find Data"
 
@@ -1440,10 +1440,11 @@ class MetrabsPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        i = 0
-        try:
+        i = -1
+        if (obj.type == 'EMPTY'):
+          try:
             i=obj["metrabs"]
-        except: 
+          except: 
             i = 0
         return (i in [0,1])
 
@@ -1451,6 +1452,7 @@ class MetrabsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.active_object
+
         i = 0
         try:
             i=obj["metrabs"]                            
@@ -1470,7 +1472,7 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
-            row.operator("wm.template_operator")
+            row.operator("wm.filter_operator")
             row.label(text="->{0}".format(_filternames[obj["tof"]]))
             #row.prop(obj, '["%s"]' % ("tof"),text="filter")  
             row.prop(obj, '["%s"]' % ("frw"),text="frw")  
@@ -1483,7 +1485,7 @@ class MetrabsPanel(bpy.types.Panel):
               row = layout.row()
               row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
-            row.prop(obj, '["%s"]' % ("inpath"),text="path")  
+            row.prop(obj, '["%s"]' % ("inpath"),text="path")
 
 
 """   
@@ -1492,7 +1494,7 @@ class MetrabsPanel(bpy.types.Panel):
 """    
 
 
-class ADDONNAME_PT_TemplatePanel(bpy.types.Panel):
+class Filter_PT_Panel(bpy.types.Panel):
     bl_label = "Name of the Panel"
     bl_idname = "ADDONNAME_PT_TemplatePanel"
     bl_space_type = "VIEW_3D"
@@ -1502,27 +1504,28 @@ class ADDONNAME_PT_TemplatePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         
-        layout.operator("wm.template_operator")
+        layout.operator("wm.filter_operator")
         
 
 
 
 
 
-class ADDONAME_OT_TemplateOperator(bpy.types.Operator):
-    bl_label = "Filter"
-    bl_idname = "wm.template_operator"
+class Filter_OT_Operator(bpy.types.Operator):
+    """ Select smoothing filter """
+    bl_label = "Set Filter"
+    bl_idname = "wm.filter_operator"
     
     id_filter = bpy.props.EnumProperty(
-       name = "Filter",
-       description ="Choose Filter",
+       name = "Smoothing_Filter",
+       description ="Selects smoothing Filter",
        items = [
          ("f0",_filternames[0],""),
-         ("f1",_filternames[1] ,""),
+         ("f1",_filternames[1],""),
          ("f2",_filternames[2],""),
          ("f3",_filternames[3],""),
          ("f4",_filternames[4],""),         
-         ("f5",_filternames[5],"")
+         ("f5",_filternames[5],"") 
        ]
     )
     
@@ -1558,7 +1561,7 @@ class ADDONAME_OT_TemplateOperator(bpy.types.Operator):
         return {'FINISHED'}    
 
 
-classes = [ADDONNAME_PT_TemplatePanel, ADDONAME_OT_TemplateOperator]
+classes = [Filter_PT_Panel, Filter_OT_Operator]
 
 def register():
     bpy.utils.register_class(make_metrabs)

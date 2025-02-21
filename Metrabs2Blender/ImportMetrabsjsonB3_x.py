@@ -1346,7 +1346,7 @@ def set_importpath(context, filepath, use_some_setting):
 
 
 class findMETRABData(Operator, ImportHelper):
-    """This appears in the tooltip of the operator and in the generated docs"""
+    """Browse for METRABS data"""
     bl_idname = "operator.findmetabsdata"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Find Data"
 
@@ -1512,6 +1512,7 @@ class Filter_PT_Panel(bpy.types.Panel):
 
 
 class Filter_OT_Operator(bpy.types.Operator):
+    """ Select smoothing filter """
     bl_label = "Set Filter"
     bl_idname = "wm.filter_operator"
     
