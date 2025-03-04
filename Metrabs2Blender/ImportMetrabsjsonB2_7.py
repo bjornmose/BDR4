@@ -1464,6 +1464,11 @@ class MetrabsPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.operator("operator.findmetabsdata")
+            try: 
+                obj["inpath"]
+            except:
+                return
+
             row.operator("object.read_metrabs_info")
             row.operator("object.import_metrabs_operator")
             row = layout.row()

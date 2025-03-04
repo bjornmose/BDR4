@@ -44,6 +44,7 @@ class CloneMotionPanel(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "object"
     '''
+    
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
 
@@ -53,8 +54,9 @@ class CloneMotionPanel(bpy.types.Panel):
         layout = self.layout
 
         obj = context.object
-
+        scene = bpy.context.scene
         obj = context.active_object
+
         i = 0
         try:
             i=obj["bakestep"]                            
@@ -66,6 +68,7 @@ class CloneMotionPanel(bpy.types.Panel):
         else:
             row = layout.row()
             row.prop(obj, '["%s"]' % ("bakestep"),text="Step")
+            row.prop_search(scene.keying_sets_all, "active", scene, "keying_sets_all", text="")
             row.operator("object.clone_motion")
 
 def register():
