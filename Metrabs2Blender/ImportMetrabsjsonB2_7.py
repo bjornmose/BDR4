@@ -24,7 +24,8 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
 
-
+nOP_Box_X = 'SB_x'
+nOP_Box_Y = 'SB_y'
 
 
 joints_coco_19 =  [
@@ -546,7 +547,7 @@ class C_rawMeterasData():
             if dn < d_min:
                 self.box = [xn,yn]
                 d_min = dn
-                pname='pose3d{0:d}'.format(nb+1)
+                pname='pose3d{0:d}'.format(nb)
                 if (self.boxindex != nb):
                   print('Box Switch',pname)        
                   self.boxindex = nb
@@ -828,6 +829,13 @@ def completeObjectProperties(obj):
     except:
         frw=100
         obj["frw"]=frw
+    try:
+        r = obj[nOP_Box_X] 
+        r = obj[nOP_Box_Y] 
+    except:
+        obj[nOP_Box_X] = 0.0
+        obj[nOP_Box_Y] = 0.0
+
         
       
                 
@@ -1132,11 +1140,12 @@ class import_metrabs(bpy.types.Operator):
 
         makejoints(obj,joints,pre) 
         makeactions_3d_res = makeactions_3d(joints,pre)
-        box = [0.0,0.0]
             
           
-        ETA = _ETA(end_frame-start_frame)
         TheFilterCass = C_rawMeterasData()
+        sbx = obj[nOP_Box_X]
+        sby = obj[nOP_Box_Y]
+        TheFilterCass.box=[sbx,sby]
 
         #read all frames from source
         for i in range (start_frame ,end_frame):
@@ -1474,7 +1483,11 @@ class MetrabsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
             row.prop(obj, '["%s"]' % ("end_frame"),text="end")  
-            row.prop(obj, '["%s"]' % ("incr"),text="step")  
+            row.prop(obj, '["%s"]' % ("incr"),text="step")
+            row = layout.row()
+            row.prop(obj, '["%s"]' % (nOP_Box_X),text="MB_X")  
+            row.prop(obj, '["%s"]' % (nOP_Box_Y),text="MB_Y")  
+
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
             row.operator("wm.filter_operator")
