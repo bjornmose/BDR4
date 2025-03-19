@@ -26,6 +26,8 @@ from bpy.types import Operator
 
 nOP_Box_X = 'SB_x'
 nOP_Box_Y = 'SB_y'
+nOB_ActionTimeScale = 'ActionTimeScale'
+nOB_FilterInc = 'FilterInc'
 
 
 joints_coco_19 =  [
@@ -593,7 +595,7 @@ class C_rawMeterasData():
             channel[frame] = (x,y,z)
         return channel
     
-    def inject_action(self,obj,chdata,sf):
+    def inject_action(self,obj,chdata,sf,tf):
         fcu_x = obj.animation_data.action.fcurves[0]
         fcu_y = obj.animation_data.action.fcurves[1]
         fcu_z = obj.animation_data.action.fcurves[2]
@@ -603,9 +605,10 @@ class C_rawMeterasData():
             lx = loc[0]/ sf
             ly = loc[1]/ sf
             lz = loc[2]/ sf
-            fcu_x.keyframe_points.insert(frame,lx,options={'NEEDED','FAST'})
-            fcu_y.keyframe_points.insert(frame,ly,options={'NEEDED','FAST'})
-            fcu_z.keyframe_points.insert(frame,lz,options={'NEEDED','FAST'})
+            frs = frame * tf/100.0
+            fcu_x.keyframe_points.insert(frs,lx,options={'NEEDED','FAST'})
+            fcu_y.keyframe_points.insert(frs,ly,options={'NEEDED','FAST'})
+            fcu_z.keyframe_points.insert(frs,lz,options={'NEEDED','FAST'})
           except (KeyError):
             pass  
         
@@ -807,9 +810,9 @@ def completeObjectProperties(obj):
         obj["end_frame"]   = 5
 
     try:
-        T=obj["incr"] 
+        T=obj[nOB_FilterInc] 
     except:
-        obj["incr"]   = 1
+        obj[nOB_FilterInc]   = 1
     try:
         T=obj["scaledidvisor"] 
     except:
@@ -831,10 +834,12 @@ def completeObjectProperties(obj):
         obj["frw"]=frw
     try:
         r = obj[nOP_Box_X] 
-        r = obj[nOP_Box_Y] 
+        r = obj[nOP_Box_Y]
+        r = obj[nOB_ActionTimeScale] 
     except:
         obj[nOP_Box_X] = 0.0
         obj[nOP_Box_Y] = 0.0
+        obj[nOB_ActionTimeScale] = 100.0
 
         
       
@@ -1107,7 +1112,7 @@ class import_metrabs(bpy.types.Operator):
         pre = obj.name + '_'
         file = obj['inpath']+obj["infile"] 
         start_frame = obj["start_frame"]
-        incr = obj["incr"]
+        incr = obj[nOB_FilterInc]
         end_frame = obj["end_frame"] + incr
         print(file,start_frame,end_frame,incr)
         # read the joints from data 
@@ -1146,6 +1151,7 @@ class import_metrabs(bpy.types.Operator):
         sbx = obj[nOP_Box_X]
         sby = obj[nOP_Box_Y]
         TheFilterCass.box=[sbx,sby]
+        tf = obj[nOB_ActionTimeScale]
 
         #read all frames from source
         for i in range (start_frame ,end_frame):
@@ -1200,16 +1206,16 @@ class import_metrabs(bpy.types.Operator):
                       res = TheFilterCass.redfilter(chdata,filter,incr)
             
                 #apply filter here ----
-                TheFilterCass.inject_action(obj,res,sf)
+                TheFilterCass.inject_action(obj,res,sf,tf)
             else:
                 print('->Raw->Action',ch)
-                TheFilterCass.inject_action(obj,chdata,sf)
+                TheFilterCass.inject_action(obj,chdata,sf,tf)
                 
 
 
         if zba > 0:
             bpy.context.scene.frame_start = 0
-            bpy.context.scene.frame_end = end_frame-start_frame
+            bpy.context.scene.frame_end = (end_frame-start_frame) * tf/100.0
         else:
             bpy.context.scene.frame_start = start_frame
             bpy.context.scene.frame_end = end_frame
@@ -1264,7 +1270,7 @@ class import_metrabs2D(bpy.types.Operator):
         makeactions_3d_res = makeactions_3d(joints,pre)
         file = obj['inpath']+obj["infile"] 
         start_frame = obj["start_frame"]
-        incr = obj["incr"]
+        incr = obj[nOB_FilterInc]
         end_frame = obj["end_frame"] + incr
         print(file,start_frame,end_frame,incr)
         box = [0.0,0.0]
@@ -1409,7 +1415,7 @@ class op_CreateArmature(bpy.types.Operator):
         try:
           tof=obj["tof"] 
           frw=obj["frw"]
-          incr = obj["incr"] 
+          incr = obj[nOB_FilterInc] 
           dName = "_F{0:1d}W{1:03d}S{2:02d} ".format(tof,frw,incr) 
         except:
           dName = "oops"
@@ -1483,7 +1489,8 @@ class MetrabsPanel(bpy.types.Panel):
             row = layout.row()
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
             row.prop(obj, '["%s"]' % ("end_frame"),text="end")  
-            row.prop(obj, '["%s"]' % ("incr"),text="step")
+            row.prop(obj, '["%s"]' % (nOB_FilterInc),text="step")
+            row.prop(obj, '["%s"]' % (nOB_ActionTimeScale),text="ATS")
             row = layout.row()
             row.prop(obj, '["%s"]' % (nOP_Box_X),text="MB_X")  
             row.prop(obj, '["%s"]' % (nOP_Box_Y),text="MB_Y")  
