@@ -423,7 +423,7 @@ class UnLinkArmature(bpy.types.Operator):
         pre = obj.name
         _Tar_clear_ArmatureConstraints(arm,pre)
         print('CleanUp:')
-        if(False):
+        if(True):
          for mde in _lMDE:
             deleteObject(pre+_lMDE[mde])
         else:
