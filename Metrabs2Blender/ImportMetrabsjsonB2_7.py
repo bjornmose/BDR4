@@ -4,6 +4,8 @@ import os
 import inspect
 import sys
 import time
+import numpy as np
+
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -646,12 +648,12 @@ class C_rawMeterasData():
               except (KeyError):
                 pass 
         
-          lx.sort()
-          ly.sort()
-          lz.sort()
           l = len(lx)
           if l > 0:
-            res[step] = (lx[l//2],ly[l//2],lz[l//2])
+              mx=np.median(lx)
+              my=np.median(ly)
+              mz=np.median(lz)
+              res[step] = (mx,my,mz)
         return res
 
     def redfilter(self,chdata,filter,w):
