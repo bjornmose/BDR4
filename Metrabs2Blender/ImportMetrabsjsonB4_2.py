@@ -1545,8 +1545,8 @@ def register():
     bpy.utils.register_class(delete_childen_actions)
     bpy.utils.register_class(delete_childen)
     bpy.utils.register_class(op_CreateArmature)
-    for cls in classes:
-        bpy.utils.register_class(cls)
+    #for cls in classes:
+    #    bpy.utils.register_class(cls)
     print('Import Mertabs register DONE')
 
 
@@ -1561,8 +1561,8 @@ def unregister():
     bpy.utils.register_class(delete_childen_actions)
     bpy.utils.register_class(delete_childen)
     bpy.utils.unregister_class(op_CreateArmature)
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    #for cls in classes:
+    #    bpy.utils.unregister_class(cls)
     
 def main():
     register()
