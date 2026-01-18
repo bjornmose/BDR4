@@ -405,8 +405,15 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
         lz = joint[3] / scalediv
         bone.head = (lx,ly,lz)
         bone.tail = (lx,ly,lz+1.0)
-        bone.layers=(True, False , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
-                     False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+        try: #fails in B4.2
+            bone.layers=(True, False , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+             False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+        except:
+            pass
+
+        
+
+
 
         
             
@@ -1184,6 +1191,9 @@ class import_metrabs(bpy.types.Operator):
             
             
             if (incr > 0):
+                if tof == 0: 
+                      print('->Raw->Action',ch)
+                      res = chdata
                 if tof == 1:
                       print('->AverageFilter->Action',ch)
                       res = TheFilterCass.redavg(chdata,incr)
@@ -1202,16 +1212,16 @@ class import_metrabs(bpy.types.Operator):
                       print('->KernelFilter9->Action',ch)
                       filter = [1.0,1.0,2.0,4.0,6.0,4.0,2.0,1.0,1.0]
                       res = TheFilterCass.redfilter(chdata,filter,incr)
-                else:
+                elif tof == 6:
                       print('->KernelFilter3->Action',ch)
                       filter = [1.0,4.0,1.0]
                       res = TheFilterCass.redfilter(chdata,filter,incr)
-            
                 #apply filter here ----
                 TheFilterCass.inject_action(obj,res,sf,tf)
+                     
+                
             else:
-                print('->Raw->Action',ch)
-                TheFilterCass.inject_action(obj,chdata,sf,tf)
+                print('Do nothing',ch)
                 
 
 
@@ -1444,7 +1454,7 @@ class op_CreateArmature(bpy.types.Operator):
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
-_filternames = ["KF3","Av","Med","KF5","AvN","KF9"]
+_filternames = ["RAW","Av","Med","KF5","AvN","KF9","KF3"]
 
 class MetrabsPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
@@ -1477,6 +1487,8 @@ class MetrabsPanel(bpy.types.Panel):
             i = 0
         if(i ==0): 
             row = layout.row()
+            row.label(text="**HAVING SPEAKING NAME**")
+            row = layout.row()
             row.operator("object.make_metrabs_operator")
         else:
             row = layout.row()
@@ -1499,7 +1511,7 @@ class MetrabsPanel(bpy.types.Panel):
 
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
-            row.operator("wm.filter_operator")
+            row.prop(obj, '["%s"]' % ("tof"),text="filter")  
             row.label(text="->{0}".format(_filternames[obj["tof"]]))
             #row.prop(obj, '["%s"]' % ("tof"),text="filter")  
             row.prop(obj, '["%s"]' % ("frw"),text="frw")  
@@ -1521,74 +1533,6 @@ class MetrabsPanel(bpy.types.Panel):
 """    
 
 
-class Filter_PT_Panel(bpy.types.Panel):
-    bl_label = "Name of the Panel"
-    bl_idname = "ADDONNAME_PT_TemplatePanel"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = 'UI'
-    bl_category = "Template Tab"
-    
-    def draw(self, context):
-        layout = self.layout
-        
-        layout.operator("wm.filter_operator")
-        
-
-
-
-
-
-class Filter_OT_Operator(bpy.types.Operator):
-    """ Select smoothing filter """
-    bl_label = "Set Filter"
-    bl_idname = "wm.filter_operator"
-    
-    id_filter = bpy.props.EnumProperty(
-       name = "Smoothing_Filter",
-       description ="Selects smoothing Filter",
-       items = [
-         ("f0",_filternames[0],""),
-         ("f1",_filternames[1],""),
-         ("f2",_filternames[2],""),
-         ("f3",_filternames[3],""),
-         ("f4",_filternames[4],""),         
-         ("f5",_filternames[5],"") 
-       ]
-    )
-    
-    
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-        #return wm.invoke_search_popup(self)
-    
-    
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self,"id_filter")
-        
-    
-    def execute(self, context):
-        obj = context.active_object
-        if self.id_filter == "f0":
-           obj["tof"] = 0
-        if self.id_filter == "f1":
-           obj["tof"] = 1
-        if self.id_filter == "f2":
-           obj["tof"] = 2
-        if self.id_filter == "f3":
-           obj["tof"] = 3
-        if self.id_filter == "f4":
-           obj["tof"] = 4
-        if self.id_filter == "f5":
-           obj["tof"] = 5
-           
-
-        
-        return {'FINISHED'}    
-
-
-classes = [Filter_PT_Panel, Filter_OT_Operator]
 
 def register():
     bpy.utils.register_class(make_metrabs)

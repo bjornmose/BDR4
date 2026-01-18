@@ -447,11 +447,19 @@ def createbones_ex(arm,dicbones):
            bone = bones.new(bname)
            bone.head = (lx,0.,0.)
            bone.tail = (lx+t[0],t[1],t[2])
-           bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
-                        False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+           try:#fails in 4.x
+               bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+           except:
+               pass
+        
+           
              
     bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.data.armatures[arm.name].layers[1] = True
+    try:
+      bpy.data.armatures[arm.name].layers[1] = True
+    except:
+      pass
     return (0)
 
 
