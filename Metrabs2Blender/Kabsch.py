@@ -87,6 +87,41 @@ def objcotrans(obj,cname,IDtarget,influence):
         
     return('FINISHED')
 
+def objcoLoc(obj,cname,IDtarget,influence):
+    crc = obj.constraints.get(cname)
+    if crc is None:
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            return('FAILED')
+        crc = obj.constraints.new('COPY_LOCATION')
+        crc.name = cname
+    if crc : #created or not .. should be here now
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            obj.constraints.remove(crc)
+            return('FAILED')
+        crc.target = target
+        crc.influence=influence
+    else:
+        print('still no object:',cname,IDtarget)
+        return('FAILED')
+        
+    return('FINISHED')
+
+
+def createHybrid(obj):
+        hyroot = createEmpty('hyb',0.5,'CIRCLE')
+        name_other = obj[CS_KabschOther]
+        for ch in obj.children:
+          name = ch.name
+          name2=name.replace(obj.name,name_other ,1)
+          name3=name.replace(obj.name,'hyb' ,1)
+          hychild = createEmpty(name3,0.1,'SPHERE')
+          hychild.parent = hyroot
+          objcotrans(hychild,'hy1',name,1.0)
+          objcotrans(hychild,'hy2',name2,0.5)
 
 
 
@@ -145,7 +180,7 @@ class KabschOperator(bpy.types.Operator):
         obj3.location[2] = obj3.location[2] + (res[1][2]-obj3.location[2])/damp
         
         
-        objcotrans(obj,'Kabsch Transform',name3,1.1)
+        objcotrans(obj,'Kabsch Transform',name3,1.)
         
         print(obj3.location,obj3.rotation_euler)
         '''
@@ -163,6 +198,27 @@ class KabschOperator(bpy.types.Operator):
         obj2.location[2]= res[1][2]0
         '''
         return {'FINISHED'}        
+
+class MakeHybridOperator(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.makehybrid_operator"
+    bl_label = "MakeHybrid"
+    
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute (self,context):
+        obj = context.active_object
+        createHybrid(obj)
+        return {'FINISHED'}
 
 class LoopKabschOperator(bpy.types.Operator):
     """Tooltip"""
@@ -232,6 +288,9 @@ class KabschPanel(bpy.types.Panel):
 
              row = layout.row()
              row.operator("object.loopkabsch_operator")
+
+             row = layout.row()
+             row.operator("object.makehybrid_operator")
                 
         except:
             row = layout.row()
@@ -245,12 +304,14 @@ def register():
     bpy.utils.register_class(KabschOperator)
     bpy.utils.register_class(LoopKabschOperator)
     bpy.utils.register_class(KabschPanel)
+    bpy.utils.register_class(MakeHybridOperator)
 
 
 def unregister():
     bpy.utils.unregister_class(KabschOperator)
     bpy.utils.unregister_class(LoopKabschOperator)
-    bpy.utils.register_class(KabschPanel)
+    bpy.utils.unregister_class(KabschPanel)
+    bpy.utils.unregister_class(MakeHybridOperator)
 
 
 if __name__ == "__main__":
