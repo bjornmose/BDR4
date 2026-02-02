@@ -542,6 +542,7 @@ class C_rawMeterasData():
         self.joints = []
         self.box = [0.0,0.0]
         self.boxindex=999
+        self.dir_Y = 1.
         pass
 
     def choose_box(self,pname,boxes):
@@ -612,7 +613,7 @@ class C_rawMeterasData():
           try:  
             loc = chdata[frame] 
             lx = loc[0]/ sf
-            ly = loc[1]/ sf
+            ly = loc[1]/ sf *  self.dir_Y
             lz = loc[2]/ sf
             frs = frame * tf/100.0
             fcu_x.keyframe_points.insert(frs,lx,options={'NEEDED','FAST'})
@@ -849,6 +850,11 @@ def completeObjectProperties(obj):
         obj[nOP_Box_X] = 0.0
         obj[nOP_Box_Y] = 0.0
         obj[nOB_ActionTimeScale] = 100.0
+    try:
+        domirr=obj["domirr"] 
+    except:
+        obj["domirr"]=0
+    
 
         
       
@@ -1117,6 +1123,7 @@ class import_metrabs(bpy.types.Operator):
         tof=obj["tof"] 
         frw=obj["frw"] 
         zba=obj["ZBA"]
+        domirr=obj["domirr"]
 
         pre = obj.name + '_'
         file = obj['inpath']+obj["infile"] 
@@ -1161,6 +1168,10 @@ class import_metrabs(bpy.types.Operator):
         sby = obj[nOP_Box_Y]
         TheFilterCass.box=[sbx,sby]
         tf = obj[nOB_ActionTimeScale]
+        if  domirr :
+            TheFilterCass.dir_Y = -1.
+        else:
+            TheFilterCass.dir_Y = 1.
 
         #read all frames from source
         for i in range (start_frame ,end_frame):
@@ -1179,7 +1190,14 @@ class import_metrabs(bpy.types.Operator):
         TheFilterCass.extract_all()
         fw = int (incr * frw / 100)      
         for ch in TheFilterCass.joints:
-            jName = pre + ch
+            chstunt = ch
+            if domirr :
+               if chstunt[0] == 'r':
+                  chstunt = chstunt.replace('r','l',1)
+               elif chstunt[0] == 'l':
+                  chstunt = chstunt.replace('l','r',1)
+
+            jName = pre + chstunt
             obj = bpy.data.objects.get(jName)
             chdata = TheFilterCass.channels[ch]
             #apply filter here +++     
@@ -1525,6 +1543,8 @@ class MetrabsPanel(bpy.types.Panel):
               row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
             row.prop(obj, '["%s"]' % ("inpath"),text="path")
+            row = layout.row()
+            row.prop(obj, '["%s"]' % ("domirr"),text="mirror")
 
 
 """   

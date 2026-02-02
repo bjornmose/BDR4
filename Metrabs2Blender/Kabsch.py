@@ -64,6 +64,31 @@ def find_camera_b_pose(LA, LB):
 
     return R, t
 
+def objcotrans(obj,cname,IDtarget,influence):
+    crc = obj.constraints.get(cname)
+    if crc is None:
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            return('FAILED')
+        crc = obj.constraints.new('COPY_TRANSFORMS')
+        crc.name = cname
+    if crc : #created or not .. should be here now
+        target = bpy.data.objects.get(IDtarget)
+        if target is None:
+            print('MISSING TARGET:',IDtarget)
+            obj.constraints.remove(crc)
+            return('FAILED')
+        crc.target = target
+        crc.influence=influence
+    else:
+        print('still no object:',cname,IDtarget)
+        return('FAILED')
+        
+    return('FINISHED')
+
+
+
 
 
 class KabschOperator(bpy.types.Operator):
@@ -104,8 +129,8 @@ class KabschOperator(bpy.types.Operator):
         loc, rot, sca = mat_out.decompose()
         #print(loc, rot, sca)
         rot2=rot.to_euler()
-        obj.rotation_euler = rot2
-        obj.location = res[1]
+        #obj.rotation_euler = rot2
+        #obj.location = res[1]
         
         name3 = 'Akku'+obj.name
         damp = 50.
@@ -118,6 +143,9 @@ class KabschOperator(bpy.types.Operator):
         obj3.location[0] = obj3.location[0] + (res[1][0]-obj3.location[0])/damp
         obj3.location[1] = obj3.location[1] + (res[1][1]-obj3.location[1])/damp
         obj3.location[2] = obj3.location[2] + (res[1][2]-obj3.location[2])/damp
+        
+        
+        objcotrans(obj,'Kabsch Transform',name3,1.1)
         
         print(obj3.location,obj3.rotation_euler)
         '''
