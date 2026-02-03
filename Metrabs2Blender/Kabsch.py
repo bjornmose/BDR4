@@ -220,6 +220,30 @@ class MakeHybridOperator(bpy.types.Operator):
         createHybrid(obj)
         return {'FINISHED'}
 
+class MakeKabschOperator(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.makekabsch_operator"
+    bl_label = "MakeKabsch"
+    
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        i = 0
+        try:
+            i=obj["metrabs"]
+        except: 
+            i = 0
+        return i>0
+    
+    def execute (self,context):
+        obj = context.active_object
+        obj[CS_KabschOther] = '*none*'
+        return {'FINISHED'}
+
+
+
+
 class LoopKabschOperator(bpy.types.Operator):
     """Tooltip"""
     bl_idname = "object.loopkabsch_operator"
@@ -294,7 +318,7 @@ class KabschPanel(bpy.types.Panel):
                 
         except:
             row = layout.row()
-            row.label("Missing prop "+CS_KabschOther)
+            row.operator("object.makekabsch_operator")
             
 
 
@@ -305,6 +329,7 @@ def register():
     bpy.utils.register_class(LoopKabschOperator)
     bpy.utils.register_class(KabschPanel)
     bpy.utils.register_class(MakeHybridOperator)
+    bpy.utils.register_class(MakeKabschOperator)
 
 
 def unregister():
@@ -312,6 +337,7 @@ def unregister():
     bpy.utils.unregister_class(LoopKabschOperator)
     bpy.utils.unregister_class(KabschPanel)
     bpy.utils.unregister_class(MakeHybridOperator)
+    bpy.utils.unregister_class(MakeKabschOperator)
 
 
 if __name__ == "__main__":
