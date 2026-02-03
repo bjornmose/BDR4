@@ -345,3 +345,6 @@ if __name__ == "__main__":
 
     # test call
     #bpy.ops.object.kabsch_operator()
+else:
+    register()
+    
