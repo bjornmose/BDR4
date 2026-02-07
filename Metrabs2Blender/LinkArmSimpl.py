@@ -7,7 +7,7 @@ import numpy as np
 import os
 import sys
 
-#today 2024/02/17
+#today 2024/11/03
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -26,6 +26,10 @@ class _Carmlinkoptions:
    def __init__(self) -> None:
        self.linktoes = True
        self.linkhand = True
+       self.influenceEllbow = 0.75
+       self.influenceKnee = 0.75
+       self.FKarms = False
+
        #rigversions = [armlinksto2_7,armlinksto3_5]
        self.rigversion = 27
    
@@ -136,7 +140,11 @@ armlinksto3_5 = {
     "EllowTargetIK_L":"upper_arm_ik_target.L",
     "KneeTargetIK_R" :"thigh_ik_target.R",
     "KneeTargetIK_L" :"thigh_ik_target.L",
-    "Head":"head"
+    "Head":"head",
+    "UpArmFK_R":"upper_arm.fk.R",
+    "UpArmFK_L":"upper_arm.fk.L",
+    "ForeArmFK_R":"forearm.fk.R",
+    "ForeArmFK_L":"forearm.fk.L"
     }
 
 armlinksto2_7= {
@@ -148,7 +156,11 @@ armlinksto2_7= {
     "EllowTargetIK_L":"elbow_target.ik.L",
     "KneeTargetIK_R" :"knee_target.ik.R",
     "KneeTargetIK_L" :"knee_target.ik.L",
-    "Head":"headproxy"
+    "Head":"headproxy",
+    "UpArmFK_R":"upper_arm.fk.R",
+    "UpArmFK_L":"upper_arm.fk.L",
+    "ForeArmFK_R":"forearm.fk.R",
+    "ForeArmFK_L":"forearm.fk.L"
     }
 if (armlinkoptions.rigversion == 27):
   armlinksto = armlinksto2_7
@@ -411,7 +423,7 @@ class UnLinkArmature(bpy.types.Operator):
         pre = obj.name
         _Tar_clear_ArmatureConstraints(arm,pre)
         print('CleanUp:')
-        if(False):
+        if(True):
          for mde in _lMDE:
             deleteObject(pre+_lMDE[mde])
         else:
@@ -524,7 +536,27 @@ class LinkArmature(bpy.types.Operator):
             crc.target = target
             print(bone.name,IDtarget, 'ik_update')
             return('FINISHED')
- 
+            
+    def cocostretch(self,bone,cname,IDtarget,pxname):
+        crc = bone.constraints.get('ST_'+pxname+cname)
+        if crc is None:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                return('FAILED')
+            crc = bone.constraints.new('STRETCH_TO')
+            crc.target = target
+            crc.name = 'ST_'+pxname+cname
+        else:
+            target = bpy.data.objects.get(IDtarget)
+            if target is None:
+                print('MISSING TARGET:',IDtarget)
+                bone.constraints.remove(crc)
+                return('FAILED')
+            crc.target = target
+            print(bone.name,IDtarget, 'stretch_update')
+            return('FINISHED')
+
             
     def findbone(self,arm,name):
             bone = arm.pose.bones.get(name)
@@ -608,8 +640,67 @@ class LinkArmature(bpy.types.Operator):
                   cname = pre+'_'+joma['lelb']
                   IDtarget ='{:}{:}'.format(nameP,cname)
                   if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z')
+#
+# Forward upper,lower arm with preconditioning
+#
+#begin
+            if armlinkoptions.FKarms:
+             bone = self.findbone(arm,armlinksto["UpArmFK_L"])
+             if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_X','LOCK_Z')
+
+             bone = self.findbone(arm,armlinksto["UpArmFK_L"])
+             if bone is not None:
+                cname = pre+'_'+joma['lelb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+ 
+             bone = self.findbone(arm,armlinksto["ForeArmFK_L"])
+             if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_X','LOCK_Z')
+
+             bone = self.findbone(arm,armlinksto["ForeArmFK_L"])
+             if bone is not None:
+                cname = pre+'_'+joma['lwri']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+
+             bone = self.findbone(arm,armlinksto["UpArmFK_R"])
+             if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_X','LOCK_Z')
+
+
+             bone = self.findbone(arm,armlinksto["UpArmFK_R"])
+             if bone is not None:
+                cname = pre+'_'+joma['relb']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+
+             bone = self.findbone(arm,armlinksto["ForeArmFK_R"])
+             if bone is not None:
+                cname = pre+_lMDE['kTorso']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_X','LOCK_Z')
+
+             bone = self.findbone(arm,armlinksto["ForeArmFK_R"])
+             if bone is not None:
+                cname = pre+'_'+joma['rwri']
+                IDtarget ='{:}{:}'.format(nameP,cname)
+                self.cocostretch(bone,cname,IDtarget,nameP)
+#
+# Forward upper,lower arm with preconditioning
+#
+#end
+                
+                
+
 
             bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
@@ -637,25 +728,25 @@ class LinkArmature(bpy.types.Operator):
             if bone is not None:
                 cname = pre+'_'+joma['relb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lelb']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             if bone is not None:
                 cname = pre+'_'+joma['rkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
             if bone is not None:
                 cname = pre+'_'+joma['lkne']
                 IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                self.cocoloc(bone,cname,IDtarget,nameP,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,"torso")
             if bone is not None:
@@ -768,10 +859,11 @@ class LinkArmPanel(bpy.types.Panel):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            if len(obj.children): 
+              i=obj["metrabs"]
         except: 
             i = 0
-        return i>0
+        return i==1
 
 
     def draw(self, context):
@@ -794,11 +886,20 @@ class LinkArmPanel(bpy.types.Panel):
                 if a is not None:
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    arm = bpy.data.objects.get(a)
+                    if arm is not None:
+                      try:
+                        row = layout.row()
+                        row.operator(LinkArmature.bl_idname)
+                        row.operator(UnLinkArmature.bl_idname)
+                      except:
+                        pass
+                    else:
+                      row = layout.row()
+                      row.label("Nix Finden : "+a)
+            
             except: 
                 pass
-            row = layout.row()
-            row.operator("object.linkarmature_operator")
-            row.operator("object.unlinkarmature_operator")
 
 
 """   

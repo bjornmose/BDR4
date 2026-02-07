@@ -38,8 +38,8 @@ def deleteObject35(name):
         with bpy.context.temp_override(selected_objects=objs):
             bpy.ops.object.delete()
         return('FINISHED')
-
-    except:
+    except Exception as error:
+        print('ERROR',error)
         print('NOT Deleted',name)
         return('FAILED')
     
@@ -67,10 +67,10 @@ def deleteObject(name):
             bpy.ops.object.delete()
         print('deleted',name)
         return('FINISHED')
-     except:
+     except Exception as error:
+        print('ERROR',error)
         print('NOT Deleted',name)
         return('FAILED')
-
 
 def create_armature(name,bonename):
     C = bpy.context

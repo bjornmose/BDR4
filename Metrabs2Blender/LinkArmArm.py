@@ -7,7 +7,7 @@ import numpy as np
 import os
 import sys
 
-#today 2024/02/17
+#today 2024/11/03
 
 dir = os.path.dirname(bpy.data.filepath)
 if not dir in sys.path:
@@ -21,13 +21,24 @@ import importlib
 importlib.reload(BVT)
 
 from BVT import *
-
+defaultrigversion = 35
 class _Carmlinkoptions:
    def __init__(self) -> None:
-       self.linktoes = True
+       self.linktoes = False
        self.linkhand = True
-       #rigversions = [armlinksto2_7,armlinksto3_5]
-       self.rigversion = 27
+       self.stiffhand = False
+       self.influenceEllbow = 0.75
+       self.influenceKnee = 0.75
+       self.rigversion = defaultrigversion
+    
+   def getlinkdict(self):
+       if self.rigversion == 27 :
+           return dictarmlink2_7
+       if self.rigversion == 35 :
+           return dictarmlink3_5
+       return None
+       
+       
    
 armlinkoptions = _Carmlinkoptions()
 '''
@@ -127,7 +138,7 @@ joma_picked = {
 
     }
     
-armlinksto3_5 = {
+dictarmlink3_5 = {
     "HandIK_R":"hand_ik.R",
     "HandIK_L":"hand_ik.L",
     "FootIK_R":"foot_ik.R",
@@ -136,10 +147,19 @@ armlinksto3_5 = {
     "EllowTargetIK_L":"upper_arm_ik_target.L",
     "KneeTargetIK_R" :"thigh_ik_target.R",
     "KneeTargetIK_L" :"thigh_ik_target.L",
-    "Head":"head"
+    "Shoulder_R": "shoulder.R",
+    "Shoulder_L": "shoulder.L",
+    "Head":"head",
+    "Neck":"neck",
+    "Root":"root",
+    "Torso":"torso",
+    "Chest":"chest",
+    "Hips":"hips",
+    "ForearmR":"DEF-forearm.R.001",
+    "ForearmL":"DEF-forearm.L.001"
     }
 
-armlinksto2_7= {
+dictarmlink2_7= {
     "HandIK_R":"hand.ik.R",
     "HandIK_L":"hand.ik.L",
     "FootIK_R":"foot.ik.R",
@@ -148,32 +168,36 @@ armlinksto2_7= {
     "EllowTargetIK_L":"elbow_target.ik.L",
     "KneeTargetIK_R" :"knee_target.ik.R",
     "KneeTargetIK_L" :"knee_target.ik.L",
-    "Head":"headproxy"
+    "Shoulder_R": "shoulder.R",
+    "Shoulder_L": "shoulder.L",
+    "Head":"headproxy",
+    "Neck":"neck",
+    "Root":"root",
+    "Torso":"torso",
+    "Chest":"chest",
+    "Hips":"hips",
+    "ForearmR":"DEF-forearm.02.R",
+    "ForearmL":"DEF-forearm.02.L"
     }
-if (armlinkoptions.rigversion == 27):
-  armlinksto = armlinksto2_7
-else:
-  armlinksto = armlinksto3_5
-#Library Metrabs Derived Empties 
-_lMDE = {
-    "kHipRot":"ZD_HipRot",
-    "kChestRot":"ZD_ChestRot",
-    "kTorso":"ZD_Torso",
-    "kTorsoL":"ZD_TorsoL",
-    "kTorsoR":"ZD_TorsoR",
-    "kHeadRot":"ZD_HeadRot",
-    "k11":"ZD_11",
-    "k12":"ZD_12",
-    "k13":"ZD_13",
-    "k14":"ZD_14",
-    "kFeetRot":"ZD_FeetRot"
+
+
+
+#Dictionary Metrabs Derived Bones
+_dMDB = {
+    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
+    "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
+    "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
+    "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
+    "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
+    "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
+    "kF10":{"name":"ZD_F10","tail":[-1.,0.,0.]},
+    "kF11":{"name":"ZD_F11","tail":[1.,0.,0.]},
+    "kF12":{"name":"ZD_F12","tail":[0.,1.,0.]}
 }
 
-def listMDE():
-    for mde in _lMDE:
-        print(mde,_lMDE[mde])
-        
-
+# get the name of a _dMDB bone
+def _nMDB(key):
+    return (_dMDB[key]["name"])
     
     
 joma_list ={
@@ -242,115 +266,6 @@ def objcoTrackTo(obj,cname,IDtarget,track_axis,up_axis,influence):
     return('FINISHED')
 
 
-def makehiprot(parent,joma):
-    
-    pre = parent.name
-    ID =pre+_lMDE["kHipRot"]
-    #brute force update what ever happend since 
-    deleteObject(ID)
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-        objcoloc(obj,'COL_HipRot_lhip',pre+'_'+joma['lhip'],1.0)
-        objcoloc(obj,'COL_HipRot_rhip',pre+'_'+joma['rhip'],0.5)
-        objcoTrackTo(obj,'COTT_HipRot_lhip',pre+'_'+joma['lhip'],'TRACK_X','UP_Y',1.0)
-        if (armlinkoptions.rigversion == 27):
-          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Y','LOCK_X',1.0)
-        else:
-          objcoLockedTrack(obj,'COLT_HipRot_belly',pre+'_'+joma['bell'],'TRACK_Z','LOCK_X',1.0)
-
-def maketorso(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kTorso"]
-    deleteObject(ID)
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_Torso_HipRot',pre+_lMDE["kHipRot"],1.0)
-        objcoloc(obj,'COCO_Torso_ChestRot',pre+_lMDE["kChestRot"],0.5)
-
-    ID =pre+_lMDE["kTorsoR"]
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_rTorso_rsho',pre+'_'+joma['rsho'],1.0)
-        objcoloc(obj,'COCO_rTorso_rhip',pre+'_'+joma['rhip'],0.5)
-
-    ID =pre+_lMDE["kTorsoL"]
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_lTorso_rsho',pre+'_'+joma['lsho'],1.0)
-        objcoloc(obj,'COCO_lTorso_rhip',pre+'_'+joma['lhip'],0.5)
-
-    ID =pre+_lMDE["kTorso"]
-    obj = bpy.data.objects.get(ID)
-    if (obj):
-        objcoTrackTo(obj,'COTT_Torso_trackL',pre+_lMDE["kTorsoL"],'TRACK_X','UP_Z',1.0)
-        objcoTrackTo(obj,'COTT_Torso_trackR',pre+_lMDE["kTorsoR"],'TRACK_NEGATIVE_X','UP_Z',0.5)
-        objcoLockedTrack(obj,'COLT_Torso_neck',pre+'_'+joma['neck'],'TRACK_Z','LOCK_X',1.0)
-
-                 
-def makechestrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kChestRot"]
-    #brute force update what ever happend since 
-    deleteObject(ID)
-
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-        objcoloc(obj,'COCO_chestrot_lcla',pre+'_'+joma['lcla'],1.0)
-        objcoloc(obj,'COCO_chestrot_rcla',pre+'_'+joma['rcla'],0.5)
-        objcoTrackTo(obj,'COTT_chestrot_lcla',pre+'_'+joma['lcla'],'TRACK_X','UP_Y',1.0)
-        if (armlinkoptions.rigversion == 27):
-          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Y','LOCK_X',1.0)
-        else:
-          objcoLockedTrack(obj,'COLT_chestrot_spin',pre+'_'+joma['spin'],'TRACK_NEGATIVE_Z','LOCK_X',1.0)
-                 
-def makeheadrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kHeadRot"]
-    deleteObject(ID)
-
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):
-        objcoloc(obj,'COCO_HeadRot_lear',pre+'_'+joma['lear'],1.0)
-        objcoloc(obj,'COCO_HeadRot_rear',pre+'_'+joma['rear'],0.5)
-        objcoTrackTo(obj,'COTT_HeadRot_nose',pre+'_'+joma['nose'],'TRACK_Z','UP_Y',1.0)
-        #objcoLockedTrack(obj,'COLT_HeadRot_htop',pre+'_'+joma['htop'],'TRACK_Y','LOCK_Z',1.0)
-        objcoLockedTrack(obj,'COLT_HeadRot_lear',pre+'_'+joma['lear'],'TRACK_X','LOCK_Z',1.0)
-
-def makefeetrot(parent,joma):
-
-    pre = parent.name
-    ID =pre+_lMDE["kFeetRot"]
-    deleteObject(ID)
-
-    
-    obj = bpy.data.objects.get(ID)
-    if (not obj):
-        obj =createEmpty(ID,0.5,'ARROWS')
-        obj.parent=parent
-    if (obj):        
-        objcoloc(obj,'COCO_FeetRot_lfoot',pre+'_'+joma['lfoo'],1.0)
-        objcoloc(obj,'COCO_FeetRot_rfoot',pre+'_'+joma['rfoo'],0.5)
-        objcoTrackTo(obj,'COTT_FeetRot_lfoo',pre+'_'+joma['lfoo'],'TRACK_Z','UP_Y',1.0)
-
 def _clear_ArmatureConstraints(arm):
     print('_clear_ArmatureConstraints')
     for bone in arm.pose.bones:
@@ -380,8 +295,6 @@ def _Tar_clear_ArmatureConstraints(arm,pat):
                     print('remove',_na,'from',bone.name)
     print('_Tar_clear_ArmatureConstraints Done')
 
-
-
 class UnLinkArmature2A(bpy.types.Operator):
     """UnLinkArmatureToSimpl"""
     bl_idname = "object.unlinka2armature_operator"
@@ -389,6 +302,7 @@ class UnLinkArmature2A(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+
         obj = context.active_object
         i = 0
         try:
@@ -410,15 +324,145 @@ class UnLinkArmature2A(bpy.types.Operator):
         print(nameA,' is:',arm)
         pre = obj.name
         _Tar_clear_ArmatureConstraints(arm,pre)
-        print('CleanUp:')
-        if(False):
-         for mde in _lMDE:
-            deleteObject(pre+_lMDE[mde])
-        else:
-         print('keep _lMDE for inspection')
-
         return {'FINISHED'}
 
+def coboneloc(bone,cname,target,IDbone,influence):
+        lcname = 'L_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('COPY_LOCATION')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.influence = influence
+            return('FINISHED')
+
+def coboneIK(bone,cname,target,IDbone,len,influence):
+        lcname = 'IK_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('IK')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.chain_count = len
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.chain_count = len
+            crc.influence = influence
+            return('FINISHED')
+
+
+def cobonerot(bone,cname,target,IDbone,use_x,use_y,use_z,influence):
+        lcname = 'R_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('COPY_ROTATION')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.use_x = use_x
+            crc.use_y = use_y
+            crc.use_z = use_z
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.use_x = use_x
+            crc.use_y = use_y
+            crc.use_z = use_z
+            crc.influence = influence
+            return('FINISHED')
+
+def cobonetrackto(bone,cname,target,IDbone,track_axis,up_axis,influence):
+        lcname = 'TT_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('TRACK_TO')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.track_axis = track_axis
+            crc.up_axis = up_axis
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.track_axis = track_axis
+            crc.up_axis = up_axis
+            crc.influence = influence
+            return('FINISHED')
+
+
+def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
+        lcname = 'LT_'+cname
+        crc = bone.constraints.get(lcname)
+        if crc is None:
+            crc = bone.constraints.new('LOCKED_TRACK')
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.name = lcname
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            crc.influence = influence
+        else:
+            crc.target = target
+            crc.subtarget = IDbone
+            crc.track_axis=track_axis
+            crc.lock_axis=lock_axis
+            crc.influence = influence
+            return('FINISHED')
+        
+def createbones_ex(arm,dicbones):
+    print('dicbones',dicbones)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try: #B2.7 style
+        bpy.context.scene.objects.active = arm
+        arm.select=True
+        bpy.ops.object.mode_set(mode='EDIT')
+        bones = bpy.context.active_object.data.edit_bones
+    except:
+        try: #B3xx style
+          print('B2.7 failed')
+          bpy.context.view_layer.objects.active = arm
+          arm.select_set(True)
+          bpy.ops.object.mode_set(mode='EDIT')
+          bones = bpy.context.active_object.data.edit_bones
+        except Exception as error:
+         print('ERROR',error)
+         return(1)
+        
+    lx = 0.
+    for key in dicbones:
+        item = dicbones[key]
+        t = item["tail"]
+        bname = item["name"]
+        bone = arm.pose.bones.get(bname)
+        if bone is None:
+           lx += 1.5
+           bone = bones.new(bname)
+           bone.head = (lx,0.,0.)
+           bone.tail = (lx+t[0],t[1],t[2])
+           try:#fails in 4.x
+               bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+           except:
+               pass
+        
+           
+             
+    bpy.ops.object.mode_set(mode='OBJECT')
+    try:
+      bpy.data.armatures[arm.name].layers[1] = True
+    except:
+      pass
+    return (0)
 
 
 
@@ -436,29 +480,6 @@ class LinkArmature2A(bpy.types.Operator):
         except: 
             i = 0
         return i>0
-
-    def coarmloc(self,bone,cname,target,IDbone,influence):
-        crc = bone.constraints.get('L_'+cname)
-        if crc is None:
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                return('FAILED')
-            crc = bone.constraints.new('COPY_LOCATION')
-            crc.target = target
-            crc.subtarget = self.findbone(target,IDbone)
-            crc.name = 'L_'+cname
-            crc.influence = influence
-        else:
-            if target is None:
-                print('MISSING TARGET:',IDtarget)
-                bone.constraints.remove(crc)
-                return('FAILED')
-            crc.target = target
-            crc.subtarget = self.findbone(target,IDbone)
-            crc.influence = influence
-            print(bone.name,IDtarget, 'loc_update')
-            return('FINISHED')
-
 
     
     def cocoloc(self,bone,cname,IDtarget,pxname,influence):
@@ -557,7 +578,8 @@ class LinkArmature2A(bpy.types.Operator):
                 print('not in:',arm)
                 print('!!!!!!!')    
             return(bone)
-        
+    
+
                                       
     def execute(self,context):
         obj = context.active_object
@@ -574,6 +596,8 @@ class LinkArmature2A(bpy.types.Operator):
         if(arm is not None):
             arm['bakestep']=1
             _clear_ArmatureConstraints(arm)
+            armlinkoptions.rigversion = arm['RV']
+            armlinksto = armlinkoptions.getlinkdict()
 
         # see if 'rwri' element of jome is there
         '''
@@ -592,187 +616,288 @@ class LinkArmature2A(bpy.types.Operator):
 
         
         if arm is not None:
-            
-            
-            n_probe = pre+'_'+joma['rwri']
-            o_probe = bpy.data.objects.get(n_probe)
-            if o_probe is not None:
-                makehiprot(obj,joma)
-                makechestrot(obj,joma)
-                maketorso(obj,joma)
-                makeheadrot(obj,joma)
+            '''create helper bones'''
+            homearm = obj
+            createbones_ex(homearm,_dMDB)
+            '''build constraints for helpers'''
+            '''ktorso'''
+            bone = self.findbone(homearm,_nMDB("kTorsoR"))
             if bone is not None:
-                cname = pre+'_'+joma['rwri']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                if (armlinkoptions.linkhand):
-                  #cname = pre+'_'+joma['rhan']
-                  #IDtarget ='{:}{:}'.format(nameP,cname)
-                  #self.cocoik(bone,cname,IDtarget,1,nameP)
-                  cname = pre+'_'+joma['relb']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+                subtarget = joma['rsho']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['rhip']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+            
+            bone = self.findbone(homearm,_nMDB("kTorsoL"))
+            if bone is not None:
+                subtarget = joma['lsho']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['lhip']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
 
-                    
+            bone = self.findbone(homearm,_nMDB("kTorso"))
+            if bone is not None:
+                '''position'''
+                subtarget = _nMDB("kTorsoR")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = _nMDB("kTorsoL")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                '''rotation'''
+                subtarget = _nMDB("kTorsoL")
+                cname = pre+'_'+subtarget
+                cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
+
+            '''kHipRot'''
+            bone = self.findbone(homearm,_nMDB("kHipRot"))
+            if bone is not None:
+                subtarget = joma['rhip']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['lhip']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
+                subtarget = joma['bell']
+                cname = pre+'_'+subtarget
+                if (armlinkoptions.rigversion == 27):
+                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
+                else:
+                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
+
+            '''kChestRot'''
+            bone = self.findbone(homearm,_nMDB("kChestRot"))
+            if bone is not None:
+                subtarget = joma['rcla']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['lcla']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Y',1.0)
+                subtarget = joma['spin']
+                cname = pre+'_'+subtarget
+                if (armlinkoptions.rigversion == 27):
+                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                else:
+                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Z','LOCK_X',1.0)
+
+            '''kHeadRot'''
+            bone = self.findbone(homearm,_nMDB("kHeadRot"))
+            if bone is not None:
+                subtarget = joma['rear']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['lear']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                subtarget = joma['nose']
+                cname = pre+'_'+subtarget
+                cobonetrackto(bone,cname,obj,subtarget,'TRACK_Z','UP_Y',1.0)
+                subtarget = joma['lear']
+                cname = pre+'_'+subtarget
+                cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
+                 
+
+
+            '''helpers done'''
+            
+
+            bone = self.findbone(arm,armlinksto["HandIK_R"])
+            if bone is not None:
+                subtarget = joma['rwri']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                # not really happy with either option play with it and bring better solution 
+
+                if (armlinkoptions.stiffhand): #deps circle
+                    subtarget = armlinksto["ForearmR"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
+        
+                if (armlinkoptions.linkhand):
+                    subtarget = joma['relb']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                    else: #fix me 
+                      #coboneIK(bone,cname,obj,subtarget,1,1.0)
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+
             bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
-                cname = pre+'_'+joma['lwri']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                if (armlinkoptions.linkhand):
-                  #cname = pre+'_'+joma['lhan']
-                  #IDtarget ='{:}{:}'.format(nameP,cname)
-                  #self.cocoik(bone,cname,IDtarget,1,nameP)
-                  cname = pre+'_'+joma['lelb']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_NEGATIVE_Y','LOCK_Z') 
-                  
+                subtarget = joma['lwri']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                #see hand right
+                if (armlinkoptions.stiffhand): #deps circle
+                    subtarget = armlinksto["ForearmL"]
+                    cname = pre+'_'+subtarget
+                    cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
 
-            bone = self.findbone(arm,armlinksto["FootIK_L"])
+                if (armlinkoptions.linkhand):
+                    subtarget = joma['lelb']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
+                    else: # fix me
+                      #coboneIK(bone,cname,obj,subtarget,1,1.0)
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                    
+
+            subtarget = joma['relb']   
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
+            cname = pre+'_'+subtarget
             if bone is not None:
-                cname = pre+'_'+joma['lank']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                if (armlinkoptions.linktoes):
-                  cname = pre+'_'+joma['ltoe']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceEllbow)
+
+            subtarget = joma['lelb']   
+            bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
+            cname = pre+'_'+subtarget
+            if bone is not None:
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceEllbow)
 
             bone = self.findbone(arm,armlinksto["FootIK_R"])
             if bone is not None:
-                cname = pre+'_'+joma['rank']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                subtarget = joma['rank']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
                 if (armlinkoptions.linktoes):
-                  cname = pre+'_'+joma['rtoe']
-                  IDtarget ='{:}{:}'.format(nameP,cname)
-                  if (armlinkoptions.rigversion == 27):
-                    self.cocolockedtrack(bone,cname,IDtarget,nameP,'TRACK_Y','LOCK_X')
+                    subtarget = joma['rtoe']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
+                    else:
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
 
-            bone = self.findbone(arm,armlinksto["EllowTargetIK_R"])
+            bone = self.findbone(arm,armlinksto["FootIK_L"])
             if bone is not None:
-                cname = pre+'_'+joma['relb']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                subtarget = joma['lank']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                if (armlinkoptions.linktoes):
+                    subtarget = joma['ltoe']
+                    cname = pre+'_'+subtarget
+                    if (armlinkoptions.rigversion == 27):
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
+                    else:
+                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
 
-            bone = self.findbone(arm,armlinksto["EllowTargetIK_L"])
-            if bone is not None:
-                cname = pre+'_'+joma['lelb']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-
+            subtarget = joma['rkne']   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
+            cname = pre+'_'+subtarget
             if bone is not None:
-                cname = pre+'_'+joma['rkne']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
+            subtarget = joma['lkne']   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
+            cname = pre+'_'+subtarget
             if bone is not None:
-                cname = pre+'_'+joma['lkne']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
-            bone = self.findbone(arm,"torso")
+            bone = self.findbone(arm,armlinksto["Shoulder_R"])
             if bone is not None:
-                cname = pre+_lMDE['kChestRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+_lMDE['kHipRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
-                cname = pre+'_'+joma['bell']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+_lMDE['kTorso']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                
+                subtarget = joma['rsho']   
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,obj,subtarget,1,1.0)
 
-            bone = self.findbone(arm,"hips")
+            bone = self.findbone(arm,armlinksto["Shoulder_L"])
             if bone is not None:
-                cname =pre+_lMDE['kChestRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                cname = pre+_lMDE['kHipRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                cname = pre+'_'+joma['bell']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
+                subtarget = joma['lsho']   
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,obj,subtarget,1,1.0)
 
-            bone = self.findbone(arm,"chest")
-            if bone is not None:
-                cname =pre+_lMDE['kChestRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                
-                cname = pre+_lMDE['kHipRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,0.5)
-
-                    
-            '''
-                    
-            bone = self.findbone(arm,"head")
-            if bone is not None:
-                cname = 'Oszhead'
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
-            '''
-
-            bone = self.findbone(arm,"shoulder.L")
-            if bone is not None:
-                cname = pre+'_'+joma['lsho']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
-
-            bone = self.findbone(arm,"shoulder.R")
-            if bone is not None:
-                cname = pre+'_'+joma['rsho']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                target = bpy.data.objects.get(IDtarget)
-                self.cocoik(bone,cname,IDtarget,1,nameP)
             
-            bone = self.findbone(arm,"root")
+            bone = self.findbone(arm,armlinksto["Root"])
             if bone is not None:
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                cobonerot(bone,cname,obj,subtarget,0,0,1,1.0)
 
-                #cname = pre+'_FeetRot'
-                cname = pre+_lMDE['kTorso']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocoloc(bone,cname,IDtarget,nameP,1.0)
-                crc = bone.constraints.get('L_'+cname)
-                if crc is not None:
-                    crc.use_z = 0
+            bone = self.findbone(arm,armlinksto["Torso"])    
+            if bone is not None:
+                subtarget = _nMDB("kChestRot")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                subtarget = _nMDB("kHipRot")
+                cname = pre+'_'+subtarget
+                if (armlinkoptions.rigversion == 27):
+                    w =0.5
+                else:
+                    w =0.75
+                coboneloc(bone,cname,obj,subtarget,w)
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
 
-                cname = pre+_lMDE['kTorso']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                crc = bone.constraints.get('R_'+cname)
-                if crc is not None:
-                    crc.use_x = 0
-                    crc.use_y = 0
-                    crc.use_z = 1
+            bone = self.findbone(arm,armlinksto["Chest"])
+            if bone is not None:
+                subtarget = _nMDB("kChestRot")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+                subtarget = _nMDB("kHipRot")
+                cname = pre+'_'+subtarget
+                if (armlinkoptions.rigversion == 27):
+                    w =0.5
+                else:
+                    w =0.6
+                coboneloc(bone,cname,obj,subtarget,w)
+
+            bone = self.findbone(arm,armlinksto["Hips"])
+            if bone is not None:
+                subtarget = _nMDB("kChestRot")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+                subtarget = _nMDB("kHipRot")
+                cname = pre+'_'+subtarget
+                if (armlinkoptions.rigversion == 27):
+                    w =0.5
+                else:
+                    w =0.55
+                coboneloc(bone,cname,obj,subtarget,w)
+                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["Neck"])
+            if bone is not None:
+                subtarget = joma['nose']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,obj,subtarget,1,0.2)
+
+
+
 
             bone = self.findbone(arm,armlinksto["Head"])
             if bone is not None:
-                cname = pre+_lMDE['kHeadRot']
-                IDtarget ='{:}{:}'.format(nameP,cname)
-                self.cocorot(bone,cname,IDtarget,nameP)
-                #cname = pre+'_'+joma['htop']
-                #IDtarget ='{:}{:}'.format(nameP,cname)
-                #target = bpy.data.objects.get(IDtarget)
-                #self.cocoik(bone,cname,IDtarget,1,nameP)
-        print('LinkArmature.execute done')
+                subtarget = _nMDB("kHeadRot")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+        else:
+            print('no arm')
+        print('LinkArmature2A.execute done')
         return {'FINISHED'}
+
+class makeRigVersion(bpy.types.Operator):
+    """UnLinkArmatureToSimpl"""
+    bl_idname = "metrabs.makerigversion"
+    bl_label = "RegisterRigVersion"
+
+    def execute(self,context):
+        obj = context.active_object
+        arm = bpy.data.objects.get(obj["~armature"])
+        arm["RV"] = defaultrigversion
+        #no need to create here -- however nice to see them b4 they get linked
+        if (1):
+          createbones_ex(obj,_dMDB)
+
+        return {'FINISHED'}
+
 
 
 class LinkArm2ArmPanel(bpy.types.Panel):
@@ -817,12 +942,19 @@ class LinkArm2ArmPanel(bpy.types.Panel):
                 if a is not None:
                     row = layout.row()
                     row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    arm = bpy.data.objects.get(a)
+                    if arm is not None: 
+                      try:
+                        arm["RV"]
+                        row.prop(arm, '["%s"]' % ("RV"),text="RigVersion")
+                        row = layout.row()
+                        row.operator(LinkArmature2A.bl_idname)
+                        row.operator(UnLinkArmature2A.bl_idname)
+                      except:
+                        row.operator(makeRigVersion.bl_idname)
+        
             except: 
                 pass
-            row = layout.row()
-            row.operator("object.linka2armature_operator")
-            row.operator("object.unlinka2armature_operator")
-
 
 """   
         row = layout.row()
@@ -836,6 +968,7 @@ def register():
     bpy.utils.register_class(LinkArmature2A)
     bpy.utils.register_class(UnLinkArmature2A)
     bpy.utils.register_class(LinkArm2ArmPanel)
+    bpy.utils.register_class(makeRigVersion)
     print('register LinkA2ArmVxxx Done')
 
 
@@ -843,13 +976,13 @@ def unregister():
     bpy.utils.unregister_class(LinkArmature2A)
     bpy.utils.unregister_class(UnLinkArmature2A)
     bpy.utils.unregister_class(LinkArm2ArmPanel)
+    bpy.utils.unregister_class(makeRigVersion)
     del theGen
 
 #run from run
 if __name__ == "__main__":
     #runit(bpy.context,1)    
     register()
-    listMDE()
     print('LinkA2ArmVxx DONE')
 #    makefeetrot() 
     

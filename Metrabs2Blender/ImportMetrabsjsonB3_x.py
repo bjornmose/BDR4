@@ -27,7 +27,6 @@ from bpy.types import Operator
 
 
 
-
 joints_coco_19 =  [
         "neck",
         "nose",
@@ -350,7 +349,7 @@ def cocoloc(bone,cname,IDtarget,pxname):
 
 
 
-def readArmatureRestPos(name,jPre,scalediv):
+def readArmatureRestPos(name,jPre,deko,scalediv):
     d_min = 100000.0
     res_arm = None
     pname = 'pose3d' 
@@ -368,9 +367,9 @@ def readArmatureRestPos(name,jPre,scalediv):
         return res_arm
     
     p1 = data[pname]
-    if (not p1): return res_arm
+    if (not p1): return res_armf
     aPre = 'Arm_'
-    res_arm = create_armature(aPre+jPre,'TestBone')
+    res_arm = create_armature(aPre+jPre+deko,'TestBone')
 
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
@@ -516,6 +515,170 @@ def readmetrabs(name,frame,box,jPre,sf):
     #print('Joints UnUsed:',100*missmatch/len(p1),'%')
     return res_box
 
+
+''' 
+kind of man in the middle aproach
+collect a 3D track: (time[frame] location(x.y,z)) for each METRABS joint
+the place to apply fiters
+'''
+class C_rawMeterasData():
+    def __init__(self) -> None:
+        self.myData = {}
+        self.firstframe = 1000
+        self.lastframe = -1000
+        self.channels = {}
+        self.joints = []
+        self.box = [0.0,0.0]
+        self.boxindex=999
+        pass
+
+    def choose_box(self,pname,boxes):
+        l =len(boxes)
+        if l>1:
+          xb = boxes[0][0]
+          yb = boxes[0][1]
+          d_min = (xb - self.box[0])*(xb - self.box[0]) +(yb - self.box[1])*(yb - self.box[1]) 
+          for nb in range(1,l):
+            xn = boxes[nb][0]
+            yn = boxes[nb][1]
+            dn = (xn - self.box[0])*(xn - self.box[0]) +(yn - self.box[1])*(yn - self.box[1])
+            #print('dn',dn,'d_min',d_min)
+            if dn < d_min:
+                self.box = [xn,yn]
+                d_min = dn
+                pname='pose3d{0:d}'.format(nb+1)
+                if (self.boxindex != nb):
+                  print('Box Switch',pname)        
+                  self.boxindex = nb
+        return (pname) 
+        
+
+    def addframe(self,name,frame):
+        pname = 'pose3d' 
+        try: 
+            with open(name) as json_file:
+                data = json.load(json_file)
+                boxes = data['boxes'] # at least on box must be there
+                pname = self.choose_box(pname,boxes)
+                self.myData[frame] = data[pname] #quick and dirty .. no box selction
+                self.joints = data['joints']
+                if self.firstframe > frame : self.firstframe = frame
+                if self.lastframe < frame : self.lastframe = frame
+        except:
+            print('except',name)
+        return
+    
+    def extract_all(self):
+        for ch in self.joints:
+            print('Extracting',ch)
+            chdata = self.extract_channel(ch)
+            self.channels[ch] = chdata
+            #print('\n****xx***',ch,chdata,) // ok that works
+
+    def extract_channel(self,chname):
+        channel = {}
+        for frame in range (self.firstframe,self.lastframe+1):
+            try:
+              f = self.myData[frame]
+              for joint in f:
+                chn = joint[0]
+                if chn == chname:
+                  x = joint[1]
+                  y = joint[2]
+                  z = joint[3]
+              channel[frame] = (x,y,z)
+            except: 
+                pass
+            channel[frame] = (x,y,z)
+        return channel
+    
+    def inject_action(self,obj,chdata,sf):
+        fcu_x = obj.animation_data.action.fcurves[0]
+        fcu_y = obj.animation_data.action.fcurves[1]
+        fcu_z = obj.animation_data.action.fcurves[2]
+        for frame in range (self.firstframe,self.lastframe+1):
+          try:  
+            loc = chdata[frame] 
+            lx = loc[0]/ sf
+            ly = loc[1]/ sf
+            lz = loc[2]/ sf
+            fcu_x.keyframe_points.insert(frame,lx,options={'NEEDED','FAST'})
+            fcu_y.keyframe_points.insert(frame,ly,options={'NEEDED','FAST'})
+            fcu_z.keyframe_points.insert(frame,lz,options={'NEEDED','FAST'})
+          except (KeyError):
+            pass  
+        
+    def redavg(self,chdata,w):
+        res = {}
+        lx = ly = lz = 0.
+        n = 0
+        for frame in range (self.firstframe,self.lastframe+1):
+          try:  
+            loc = chdata[frame] 
+            lx += loc[0]
+            ly += loc[1]
+            lz += loc[2]            
+            n  += 1
+          except (KeyError):
+            pass 
+          if ( (n > 0) and  (frame % w ) == 0):
+              res[frame] = (lx/n,ly/n,lz/n)
+              n = 0
+              lx = ly = lz = 0.
+        return res
+
+    def redmedian(self,chdata,incr,w):
+        res = {}
+        for step in range (self.firstframe,self.lastframe+1,incr):
+          lx = []
+          ly = []
+          lz = []
+          for frame in range(1,w+1):
+              try:  
+                loc = chdata[step+frame - w//2] 
+                lx.append(loc[0])
+                ly.append(loc[1])
+                lz.append(loc[2])            
+              except (KeyError):
+                pass 
+        
+          lx.sort()
+          ly.sort()
+          lz.sort()
+          l = len(lx)
+          if l > 0:
+            res[step] = (lx[l//2],ly[l//2],lz[l//2])
+        return res
+
+    def redfilter(self,chdata,filter,w):
+        res = {}
+        fl = len (filter)
+        for step in range (self.firstframe,self.lastframe+1,w):
+          lx = 0.
+          ly = 0.
+          lz = 0.
+          k = 0
+          for n in range(0,fl):
+              try:  
+                loc = chdata[step+n - fl//2] 
+                lx += filter[n] * loc[0]
+                ly += filter[n] * loc[1]
+                lz += filter[n] * loc[2]     
+                k  += filter[n]
+              except (KeyError):
+                pass 
+          res[step] = (lx/k,ly/k,lz/k)
+        
+        return res
+        
+        
+    
+    def _dump(self):
+        print(self.myData)
+        return
+
+
+
 def readmetrabs2D(name,frame,box,jPre,rx,ry,sf):
     d_min = 100000.0
     res_box = box
@@ -655,6 +818,17 @@ def completeObjectProperties(obj):
     except:
         obj["ZBA"]   = 1
     obj["metrabs"] = 1  
+    try:
+        tof=obj["tof"] 
+    except:
+        obj["tof"]=3
+        tof=3
+    try:
+        frw=obj["frw"] 
+    except:
+        frw=100
+        obj["frw"]=frw
+        
       
                 
                 
@@ -916,6 +1090,11 @@ class import_metrabs(bpy.types.Operator):
 #           joints = joints_smpl_head_30 
 #            joints = joints_mpi_inf_3dhp_28
         '''
+        completeObjectProperties(obj)
+        sf = obj["scaledidvisor"]
+        tof=obj["tof"] 
+        frw=obj["frw"] 
+        zba=obj["ZBA"]
 
         pre = obj.name + '_'
         file = obj['inpath']+obj["infile"] 
@@ -954,60 +1133,71 @@ class import_metrabs(bpy.types.Operator):
         makejoints(obj,joints,pre) 
         makeactions_3d_res = makeactions_3d(joints,pre)
         box = [0.0,0.0]
-        try:
-          sf = obj["scaledidvisor"]
-        except:
-          sf = 100
-          obj["scaledidvisor"] = sf
-        try:
-          zba=obj["ZBA"] 
-        except:
-          zba=0
             
           
         ETA = _ETA(end_frame-start_frame)
+        TheFilterCass = C_rawMeterasData()
 
-        for i in range (start_frame ,end_frame,incr):
+        #read all frames from source
+        for i in range (start_frame ,end_frame):
             Name='{0:}{1:04d}.json'.format(file,i)
-            #bpy.context.scene.frame_set(i)
-            #print(Name)
-            etapre = (i - start_frame)
-            if etapre > 200 : etapre =200
-            if etapre > i : etapre =i
-            if etapre < 5 : etpre =5
-            ETA.ticknow(i-start_frame+1,etapre)
-            tpifs=ETA.gettpifs()
-            tpifloating =ETA.tpifloating/1000000
-            tlf =ETA.timeleftfloating_sec()
-            tt  =ETA.guesttotal()
-            ttsfs =ETA.guesttotalslopefs()
-            ttsfl =ETA.guesttotalslopefloating()
-            tls =ETA.guestleft()
-            tlsf =ETA.guestleftfloating()
             if zba > 0:
-              box=readmetrabs(Name,i - start_frame,box,pre,sf)
+              TheFilterCass.addframe(Name,i-start_frame)
+              #box=readmetrabs(Name,i - start_frame,box,pre,sf)
             else:
-              box=readmetrabs(Name,i,box,pre,sf)
+              TheFilterCass.addframe(Name,i)
+              #box=readmetrabs(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
-            #txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,50)) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms{4:0>7.1f}".format(i,end_frame,progbar(progress,50),tpifs,tls) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf) 
-            #txt = "{0:06d}:{1:06d} {2:}{3:0>5.1f}ms ETA{4:0>7.1f}:{5:0>7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,tls) 
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETA{4: >7.1f}+-{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tlf,abs(tls-tlf)) 
-            #expecting constant rate
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >9.1f}ETA{5: >9.1f}".format(i,end_frame,progbar(progress,40),tpifloating,tt,tlf) 
-            #expecting changing rate
-            #txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,40),tpifloating,ttsfs,tls) 
-            #expecting changing rate V2
-            try:
-              progress = 100.-(tlsf/ttsfl)*100.
-            except:
-              pass
-            txt = "{0:06d}:{1:06d} {2:}{3: >5.1f}ms ETT{4: >7.1f}ETA{5: >7.1f}".format(i,end_frame,progbar(progress,30),tpifloating,ttsfl,tlsf) 
+            txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,30)) 
             print(txt, end="\r") 
-            #print(txt) 
-            #print(i,progbar((i-start_frame) * 100/(end_frame-start_frame)))
-        txt = "Total{0:8.1f}".format(ETA.gettotal()) 
+
+        print('First',TheFilterCass.firstframe,'Last',TheFilterCass.lastframe)
+        TheFilterCass.extract_all()
+        fw = int (incr * frw / 100)      
+        for ch in TheFilterCass.joints:
+            jName = pre + ch
+            obj = bpy.data.objects.get(jName)
+            chdata = TheFilterCass.channels[ch]
+            #apply filter here +++     
+            #calculated filters
+            avfilter = []
+            for i in range (0 ,fw+1):
+                avfilter.append(1.0)
+
+            
+            
+            if (incr > 0):
+                if tof == 1:
+                      print('->AverageFilter->Action',ch)
+                      res = TheFilterCass.redavg(chdata,incr)
+                elif tof == 2:
+                      print("->MedianFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
+                      #print(txt)
+                      res = TheFilterCass.redmedian(chdata,incr,fw)
+                elif tof == 3:
+                      print('->KernelFilter5->Action',ch)
+                      filter = [1.0,2.0,6.0,2.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+                elif tof == 4:
+                      print("->AverageFilter(w={0:03d})->Action {1:} ".format(fw,ch) )
+                      res = TheFilterCass.redfilter(chdata,avfilter,incr)
+                elif tof == 5:
+                      print('->KernelFilter9->Action',ch)
+                      filter = [1.0,1.0,2.0,4.0,6.0,4.0,2.0,1.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+                else:
+                      print('->KernelFilter3->Action',ch)
+                      filter = [1.0,4.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+            
+                #apply filter here ----
+                TheFilterCass.inject_action(obj,res,sf)
+            else:
+                print('->Raw->Action',ch)
+                TheFilterCass.inject_action(obj,chdata,sf)
+                
+
+
         if zba > 0:
             bpy.context.scene.frame_start = 0
             bpy.context.scene.frame_end = end_frame-start_frame
@@ -1156,7 +1346,7 @@ def set_importpath(context, filepath, use_some_setting):
 
 
 class findMETRABData(Operator, ImportHelper):
-    """This appears in the tooltip of the operator and in the generated docs"""
+    """Browse for METRABS data"""
     bl_idname = "operator.findmetabsdata"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Find Data"
 
@@ -1208,28 +1398,36 @@ class op_CreateArmature(bpy.types.Operator):
         obj = context.active_object
          
         try:
+          tof=obj["tof"] 
+          frw=obj["frw"]
+          incr = obj["incr"] 
+          dName = "_F{0:1d}W{1:03d}S{2:02d} ".format(tof,frw,incr) 
+        except:
+          dName = "oops"
+            
+        try:
             rFrame = obj['start_frame']
         except:
             rFrame = 1
         aName = obj.name
-        
+                
         file = obj['inpath']+obj["infile"] 
         box = [0.0,0.0]
         path='{0:}{1:04d}.json'.format(file,rFrame)
         print(self.bl_idname,path)
         scalediv = obj["scaledidvisor"]
-        arm_obj=readArmatureRestPos(path,aName,scalediv)
+        arm_obj=readArmatureRestPos(path,aName,dName,scalediv)
         arm_obj['skeleton'] = obj['skeleton']
         arm_obj["metrabs"] = 2
         try:
           arm_obj["~armature"] = obj["~armature"]
         except:
-          arm_obj["~armature"] = "*none*"   
+          arm_obj["~armature"] = "*none*" 
         obj["~armature"] = arm_obj.name
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
-
+_filternames = ["KF3","Av","Med","KF5","AvN","KF9"]
 
 class MetrabsPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
@@ -1242,10 +1440,11 @@ class MetrabsPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        i = 0
-        try:
+        i = -1
+        if (obj.type == 'EMPTY'):
+          try:
             i=obj["metrabs"]
-        except: 
+          except: 
             i = 0
         return (i in [0,1])
 
@@ -1253,6 +1452,7 @@ class MetrabsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.active_object
+
         i = 0
         try:
             i=obj["metrabs"]                            
@@ -1272,16 +1472,20 @@ class MetrabsPanel(bpy.types.Panel):
             row.prop(obj, '["%s"]' % ("incr"),text="step")  
             row = layout.row()
             row.prop(obj, '["%s"]' % ("scaledidvisor"),text="ScaleDiv")  
+            row.operator("wm.filter_operator")
+            row.label(text="->{0}".format(_filternames[obj["tof"]]))
+            #row.prop(obj, '["%s"]' % ("tof"),text="filter")  
+            row.prop(obj, '["%s"]' % ("frw"),text="frw")  
             #row.operator("object.delete_joints_action")
             #row.operator("object.push_down_joints_action")
             if len(obj.children): 
-              row.operator(delete_childen_actions.bl_idname)
               row = layout.row()
               row.operator(delete_childen.bl_idname)
+              row.operator(delete_childen_actions.bl_idname)
               row = layout.row()
               row.operator(op_CreateArmature.bl_idname)
             row = layout.row()
-            row.prop(obj, '["%s"]' % ("inpath"),text="path")  
+            row.prop(obj, '["%s"]' % ("inpath"),text="path")
 
 
 """   
@@ -1290,7 +1494,74 @@ class MetrabsPanel(bpy.types.Panel):
 """    
 
 
+class Filter_PT_Panel(bpy.types.Panel):
+    bl_label = "Name of the Panel"
+    bl_idname = "ADDONNAME_PT_TemplatePanel"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = 'UI'
+    bl_category = "Template Tab"
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        layout.operator("wm.filter_operator")
+        
 
+
+
+
+
+class Filter_OT_Operator(bpy.types.Operator):
+    """ Select smoothing filter """
+    bl_label = "Set Filter"
+    bl_idname = "wm.filter_operator"
+    
+    id_filter : bpy.props.EnumProperty(
+       name = "Smoothing_Filter",
+       description ="Selects smoothing Filter",
+       items = [
+         ("f0",_filternames[0],""),
+         ("f1",_filternames[1],""),
+         ("f2",_filternames[2],""),
+         ("f3",_filternames[3],""),
+         ("f4",_filternames[4],""),         
+         ("f5",_filternames[5],"") 
+       ]
+    )
+    
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+        #return wm.invoke_search_popup(self)
+    
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self,"id_filter")
+        
+    
+    def execute(self, context):
+        obj = context.active_object
+        if self.id_filter == "f0":
+           obj["tof"] = 0
+        if self.id_filter == "f1":
+           obj["tof"] = 1
+        if self.id_filter == "f2":
+           obj["tof"] = 2
+        if self.id_filter == "f3":
+           obj["tof"] = 3
+        if self.id_filter == "f4":
+           obj["tof"] = 4
+        if self.id_filter == "f5":
+           obj["tof"] = 5
+           
+
+        
+        return {'FINISHED'}    
+
+
+classes = [Filter_PT_Panel, Filter_OT_Operator]
 
 def register():
     bpy.utils.register_class(make_metrabs)
@@ -1303,6 +1574,8 @@ def register():
     bpy.utils.register_class(delete_childen_actions)
     bpy.utils.register_class(delete_childen)
     bpy.utils.register_class(op_CreateArmature)
+    for cls in classes:
+        bpy.utils.register_class(cls)
     print('Import Mertabs register DONE')
 
 
@@ -1317,6 +1590,8 @@ def unregister():
     bpy.utils.register_class(delete_childen_actions)
     bpy.utils.register_class(delete_childen)
     bpy.utils.unregister_class(op_CreateArmature)
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
     
 def main():
     register()

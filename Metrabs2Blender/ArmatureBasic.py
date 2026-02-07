@@ -1,7 +1,16 @@
 import bpy
 
 
-def _putz_ArmatureConstraints(arm):
+def _putz_All_ArmatureConstraints(arm):
+    print('_putz_ALL_ArmatureConstraints')
+    for bone in arm.pose.bones:
+        for co in bone.constraints:
+          print('bone:',bone.name,'CO:',co.name)
+          bone.constraints.remove(co) 
+    print('_putz_ALL_ArmatureConstraints Done')
+
+
+def _putz_Targetless_ArmatureConstraints(arm):
     print('_putz_ArmatureConstraints')
     for bone in arm.pose.bones:
         for co in bone.constraints:
@@ -12,7 +21,7 @@ def _putz_ArmatureConstraints(arm):
             if _ta is None:
                 print('bone:',bone.name,'CO:',co.name)
                 bone.constraints.remove(co) 
-    print('_putz_ArmatureConstraints Done')
+    print('_putz_Targetless_ArmatureConstraints Done')
 	
 def _ListTargetless_ArmatureConstraints(arm):
     print('_list_lost_target_ArmatureConstraints')
@@ -29,6 +38,14 @@ def _ListTargetless_ArmatureConstraints(arm):
     print('_list_lost_target_ArmatureConstraints Done' ,count)
 	
 
+class PutzAllArmature(bpy.types.Operator):
+    bl_idname = "object.putzallarmature_operator"
+    bl_label = "Remove ALL Bone Constraints"
+
+    def execute(self,context):
+        obj = context.active_object
+        _putz_All_ArmatureConstraints(obj)
+        return {'FINISHED'}
 
 
 class PutzArmature(bpy.types.Operator):
@@ -37,7 +54,7 @@ class PutzArmature(bpy.types.Operator):
 
     def execute(self,context):
         obj = context.active_object
-        _putz_ArmatureConstraints(obj)
+        _putz_Targetless_ArmatureConstraints(obj)
         return {'FINISHED'}
         
 class ListLostTargetsArmature(bpy.types.Operator):
@@ -73,6 +90,9 @@ class PutzArmPanel(bpy.types.Panel):
         row.operator("object.putzarmature_operator")
         row = layout.row()
         row.operator("object.listlosttargetsarmature_operator")
+        row = layout.row()
+        row.operator("object.putzallarmature_operator")
+
 
 
 
@@ -80,12 +100,14 @@ class PutzArmPanel(bpy.types.Panel):
 
 def register():
     bpy.utils.register_class(ListLostTargetsArmature)
+    bpy.utils.register_class(PutzAllArmature)
     bpy.utils.register_class(PutzArmature)
     bpy.utils.register_class(PutzArmPanel)
 
 
 def unregister():
     bpy.utils.unregister_class(ListLostTargetsArmature)
+    bpy.utils.unregister_class(PutzAllArmature)
     bpy.utils.unregister_class(PutzArmature)
     bpy.utils.unregister_class(PutzArmPanel)
 
