@@ -214,7 +214,23 @@ def main(jobname):
         json.dump(jdata, ji, ensure_ascii=False, indent=4)
         ji.close()  
 
-       
+
+#check if all results are there 
+    nofMR=0
+    nofMD=0
+    print('Scan for results')
+    for i in range ( frame_start , frame_end , frame_skip):
+        if jsonexists(i,outputpatternjson) : 
+            nofMD +=1
+        else:
+            nofMR +=1
+    print('Done',nofMD,'Remain',nofMR)
+    if nofMR == 0 :
+        print('Nothing to do')
+        return
+    else:
+        print('get tensorflow')
+
        
     #actually the place we need load TF
     import tensorflow as tf
