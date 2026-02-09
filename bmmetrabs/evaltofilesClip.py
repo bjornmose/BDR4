@@ -19,7 +19,7 @@ bad example doiimage (loads of params passed)
 
 #licence GPL
 #author bjornmose
-#today 2024_02_02
+#today 2025_02_09
 #use local model path
 #home_models = './models/'
 #define path to models based on home
@@ -92,6 +92,16 @@ def main(jobname):
         frame_end = inpt['end']
         frame_skip = inpt['skip']
         outpath = inpt['outpath']
+        try:
+            os.makedirs(outpath)
+        except:
+            print('exists or failed',outpath)
+            pass
+        try:
+            os.makedirs(outpath+'/viz')
+        except:
+            print('exists or failed',outpath)
+            pass
         inpattern = inpt['inpattern'] 
         outputpatternjson = outpath + inpt['outputpatternjson'] 
         outputpatternviz =  outpath + inpt['outputpatternviz']
@@ -349,7 +359,7 @@ def pose2json(skeleton,p3d,boxes,joint_names,frame,pat):
         jdata['pose3d1'] = []
         jdata['pose3d2'] = []
         for x, y, w, h in boxes[:, :4]:
-          jdata['boxes'].append([x.astype(float),y.astype(float)])
+          jdata['boxes'].append([x.astype(float),y.astype(float),w.astype(float),h.astype(float)])
           
         for joint in joint_names:
           jdata['joints'].append(joint.astype(str))
