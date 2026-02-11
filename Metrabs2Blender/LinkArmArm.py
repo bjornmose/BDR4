@@ -866,6 +866,9 @@ class LinkArmature2A(bpy.types.Operator):
                     subtarget = _nMDB("kChest")
                     cname = pre+'_'+subtarget
                     coboneloc(bone,cname,obj,subtarget,1.0)
+                subtarget = _nMDB("kChestRot")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
                     
 
             bone = self.findbone(arm,armlinksto["Hips"])
