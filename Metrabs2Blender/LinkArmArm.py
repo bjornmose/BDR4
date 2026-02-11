@@ -184,15 +184,15 @@ dictarmlink2_7= {
 
 #Dictionary Metrabs Derived Bones
 _dMDB = {
-    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
+    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.],"parent":""},
     "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
     "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
     "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
-    "kF10":{"name":"ZD_F10","tail":[-1.,0.,0.]},
-    "kF11":{"name":"ZD_F11","tail":[1.,0.,0.]},
-    "kF12":{"name":"ZD_F12","tail":[0.,1.,0.]}
+    "kHips":{"name":"ZD_Hips","tail":[-1.,0.,0.],"parent":"kHipRot"},
+    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
+    "kTorsoLoc":{"name":"ZD_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"}
 }
 
 # get the name of a _dMDB bone
@@ -443,12 +443,28 @@ def createbones_ex(arm,dicbones):
         item = dicbones[key]
         t = item["tail"]
         bname = item["name"]
+        bp = None
+        try:
+            pname = item["parent"]
+            if pname: 
+                bp = bones[_nMDB(pname)]
+        except:
+            pass
         bone = arm.pose.bones.get(bname)
         if bone is None:
            lx += 1.5
            bone = bones.new(bname)
-           bone.head = (lx,0.,0.)
-           bone.tail = (lx+t[0],t[1],t[2])
+           if bp is None:
+               bone.head = (lx,0.,0.)
+               bone.tail = (lx+t[0],t[1],t[2])
+           else:
+               h = bp.tail
+               bone.head = (h[0],h[1],h[2])
+               bone.tail = (h[0]+t[0],h[1]+t[1],h[2]+t[2])
+               bone.parent = bp
+        
+        
+           bone.parent = bp
            try:#fails in 4.x
                bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
                 False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
@@ -702,7 +718,6 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lear']
                 cname = pre+'_'+subtarget
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
-                 
 
 
             '''helpers done'''
@@ -822,46 +837,52 @@ class LinkArmature2A(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Torso"])    
             if bone is not None:
-                subtarget = _nMDB("kChestRot")
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = _nMDB("kHipRot")
-                cname = pre+'_'+subtarget
                 if (armlinkoptions.rigversion == 27):
-                    w =0.5
+                    subtarget = _nMDB("kChestRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
+                    subtarget = _nMDB("kHipRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,0.5)
                 else:
-                    w =0.75
-                coboneloc(bone,cname,obj,subtarget,w)
+                    subtarget = _nMDB("kTorsoLoc")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
                 subtarget = _nMDB("kTorso")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
 
             bone = self.findbone(arm,armlinksto["Chest"])
             if bone is not None:
-                subtarget = _nMDB("kChestRot")
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,1.0)
-                cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
-                subtarget = _nMDB("kHipRot")
-                cname = pre+'_'+subtarget
                 if (armlinkoptions.rigversion == 27):
-                    w =0.5
+                    subtarget = _nMDB("kChestRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
+                    cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
+                    subtarget = _nMDB("kHipRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,0.5)
                 else:
-                    w =0.6
-                coboneloc(bone,cname,obj,subtarget,w)
+                    subtarget = _nMDB("kChest")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
+                    
 
             bone = self.findbone(arm,armlinksto["Hips"])
             if bone is not None:
-                subtarget = _nMDB("kChestRot")
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,1.0)
+                if (armlinkoptions.rigversion == 27):
+                    subtarget = _nMDB("kChestRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
+                    subtarget = _nMDB("kHipRot")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,0.5)
+                else:
+                    subtarget = _nMDB("kHips")
+                    cname = pre+'_'+subtarget
+                    coboneloc(bone,cname,obj,subtarget,1.0)
                 subtarget = _nMDB("kHipRot")
                 cname = pre+'_'+subtarget
-                if (armlinkoptions.rigversion == 27):
-                    w =0.5
-                else:
-                    w =0.55
-                coboneloc(bone,cname,obj,subtarget,w)
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
 
             bone = self.findbone(arm,armlinksto["Neck"])
