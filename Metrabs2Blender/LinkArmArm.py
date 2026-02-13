@@ -190,8 +190,8 @@ _dMDB = {
     "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
-    "kHips":{"name":"ZD_Hips","tail":[-1.,0.,0.],"parent":"kHipRot"},
-    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
+    "kHips":{"name":"ZD_Hips","tail":[-1.,0.,0.],"parent":"kTorso"},
+    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kTorso"},
     "kTorsoLoc":{"name":"ZD_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"}
 }
 
@@ -458,7 +458,7 @@ def createbones_ex(arm,dicbones):
                bone.head = (lx,0.,0.)
                bone.tail = (lx+t[0],t[1],t[2])
            else:
-               h = bp.tail
+               h = bp.head
                bone.head = (h[0],h[1],h[2])
                bone.tail = (h[0]+t[0],h[1]+t[1],h[2]+t[2])
                bone.parent = bp
@@ -817,12 +817,20 @@ class LinkArmature2A(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Shoulder_R"])
             if bone is not None:
+                subtarget = joma['rcla']   
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+
                 subtarget = joma['rsho']   
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,obj,subtarget,1,1.0)
 
             bone = self.findbone(arm,armlinksto["Shoulder_L"])
             if bone is not None:
+                subtarget = joma['lcla']   
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
+
                 subtarget = joma['lsho']   
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,obj,subtarget,1,1.0)
@@ -890,6 +898,9 @@ class LinkArmature2A(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Neck"])
             if bone is not None:
+                subtarget = joma['neck']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,1.0)
                 subtarget = joma['nose']
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,obj,subtarget,1,0.2)
