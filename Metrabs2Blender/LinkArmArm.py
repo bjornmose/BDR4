@@ -191,8 +191,11 @@ _dMDB = {
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
     "kHips":{"name":"ZD_Hips","tail":[-1.,0.,0.],"parent":"kTorso"},
-    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kTorso"},
-    "kTorsoLoc":{"name":"ZD_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"}
+#    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kTorso"},
+    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
+    "kTorsoLoc":{"name":"ZD_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"},
+    "kKneeR":{"name":"ZD_KneeR","tail":[0.,1.,0.],"parent":"rkne"},
+    "kKneeL":{"name":"ZD_KneeL","tail":[0.,1.,0.],"parent":"lkne"}
 }
 
 # get the name of a _dMDB bone
@@ -419,7 +422,7 @@ def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
             crc.influence = influence
             return('FINISHED')
         
-def createbones_ex(arm,dicbones):
+def createbones_ex(arm,dicbones,joma):
     print('dicbones',dicbones)
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
@@ -446,8 +449,11 @@ def createbones_ex(arm,dicbones):
         bp = None
         try:
             pname = item["parent"]
-            if pname: 
-                bp = bones[_nMDB(pname)]
+            if pname:
+                try:
+                  bp = bones[_nMDB(pname)]
+                except:
+                  bp = bones[joma[pname]]
         except:
             pass
         bone = arm.pose.bones.get(bname)
@@ -634,7 +640,7 @@ class LinkArmature2A(bpy.types.Operator):
         if arm is not None:
             '''create helper bones'''
             homearm = obj
-            createbones_ex(homearm,_dMDB)
+            createbones_ex(homearm,_dMDB,joma)
             '''build constraints for helpers'''
             '''ktorso'''
             bone = self.findbone(homearm,_nMDB("kTorsoR"))
@@ -803,13 +809,13 @@ class LinkArmature2A(bpy.types.Operator):
                     else:
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
 
-            subtarget = joma['rkne']   
+            subtarget =  _nMDB("kKneeR")   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             cname = pre+'_'+subtarget
             if bone is not None:
                 coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
-            subtarget = joma['lkne']   
+            subtarget =  _nMDB("kKneeL")   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
             cname = pre+'_'+subtarget
             if bone is not None:
@@ -820,6 +826,9 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rcla']   
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                subtarget = joma['lcla']   
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,0.5)
 
                 subtarget = joma['rsho']   
                 cname = pre+'_'+subtarget
@@ -830,6 +839,9 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lcla']   
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                subtarget = joma['rcla']   
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,obj,subtarget,0.5)
 
                 subtarget = joma['lsho']   
                 cname = pre+'_'+subtarget
