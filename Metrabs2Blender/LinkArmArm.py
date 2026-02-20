@@ -184,18 +184,17 @@ dictarmlink2_7= {
 
 #Dictionary Metrabs Derived Bones
 _dMDB = {
-    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.],"parent":""},
+    "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
     "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
     "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
     "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
-    "kHips":{"name":"ZD_Hips","tail":[-1.,0.,0.],"parent":"kTorso"},
-#    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kTorso"},
-    "kChest":{"name":"ZD_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
-    "kTorsoLoc":{"name":"ZD_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"},
-    "kKneeR":{"name":"ZD_KneeR","tail":[0.,1.,0.],"parent":"rkne"},
-    "kKneeL":{"name":"ZD_KneeL","tail":[0.,1.,0.],"parent":"lkne"}
+    "kHips":{"name":"TW_Hips","tail":[-1.,0.,0.],"parent":"kTorso"},
+    "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
+    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"},
+    "kKneeR":{"name":"TW_KneeR","tail":[0.,1.,0.],"parent":"rkne"},
+    "kKneeL":{"name":"TW_KneeL","tail":[0.,1.,0.],"parent":"lkne"}
 }
 
 # get the name of a _dMDB bone
@@ -444,6 +443,10 @@ def createbones_ex(arm,dicbones,joma):
     col = arm.data.collections.get(cs_MTRCollection)
     if col is None:
         col = arm.data.collections.new(cs_MTRCollection)
+    cs_MTRCollection2 = "MTR_Tweaker"
+    col2= arm.data.collections.get(cs_MTRCollection2)
+    if col2 is None:
+        col2 = arm.data.collections.new(cs_MTRCollection2)
 
         
     lx = 0.
@@ -480,7 +483,10 @@ def createbones_ex(arm,dicbones,joma):
                bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
                 False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
            except:
-               col.assign(bone)
+               if bname.find('TW_') == -1:
+                   col.assign(bone)
+               else:
+                   col2.assign(bone)
                pass
         
            
@@ -742,8 +748,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = _nMDB("kTorso")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
-
-
+                
             '''helpers done'''
             
 
