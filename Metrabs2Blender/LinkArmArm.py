@@ -440,6 +440,11 @@ def createbones_ex(arm,dicbones,joma):
         except Exception as error:
          print('ERROR',error)
          return(1)
+    cs_MTRCollection = "MTR_Helper"
+    col = arm.data.collections.get(cs_MTRCollection)
+    if col is None:
+        col = arm.data.collections.new(cs_MTRCollection)
+
         
     lx = 0.
     for key in dicbones:
@@ -475,6 +480,7 @@ def createbones_ex(arm,dicbones,joma):
                bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
                 False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
            except:
+               col.assign(bone)
                pass
         
            
@@ -725,6 +731,18 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
 
+            '''Knee rotation'''
+            bone = self.findbone(homearm,joma['rkne'])
+            if bone is not None:
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+            bone = self.findbone(homearm,joma['lkne'])
+            if bone is not None:
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
 
             '''helpers done'''
             
@@ -809,16 +827,17 @@ class LinkArmature2A(bpy.types.Operator):
                     else:
                       cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
 
-            subtarget =  _nMDB("kKneeR")   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_R"])
             cname = pre+'_'+subtarget
             if bone is not None:
+                subtarget =  _nMDB("kKneeR")
+                cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
-            subtarget =  _nMDB("kKneeL")   
             bone = self.findbone(arm,armlinksto["KneeTargetIK_L"])
-            cname = pre+'_'+subtarget
             if bone is not None:
+                subtarget =  _nMDB("kKneeL")
+                cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,armlinkoptions.influenceKnee)
 
             bone = self.findbone(arm,armlinksto["Shoulder_R"])

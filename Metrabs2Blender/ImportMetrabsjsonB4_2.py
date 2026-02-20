@@ -372,9 +372,13 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
         return res_arm
     
     p1 = data[pname]
-    if (not p1): return res_armf
+    if (not p1): return res_arm
     aPre = 'Arm_'
     res_arm = create_armature(aPre+jPre+deko,'TestBone')
+    cs_MTRCollection = "MTR_Input"
+    col = res_arm.data.collections.get(cs_MTRCollection)
+    if col is None:
+        col = res_arm.data.collections.new(cs_MTRCollection)
 
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
@@ -409,9 +413,9 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
             bone.layers=(True, False , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
              False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
         except:
+            col.assign(bone)
             pass
-
-        
+            
 
 
 
