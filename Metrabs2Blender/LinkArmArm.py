@@ -190,11 +190,12 @@ _dMDB = {
     "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
-    "kHips":{"name":"TW_Hips","tail":[-1.,0.,0.],"parent":"kTorso"},
+    "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso"},
     "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
-    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[0.,1.,0.],"parent":"kTorso"},
+    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso"},
     "kKneeR":{"name":"TW_KneeR","tail":[0.,1.,0.],"parent":"rkne"},
-    "kKneeL":{"name":"TW_KneeL","tail":[0.,1.,0.],"parent":"lkne"}
+    "kKneeL":{"name":"TW_KneeL","tail":[0.,1.,0.],"parent":"lkne"},
+    "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"}
 }
 
 # get the name of a _dMDB bone
@@ -686,6 +687,10 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = _nMDB("kTorsoL")
                 cname = pre+'_'+subtarget
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
+                subtarget = _nMDB("kChestRot")
+                cname = pre+'_'+subtarget
+                cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
+
 
             '''kHipRot'''
             bone = self.findbone(homearm,_nMDB("kHipRot"))
@@ -707,10 +712,10 @@ class LinkArmature2A(bpy.types.Operator):
             '''kChestRot'''
             bone = self.findbone(homearm,_nMDB("kChestRot"))
             if bone is not None:
-                subtarget = joma['rcla']
+                subtarget = joma['rsho']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
-                subtarget = joma['lcla']
+                subtarget = joma['lsho']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Y',1.0)
@@ -720,6 +725,19 @@ class LinkArmature2A(bpy.types.Operator):
                   cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
                 else:
                   cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Z','LOCK_X',1.0)
+
+            '''Calvicula'''
+            bone = self.findbone(homearm,joma['rcla'])
+            if bone is not None:
+                subtarget = _nMDB("kClav")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+
+            bone = self.findbone(homearm,joma['lcla'])
+            if bone is not None:
+                subtarget = _nMDB("kClav")
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
 
             '''kHeadRot'''
             bone = self.findbone(homearm,_nMDB("kHeadRot"))
@@ -963,10 +981,6 @@ class makeRigVersion(bpy.types.Operator):
         obj = context.active_object
         arm = bpy.data.objects.get(obj["~armature"])
         arm["RV"] = defaultrigversion
-        #no need to create here -- however nice to see them b4 they get linked
-        if (1):
-          createbones_ex(obj,_dMDB)
-
         return {'FINISHED'}
 
 
