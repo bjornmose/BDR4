@@ -829,6 +829,11 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,obj,subtarget,0,0,1,1.0)
+
                 if (armlinkoptions.linktoes):
                     subtarget = joma['rtoe']
                     cname = pre+'_'+subtarget
@@ -842,6 +847,11 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lank']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
+                
+                subtarget = _nMDB("kTorso")
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,obj,subtarget,0,0,1,1.0)
+
                 if (armlinkoptions.linktoes):
                     subtarget = joma['ltoe']
                     cname = pre+'_'+subtarget
