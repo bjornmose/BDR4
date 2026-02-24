@@ -1036,7 +1036,8 @@ class LinkArm2ArmPanel(bpy.types.Panel):
                 a=obj["~armature"]
                 if a is not None:
                     row = layout.row()
-                    row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    #row.prop(obj, '["%s"]' % ("~armature"),text="Armature")
+                    row.prop_search(obj,'["%s"]' % ("~armature"),  bpy.data, "armatures",text='')
                     arm = bpy.data.objects.get(a)
                     if arm is not None: 
                       try:
