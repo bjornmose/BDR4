@@ -359,7 +359,7 @@ def coboneIK(bone,cname,target,IDbone,len,influence):
             crc.subtarget = IDbone
             crc.chain_count = len
             crc.influence = influence
-            return('FINISHED')
+        return(crc)
 
 
 def cobonerot(bone,cname,target,IDbone,use_x,use_y,use_z,influence):
@@ -767,6 +767,39 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
                 
+
+            ''' FK HELPER '''
+            bone = self.findbone(homearm,joma['rsho'])
+            if bone is not None:
+                subtarget = joma['relb']
+                cname = pre+'_'+subtarget
+                co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                co.pole_target = homearm
+                co.pole_subtarget = joma['spin']
+
+            bone = self.findbone(homearm,joma['lsho'])
+            if bone is not None:
+                subtarget = joma['lelb']
+                cname = pre+'_'+subtarget
+                co=coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                co.pole_target = homearm
+                co.pole_subtarget = joma['spin']
+
+            bone = self.findbone(homearm,joma['relb'])
+            if bone is not None:
+                subtarget = joma['rwri']
+                cname = pre+'_'+subtarget
+                co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+
+            bone = self.findbone(homearm,joma['lelb'])
+            if bone is not None:
+                subtarget = joma['lwri']
+                cname = pre+'_'+subtarget
+                co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+
+
+
+
             '''helpers done'''
             
 
