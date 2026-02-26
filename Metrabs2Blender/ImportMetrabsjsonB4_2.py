@@ -376,9 +376,10 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
     aPre = 'Arm_'
     res_arm = create_armature(aPre+jPre+deko,'TestBone')
     cs_MTRCollection = "MTR_Input"
-    col = res_arm.data.collections.get(cs_MTRCollection)
-    if col is None:
-        col = res_arm.data.collections.new(cs_MTRCollection)
+    if hasattr(res_arm.data,'collections'): 
+        col = res_arm.data.collections.get(cs_MTRCollection)
+        if col is None:
+            col = res_arm.data.collections.new(cs_MTRCollection)
 
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style

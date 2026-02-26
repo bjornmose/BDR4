@@ -449,13 +449,14 @@ def createbones_ex(arm,dicbones,joma):
          print('ERROR',error)
          return(1)
     cs_MTRCollection = "MTR_Helper"
-    col = arm.data.collections.get(cs_MTRCollection)
-    if col is None:
-        col = arm.data.collections.new(cs_MTRCollection)
-    cs_MTRCollection2 = "MTR_Tweaker"
-    col2= arm.data.collections.get(cs_MTRCollection2)
-    if col2 is None:
-        col2 = arm.data.collections.new(cs_MTRCollection2)
+    if hasattr(arm.data,'collections'):
+        col = arm.data.collections.get(cs_MTRCollection)
+        if col is None:
+            col = arm.data.collections.new(cs_MTRCollection)
+        cs_MTRCollection2 = "MTR_Tweaker"
+        col2= arm.data.collections.get(cs_MTRCollection2)
+        if col2 is None:
+            col2 = arm.data.collections.new(cs_MTRCollection2)
 
         
     lx = 0.
