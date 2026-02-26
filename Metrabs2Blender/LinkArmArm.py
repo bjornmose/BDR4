@@ -156,7 +156,11 @@ dictarmlink3_5 = {
     "Chest":"chest",
     "Hips":"hips",
     "ForearmR":"DEF-forearm.R.001",
-    "ForearmL":"DEF-forearm.L.001"
+    "ForearmL":"DEF-forearm.L.001",
+    "UparmFK_R":"upper_arm_fk.R",
+    "UparmFK_L":"upper_arm_fk.L",
+    "ForearmFK_R":"forearm_fk.R",
+    "ForearmFK_L":"forearm_fk.L"
     }
 
 dictarmlink2_7= {
@@ -177,7 +181,11 @@ dictarmlink2_7= {
     "Chest":"chest",
     "Hips":"hips",
     "ForearmR":"DEF-forearm.02.R",
-    "ForearmL":"DEF-forearm.02.L"
+    "ForearmL":"DEF-forearm.02.L",
+    "UparmFK_R":"upper_arm_fk.R",
+    "UparmFK_L":"upper_arm_fk.L",
+    "ForearmFK_R":"forearm_fk.R",
+    "ForearmFK_L":"forearm_fk.L"
     }
 
 
@@ -189,10 +197,10 @@ _dMDB = {
     "kTorso":{"name":"ZD_Torso","tail":[0.,0.,1.]},
     "kTorsoR":{"name":"ZD_TorsoR","tail":[0.,1.,0.]},
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
-    "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
+    "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.],"pos":[-0.15,0.,0.]},
     "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso"},
-    "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot"},
-    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso"},
+    "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot","pos":[-3.0,0.,0.]},
+    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-1.5,0.,0.]},
     "kKneeR":{"name":"TW_KneeR","tail":[0.,1.,0.],"parent":"rkne"},
     "kKneeL":{"name":"TW_KneeL","tail":[0.,1.,0.],"parent":"lkne"},
     "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"}
@@ -490,6 +498,17 @@ def createbones_ex(arm,dicbones,joma):
                    col2.assign(bone)
                pass
         
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bone = arm.pose.bones.get(bname)
+        try:
+           pos = item["pos"]
+           #print(pos)
+           bone.location = item["pos"]
+        except:
+           #print('no pos for bone:',bname)
+           pass        
+        bpy.ops.object.mode_set(mode='EDIT')
+    
            
              
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -790,17 +809,45 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rwri']
                 cname = pre+'_'+subtarget
                 co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                co.pole_target = homearm
+                co.pole_subtarget = joma['bell']
+                co.pole_angle = 3.14159 
 
             bone = self.findbone(homearm,joma['lelb'])
             if bone is not None:
                 subtarget = joma['lwri']
                 cname = pre+'_'+subtarget
                 co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
-
+                co.pole_target = homearm
+                co.pole_subtarget = joma['bell']
+                co.pole_angle = 0.0
 
 
 
             '''helpers done'''
+            bone = self.findbone(arm,armlinksto["UparmFK_R"])
+            if bone is not None:
+                subtarget = joma['rsho']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["UparmFK_L"])
+            if bone is not None:
+                subtarget = joma['lsho']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["ForearmFK_R"])
+            if bone is not None:
+                subtarget = joma['relb']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["ForearmFK_L"])
+            if bone is not None:
+                subtarget = joma['lelb']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
             
 
             bone = self.findbone(arm,armlinksto["HandIK_R"])
