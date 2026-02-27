@@ -182,10 +182,10 @@ dictarmlink2_7= {
     "Hips":"hips",
     "ForearmR":"DEF-forearm.02.R",
     "ForearmL":"DEF-forearm.02.L",
-    "UparmFK_R":"upper_arm_fk.R",
-    "UparmFK_L":"upper_arm_fk.L",
-    "ForearmFK_R":"forearm_fk.R",
-    "ForearmFK_L":"forearm_fk.L"
+    "UparmFK_R":"upper_arm.fk.R",
+    "UparmFK_L":"upper_arm.fk.L",
+    "ForearmFK_R":"forearm.fk.R",
+    "ForearmFK_L":"forearm.fk.L"
     }
 
 
