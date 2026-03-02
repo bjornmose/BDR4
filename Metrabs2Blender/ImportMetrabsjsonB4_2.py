@@ -1239,6 +1239,12 @@ class import_metrabs(bpy.types.Operator):
                       print('->KernelFilter3->Action',ch)
                       filter = [1.0,4.0,1.0]
                       res = TheFilterCass.redfilter(chdata,filter,incr)
+                elif tof == 7:
+                      print('->Combined->Action',ch)
+                      filter = [1.0,4.0,6.0,4.0,1.0]
+                      res = TheFilterCass.redfilter(chdata,filter,incr)
+                      filter = [1.0,2.0,-4.0,14.0,-4.0,2.0,1.0]
+                      res = TheFilterCass.redfilter(res,filter,incr)
                 #apply filter here ----
                 TheFilterCass.inject_action(obj,res,sf,tf)
                      
@@ -1477,7 +1483,7 @@ class op_CreateArmature(bpy.types.Operator):
         print('op_CreateArmaturet-----------End' ) 
         return {'FINISHED'}
 
-_filternames = ["RAW","Av","Med","KF5","AvN","KF9","KF3"]
+_filternames = ["RAW","Av","Med","KF5","AvN","KF9","KF3","Comb"]
 
 class MetrabsPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
