@@ -541,6 +541,7 @@ the place to apply fiters
 class C_rawMeterasData():
     def __init__(self) -> None:
         self.myData = {}
+        self.myBoxes = {}
         self.firstframe = 1000
         self.lastframe = -1000
         self.channels = {}
@@ -548,6 +549,8 @@ class C_rawMeterasData():
         self.box = [0.0,0.0]
         self.boxindex=999
         self.dir_Y = 1.
+        self.window_size = 20
+        self.outpath=''
         pass
 
     def choose_box(self,pname,boxes):
@@ -578,8 +581,9 @@ class C_rawMeterasData():
                 data = json.load(json_file)
                 boxes = data['boxes'] # at least on box must be there
                 pname = self.choose_box(pname,boxes)
-                self.myData[frame] = data[pname] #quick and dirty .. no box selction
+                self.myData[frame] = data[pname]
                 self.joints = data['joints']
+                self.myBoxes[frame] = boxes
                 if self.firstframe > frame : self.firstframe = frame
                 if self.lastframe < frame : self.lastframe = frame
         except:
@@ -591,6 +595,17 @@ class C_rawMeterasData():
             print('Extracting',ch)
             chdata = self.extract_channel(ch)
             self.channels[ch] = chdata
+            sb = self.filter_boxes()
+            with open(self.outpath+'smoothbox.json', 'w') as f:
+                json.dump(sb, f, indent=4)
+                f.close()
+
+            with open(self.outpath+'rawbox.json', 'w') as f:
+                json.dump(self.myBoxes, f, indent=4)
+                f.close()
+
+
+            print('\n****xx***',sb) 
             #print('\n****xx***',ch,chdata,) // ok that works
 
     def extract_channel(self,chname):
@@ -609,6 +624,51 @@ class C_rawMeterasData():
                 pass
             channel[frame] = (x,y,z)
         return channel
+
+
+    def filter_boxes(self):
+        # raw_boxes is dict frame -> list of boxes
+        # Apply temporal median filter to each channel of each box
+        smoothed = {}
+        if not self.myBoxes:
+            return smoothed
+        frames = sorted(self.myBoxes.keys())
+        if not frames:
+            return smoothed
+        num_boxes = len(self.myBoxes[frames[0]])
+        for box_idx in range(num_boxes):
+            time_series = []
+            valid_frames = []
+            for frame in frames:
+                if box_idx < len(self.myBoxes[frame]):
+                    box = self.myBoxes[frame][box_idx]
+                    if len(box) >= 4:  # Assume [x, y, w, h]
+                        time_series.append(box)
+                        valid_frames.append(frame)
+            # Apply median filter for each channel
+            smoothed_series = []
+            for i in range(len(time_series)):
+                start = max(0, i - self.window_size // 2)
+                end = min(len(time_series), i + self.window_size // 2 + 1)
+                window = time_series[start:end]
+                if window:
+                    median_box = [
+                        np.median([b[0] for b in window]),
+                        np.median([b[1] for b in window]),
+                        np.median([b[2] for b in window]),
+                        np.median([b[3] for b in window])
+                    ]
+                    smoothed_series.append(median_box)
+                else:
+                    smoothed_series.append(time_series[i])  # Fallback
+            # Assign smoothed boxes back to frames
+            for i, frame in enumerate(valid_frames):
+                if frame not in smoothed:
+                    smoothed[frame] = []
+                smoothed[frame].append(smoothed_series[i])
+        self.smoothboxes = smoothed
+        return smoothed
+
     
     def inject_action(self,obj,chdata,sf,tf):
         fcu_x = obj.animation_data.action.fcurves[0]
@@ -1169,6 +1229,7 @@ class import_metrabs(bpy.types.Operator):
             
           
         TheFilterCass = C_rawMeterasData()
+        TheFilterCass.outpath =  obj['inpath']
         sbx = obj[nOP_Box_X]
         sby = obj[nOP_Box_Y]
         TheFilterCass.box=[sbx,sby]
