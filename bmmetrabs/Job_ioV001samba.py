@@ -8,7 +8,7 @@ from os.path import exists
 #licence GPL
 #author bjornmose
 #today 2024_01_31
-version = 4
+version = 5
 
 ##############################################
 # configuration start
@@ -25,7 +25,7 @@ skeleton = 'smpl+head_30'
 
 
 # I/O Path
-datapath = 'BlueLeg'
+datapath = 'Angelica_2'
 #outpathdeko
 outpathdeko = ''
 # absolute path homebased
@@ -37,6 +37,7 @@ filetemplate = '/Image{0:04d}.png'
 #fov_degrees = 30
 fov_degrees = 55
 #fov_degrees = 75
+#fov_degrees = 90
 #fov_degrees = 100
 
 #'quality' v: v<1 lowest v<20 medium v<50 good else above  https://istvansarandi.com/dozens/ model  >199 >215 >225

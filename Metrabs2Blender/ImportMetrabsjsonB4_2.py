@@ -595,17 +595,18 @@ class C_rawMeterasData():
             print('Extracting',ch)
             chdata = self.extract_channel(ch)
             self.channels[ch] = chdata
-            sb = self.filter_boxes()
-            with open(self.outpath+'smoothbox.json', 'w') as f:
-                json.dump(sb, f, indent=4)
-                f.close()
 
-            with open(self.outpath+'rawbox.json', 'w') as f:
-                json.dump(self.myBoxes, f, indent=4)
-                f.close()
+        sb = self.filter_boxes()
+        with open(self.outpath+'smoothbox.json', 'w') as f:
+            json.dump(sb, f, indent=4)
+            f.close()
+
+        with open(self.outpath+'rawbox.json', 'w') as f:
+            json.dump(self.myBoxes, f, indent=4)
+            f.close()
 
 
-            print('\n****xx***',sb) 
+            #print('\n****xx***',sb) 
             #print('\n****xx***',ch,chdata,) // ok that works
 
     def extract_channel(self,chname):
