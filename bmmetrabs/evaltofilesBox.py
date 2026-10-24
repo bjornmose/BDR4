@@ -26,86 +26,26 @@ bad example doiimage (loads of params passed)
 home_directory = os.path.expanduser( '~' )
 home_models = home_directory+'/sambashare/modelstf2/'
 
-class Box_Estimator:
+class Box_Files:
     def __init__(self):
         self.smoothboxes = {}  # Attribute to store filtered boxes or results
         self.raw_boxes = {}  # Attribute to store raw boxes or results
-        self.outputpatternjson = None  # Default pattern for JSON files
-        self.window_size = 3  # Median filter window size
+        self.inputpath = ''  # Default pattern for Box JSON files
 
-    def collect_frames(self, frames):
-        # Method to process frames and filter boxes
-        # Placeholder implementation
-        lraw_boxes = {}
-
-        for frame in frames:
-            # Add logic to filter boxes here
-            box = self.read_from_json(frame)
-            lraw_boxes[frame] = box  # Example: just pass through
-        self.raw_boxes = lraw_boxes
-        return lraw_boxes
-    
-    def filter_boxes(self, raw_boxes):
-        # raw_boxes is dict frame -> list of boxes
-        # Apply temporal median filter to each channel of each box
-        smoothed = {}
-        if not raw_boxes:
-            return smoothed
-        frames = sorted(raw_boxes.keys())
-        if not frames:
-            return smoothed
-        num_boxes = len(raw_boxes[frames[0]])
-        for box_idx in range(num_boxes):
-            time_series = []
-            valid_frames = []
-            for frame in frames:
-                if box_idx < len(raw_boxes[frame]):
-                    box = raw_boxes[frame][box_idx]
-                    if len(box) >= 4:  # Assume [x, y, w, h]
-                        time_series.append(box)
-                        valid_frames.append(frame)
-            # Apply median filter for each channel
-            smoothed_series = []
-            for i in range(len(time_series)):
-                start = max(0, i - self.window_size // 2)
-                end = min(len(time_series), i + self.window_size // 2 + 1)
-                window = time_series[start:end]
-                if window:
-                    median_box = [
-                        statistics.median([b[0] for b in window]),
-                        statistics.median([b[1] for b in window]),
-                        statistics.median([b[2] for b in window]),
-                        statistics.median([b[3] for b in window])
-                    ]
-                    smoothed_series.append(median_box)
-                else:
-                    smoothed_series.append(time_series[i])  # Fallback
-            # Assign smoothed boxes back to frames
-            for i, frame in enumerate(valid_frames):
-                if frame not in smoothed:
-                    smoothed[frame] = []
-                smoothed[frame].append(smoothed_series[i])
-        self.smoothboxes = smoothed
-        return smoothed
-
-    def read_from_json(self, frame):
+    def read_boxes(self, frames):
         # Read boxes from JSON file for the given frame
-        filename = self.outputpatternjson.format(frame)
+        filename = self.inputpath+'smoothbox.json'
         if not os.path.exists(filename):
-            return []
+            return -1
         with open(filename, 'r') as f:
-            data = json.load(f)
-        return data.get('boxes', [])
+            self.smoothboxes = json.load(f)
+        filename = self.inputpath+'rawbox.json'
+        if not os.path.exists(filename):
+            return -1
+        with open(filename, 'r') as f:
+            self.raw_boxes = json.load(f)
+        return 0
 
-    def write_smooth_boxes_to_json(self, output_pattern=None):
-        # Write smoothed boxes to JSON files
-        if output_pattern is None:
-            output_pattern = self.outputpatternjson
-        for frame, boxes in self.smoothboxes.items():
-            filename = output_pattern.format(frame)
-            data = {'boxes': boxes}
-            with open(filename, 'w') as f:
-                json.dump(data, f, indent=4)
 
 
 
