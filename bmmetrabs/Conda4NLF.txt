@@ -1,0 +1,12 @@
+conda create --name mtrp310 python=3.10 matplotlib
+
+conda activate mtrp310
+
+
+pip install --upgrade pip
+pip install tensorflow
+
+conda remove libstdcxx-ng --force 
+conda install -c conda-forge "libstdcxx-ng>=13" 
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
