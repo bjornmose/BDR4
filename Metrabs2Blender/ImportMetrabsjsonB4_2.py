@@ -892,7 +892,7 @@ def completeObjectProperties(obj):
     try:
         T=obj["scaledidvisor"] 
     except:
-        obj["scaledidvisor"]   = 100
+        obj["scaledidvisor"]   = 100.
     try:
         T=obj["ZBA"] 
     except:
@@ -963,10 +963,6 @@ class read_metrabs_info(bpy.types.Operator):
             print(data)
             res = data['skeleton']
             obj['skeleton'] = res
-            print('skeleton=',res,'.')
-            j = skel_list[res]
-            print('***joints imported****')
-            print(j)
             res = data['start']
             obj['start_frame'] = res
             res = data['end']
