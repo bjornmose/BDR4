@@ -100,7 +100,7 @@ def main(jobname):
             print('exists or failed',outpath)
             pass
         try:
-            os.makedirs(outpath+'/viz')
+            os.makedirs(outpath+'/vizNLFraw')
         except:
             print('exists or failed',outpath)
             pass

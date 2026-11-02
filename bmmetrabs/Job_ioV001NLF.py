@@ -5,26 +5,26 @@ import os
 import json
 import sys
 from os.path import exists
-#licence GPL
+#licence MIT
 #author bjornmose
-#today 2024_01_31
+#today 2026_11_02
 version = 5
 
 ##############################################
 # configuration start
 ##############################################
 
-# choose skeleton
+# choose skeleton not used here 4 now
 skeleton = 'smpl_24'
-#skeleton = 'smpl+head_30'
+# skeleton = 'smpl+head_30'
 # skeleton = 'coco_19'
 # skeleton = 'h36m_17'
 # skeleton = 'h36m_25'
 # skeleton = 'mpi_inf_3dhp_17'
-#skeleton = 'mpi_inf_3dhp_28'
+# skeleton = 'mpi_inf_3dhp_28'
 
 
-# I/O Path
+# I/O Path AKA where the input images are
 datapath = 'Angelica_2'
 #outpathdeko
 outpathdeko = ''
@@ -33,29 +33,13 @@ usehome = True
 datapathpre = '/sambashare/MetarbsData/'
 filetemplate = '/Image{0:04d}.png'
 
-
+#not used here
 #fov_degrees = 30
 fov_degrees = 55
 #fov_degrees = 75
 #fov_degrees = 90
 #fov_degrees = 100
 
-#'quality' v: v<1 lowest v<20 medium v<50 good else above  https://istvansarandi.com/dozens/ model  >199 >215 >225
-#old !! return other joints 
-#qual = 10
-#qual = 25
-#qual = 55
-#New with unified joinz
-#qual = 200
-qual = 220
-#qual = 230
-#models picked by chance
-'''
-    EfficientNetV2-S, 256 px: hub.load('https://bit.ly/metrabs_s_256')
-    EfficientNetV2-S, 384 px: hub.load('https://bit.ly/metrabs_s')
-    EfficientNetV2-L, 384 px: hub.load('https://bit.ly/metrabs_l')
-    EfficientNetV2-XL, 384 px: hub.load('https://bit.ly/metrabs_xl')
-'''    
 #qual = 400
 #qual = 401
 #qual = 402
@@ -108,7 +92,7 @@ respath = datapath + resdetail
 jobfilename = 'e2fjob'+datapath+resdetail+'.json'
 #use relative (local) path by default
 inpath ='input/' + datapath
-outpath ='output/res' + respath
+outpath ='output/resNLF' + respath
 #override to absolute path in users home
 if (usehome):
 	home_directory = os.path.expanduser( '~' )
@@ -117,28 +101,6 @@ if (usehome):
 
 
 inpattern = inpath + filetemplate
-
-
-
-# create default file
-if (0):
-	datapath = 'default'
-	# set appenix
-	respath = datapath
-	inpath = 'input/' + datapath
-	outpath = 'output/res' + respath
-	frame_start = 1
-	frame_end = 10
-	jobfilename = 'e2fjob'+datapath+'.json'
-	create_json = 2  # enum 0 dont 1 skip existing 2 overwrite
-	fov_degrees = 90
-	qual = 15  # enum 0 lowest 19 meduim 49 good above 100 best
-	cpu_count = 1
-	viz  = 1
-	skip = 1
-
-
-        
 
 class Job_io:
     @classmethod
@@ -170,8 +132,8 @@ class Job_io:
             jdata['add_2d_json'] = add_2d_json
             jdata['inpattern'] = inpattern
             jdata['outpath'] = outpath
-            jdata['outputpatternjson'] = '/Posedata{0:04d}.json'
-            jdata['outputpatternviz'] = '/viz/Image{0:04d}.png'
+            jdata['outputpatternjson'] = '/NLFdata{0:04d}.json'
+            jdata['outputpatternviz'] = '/vizNLFraw/Image{0:04d}.png'
             jdata['outputpatternviz1'] = '/viz1/Image{0:04d}.png'
             jdata['outputpatternviz2'] = '/viz2/Image{0:04d}.png'
             json.dump(jdata, ji, ensure_ascii=False, indent=4)
