@@ -34,6 +34,8 @@ home_data = home_directory+'/sambashare/nlf_data_files/'
 
 msgbarstart = '###e2f#######################################################\n'
 msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
+_numverts = 0
+_numjoints = 0
 
 def _writestodir(name,hintextra):
  nprobe=name+'.txt' 
@@ -161,6 +163,9 @@ def main(jobname):
     #print(cano_verts)
     #print(cano_joints)
     #print(cano_all)
+    _numverts = len(cano_verts)
+    _numjoints = len(cano_joints)
+    print('NV',_numverts,'NJ',_numjoints)
 
 
 
@@ -326,7 +331,7 @@ def doimage(tf,model,weights,i,inpattern,fov_degrees,skeleton,max_detections,viz
 		p3d = pred['poses3d']
 		p2d = pred['poses2d']
 		boxes = pred['boxes']
-		DumpNLFjson(p3d,boxes,i,outputpatternjson)
+		DumpNLFjson(tf,joint_names,p3d,boxes,i,outputpatternjson)
 		
 #		boxes = []
 
@@ -335,7 +340,7 @@ def doimage(tf,model,weights,i,inpattern,fov_degrees,skeleton,max_detections,viz
 #		else:
 #			pose2json(skeleton,p3d,boxes,joint_names,i,outputpatternjson)
 	if viz == 1 :visualize_3dtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
-	if viz == 2 :visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
+	if viz == 2 :visualize_tofileClipped(image.numpy(),tf, pred, joint_names, joint_edges,i,outputpatternviz)
 	if viz == 3 :
 		visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
 		#visualize_3dOtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
@@ -357,18 +362,34 @@ def fail2json(frame,pat):
         json.dump(jdata, jf, ensure_ascii=False, indent=4)
         jf.close()
         
-def DumpNLFjson(p3d,boxes,frame,pat):
+def DumpNLFjson(tf,joint_names,poses3d,boxes,frame,pat):
     name=pat.format(frame)
     print('<-out',name)
     with open(name, 'w', encoding='utf-8') as jf:
         jdata = {}
         jdata['boxes'] = []
-        jdata['Raw3d'] = []
+        jdata['joints'] = []
+        jdata['joints3d'] = []
+        jdata['vertices3d'] = []
+        for joint in joint_names:
+          jdata['joints'].append(joint.astype(str))
         for x, y, w, h in boxes[:, :4]:
           jdata['boxes'].append([x.astype(float),y.astype(float),w.astype(float),h.astype(float)])
-        if len(p3d) > 0 :             
-             for ppose in (p3d[0]):
-               jdata['Raw3d'].append([ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+        if len(poses3d[0]) > 0 : 
+            vertices, joints = tf.split(
+            poses3d[0], [6890,24], axis=-2
+            )
+            print(joints)
+            joints = tf.nest.map_structure(lambda x: x.numpy(), joints)  # convert tensors to numpy arrays
+            vertices = tf.nest.map_structure(lambda x: x.numpy(), vertices)  # convert tensors to numpy arrays
+            print(joints)
+            for ppose,joint, in zip(joints,joint_names):
+            	print(ppose,joint)
+            	jdata['joints3d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
+
+
+            for vert in (vertices):
+               jdata['vertices3d'].append([vert[0].astype(float) ,vert[1].astype(float) , vert[2].astype(float)])
         json.dump(jdata, jf, ensure_ascii=False, indent=4)
         jf.close()
 
@@ -505,7 +526,7 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
     plt.close()
 #    plt.show()
 
-def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
+def visualize_tofileClipped(image,tf, pred, joint_names, joint_edges,i,pat):
 #    poses3d, poses2d = pred['joints3d'], pred['joints2d']
     detections, poses3d, poses2d = pred['boxes'], pred['poses3d'], pred['poses2d']
 
@@ -530,11 +551,15 @@ def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
     plot_ax.invert_yaxis()
     plot_ax.imshow(image)
     plot_ax.axis('off')
+
+    vertices, joints = tf.split(
+            poses2d[0], [6890,24], axis=-2
+            )
         
     for pose2d in poses2d:
-        #for i_start, i_end in joint_edges:
-        #    plot_ax.plot(*zip(pose2d[i_start], pose2d[i_end]), marker='o', markersize=2)
-        plot_ax.scatter(*pose2d.T, s=2)
+        for i_start, i_end in joint_edges:
+            plot_ax.plot(*zip(joints[i_start], joints[i_end]), marker='o', markersize=2)
+        plot_ax.scatter(*pose2d.T, s=1)
         
 
  
