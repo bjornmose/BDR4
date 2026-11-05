@@ -34,8 +34,6 @@ home_data = home_directory+'/sambashare/nlf_data_files/'
 
 msgbarstart = '###e2f#######################################################\n'
 msgbarend   = '\n^^^e2f^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n'
-_numverts = 0
-_numjoints = 0
 
 def _writestodir(name,hintextra):
  nprobe=name+'.txt' 
@@ -379,12 +377,12 @@ def DumpNLFjson(tf,joint_names,poses3d,boxes,frame,pat):
             vertices, joints = tf.split(
             poses3d[0], [6890,24], axis=-2
             )
-            print(joints)
+            #print(joints)
             joints = tf.nest.map_structure(lambda x: x.numpy(), joints)  # convert tensors to numpy arrays
             vertices = tf.nest.map_structure(lambda x: x.numpy(), vertices)  # convert tensors to numpy arrays
-            print(joints)
+            #print(joints)
             for ppose,joint, in zip(joints,joint_names):
-            	print(ppose,joint)
+            	#print(ppose,joint)
             	jdata['joints3d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
 
 
