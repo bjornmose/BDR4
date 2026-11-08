@@ -49,7 +49,26 @@ def _writestodir(name,hintextra):
    print(hintextra)
    print(msgbarend)
    return False
-
+   
+def makeFplane(nv):
+    res = []
+    z = -0.05
+    for nx in range(nv):
+        for ny in range(nv):
+            res.append([2*nx/nv-1.,2*ny/nv-1.,z])
+    z = 0.0
+    for nx in range(nv):
+        for ny in range(nv):
+            res.append([2*nx/nv-1.,2*ny/nv-1.,z])
+    z = 0.05
+    for nx in range(nv):
+        for ny in range(nv):
+            res.append([2*nx/nv-1.,2*ny/nv-1.,z])
+    return res
+#6890
+#num_verts = 2500
+#num_verts = 7500
+num_verts = 44
 
 def main(jobname):
     #set default values
@@ -153,9 +172,12 @@ def main(jobname):
     if(len(tfmodelname)>0):
       _modelname = modelpath+tfmodelname 
       
-#    cano_verts = np.load(f'{home_data}/canonical_verts/smplh16.npy')
+#   cano_verts = makeFplane(50)
 #   cano_joints = np.load(f'{home_data}/canonical_joints/smplh16.npy')
-    cano_verts = np.load(f'{home_data}/canonical_verts/smpl.npy')
+#    cano_verts = np.load(f'{home_data}/canonical_verts/smpl.npy')
+    marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames.npy')
+    print(marker_names)
+    cano_verts = np.load(f'{home_data}/canonical_verts/Markers.npy')
     cano_joints = np.load(f'{home_data}/canonical_joints/smpl.npy')
     cano_all = np.concatenate([cano_verts, cano_joints], axis=0)
     #print(cano_verts)
@@ -297,7 +319,7 @@ def doimage(tf,model,weights,i,inpattern,fov_degrees,skeleton,max_detections,viz
 	try:
 		#pred = model.detect_poses(image, default_fov_degrees=fov_degrees, skeleton=skeleton, max_detections=max_detections)
 		#pred = model.detect_smpl(image)
-		pred = model.detect_poses(image,weights)
+		pred = model.detect_poses(image,weights, default_fov_degrees=fov_degrees, max_detections=max_detections)
 		
 		#print(msgbarstart,'pred_TF',msgbarend)
 		#print(pred)
@@ -367,27 +389,31 @@ def DumpNLFjson(tf,joint_names,poses3d,boxes,frame,pat):
         jdata = {}
         jdata['boxes'] = []
         jdata['joints'] = []
+        jdata['markers'] = []
         jdata['joints3d'] = []
         jdata['vertices3d'] = []
-        for joint in joint_names:
-          jdata['joints'].append(joint.astype(str))
+        marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames.npy')
         for x, y, w, h in boxes[:, :4]:
           jdata['boxes'].append([x.astype(float),y.astype(float),w.astype(float),h.astype(float)])
+          
+        for mark in marker_names:
+          jdata['markers'].append(mark.astype(str))
+
+        for joint in joint_names:
+          jdata['joints'].append(joint.astype(str))
+          
         if len(poses3d[0]) > 0 : 
             vertices, joints = tf.split(
-            poses3d[0], [6890,24], axis=-2
+            poses3d[0], [num_verts,24], axis=-2
             )
-            #print(joints)
             joints = tf.nest.map_structure(lambda x: x.numpy(), joints)  # convert tensors to numpy arrays
             vertices = tf.nest.map_structure(lambda x: x.numpy(), vertices)  # convert tensors to numpy arrays
-            #print(joints)
             for ppose,joint, in zip(joints,joint_names):
-            	#print(ppose,joint)
             	jdata['joints3d'].append([joint.astype(str), ppose[0].astype(float) ,ppose[1].astype(float) , ppose[2].astype(float)])
 
+            for vert,mark in zip(vertices,marker_names):
+               jdata['vertices3d'].append([mark.astype(str),vert[0].astype(float) ,vert[1].astype(float) , vert[2].astype(float)])
 
-            for vert in (vertices):
-               jdata['vertices3d'].append([vert[0].astype(float) ,vert[1].astype(float) , vert[2].astype(float)])
         json.dump(jdata, jf, ensure_ascii=False, indent=4)
         jf.close()
 
@@ -551,13 +577,13 @@ def visualize_tofileClipped(image,tf, pred, joint_names, joint_edges,i,pat):
     plot_ax.axis('off')
 
     vertices, joints = tf.split(
-            poses2d[0], [6890,24], axis=-2
+            poses2d[0], [num_verts,24], axis=-2
             )
         
     for pose2d in poses2d:
         for i_start, i_end in joint_edges:
             plot_ax.plot(*zip(joints[i_start], joints[i_end]), marker='o', markersize=2)
-        plot_ax.scatter(*pose2d.T, s=1)
+        plot_ax.scatter(*pose2d.T, s=2)
         
 
  
