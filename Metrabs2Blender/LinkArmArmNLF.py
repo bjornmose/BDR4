@@ -481,6 +481,7 @@ def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
             return('FINISHED')
         
 def createbones_ex(arm,dicbones,joma):
+    res = 0
     print('dicbones',dicbones)
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
@@ -521,7 +522,11 @@ def createbones_ex(arm,dicbones,joma):
                 try:
                   bp = bones[_nMDB(pname)]
                 except:
-                  bp = bones[joma[pname]]
+                  try:
+                    bp = bones[joma[pname]]
+                  except:
+                    res = 2
+                    continue
         except:
             pass
         bone = arm.pose.bones.get(bname)
@@ -567,7 +572,7 @@ def createbones_ex(arm,dicbones,joma):
       bpy.data.armatures[arm.name].layers[1] = True
     except:
       pass
-    return (0)
+    return (res)
 
 
 
@@ -718,16 +723,21 @@ class LinkArmature2A(bpy.types.Operator):
             print('Object defined joma')
         except:
             joma = joma_list['']
+            
+        #print(joma)
+
         
         if arm is not None:
             '''create helper bones'''
             homearm = obj
             createbones_ex(homearm,_dMDB,joma)
+            '''twice for nested relations'''
+            createbones_ex(homearm,_dMDB,joma)
             '''build constraints for helpers'''
             '''ktorso'''
             bone = self.findbone(homearm,_nMDB("kTorsoR"))
             if bone is not None:
-                subtarget = joma['rsho']
+                subtarget = joma['rches']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma['rhip']
@@ -736,7 +746,7 @@ class LinkArmature2A(bpy.types.Operator):
             
             bone = self.findbone(homearm,_nMDB("kTorsoL"))
             if bone is not None:
-                subtarget = joma['lsho']
+                subtarget = joma['lches']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma['lhip']
@@ -771,10 +781,10 @@ class LinkArmature2A(bpy.types.Operator):
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
-                subtarget = joma['bell']
+                subtarget = joma['fhip']
                 cname = pre+'_'+subtarget
                 if (armlinkoptions.rigversion == 27):
-                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Y','LOCK_X',1.0)
+                  cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
                 else:
                   cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
 
@@ -800,13 +810,13 @@ class LinkArmature2A(bpy.types.Operator):
             if bone is not None:
                 subtarget = _nMDB("kClav")
                 cname = pre+'_'+subtarget
-                coboneloc(bone,cname,homearm,subtarget,1.0)
+                coboneloc(bone,cname,homearm,subtarget,0.1)
 
             bone = self.findbone(homearm,joma['lcla'])
             if bone is not None:
                 subtarget = _nMDB("kClav")
                 cname = pre+'_'+subtarget
-                coboneloc(bone,cname,homearm,subtarget,1.0)
+                coboneloc(bone,cname,homearm,subtarget,0.1)
 
             '''kHeadRot'''
             bone = self.findbone(homearm,_nMDB("kHeadRot"))
@@ -1008,9 +1018,6 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rcla']   
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = joma['lcla']   
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,0.5)
 
                 subtarget = joma['rsho']   
                 cname = pre+'_'+subtarget
@@ -1021,9 +1028,6 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lcla']   
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = joma['rcla']   
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,0.5)
 
                 subtarget = joma['lsho']   
                 cname = pre+'_'+subtarget
@@ -1196,7 +1200,7 @@ def register():
     bpy.utils.register_class(UnLinkArmature2A)
     bpy.utils.register_class(LinkArm2ArmPanel)
     bpy.utils.register_class(makeRigVersion)
-    print('register LinkA2ArmVxxx Done')
+    print('register LinkA2ArmNFL Done')
 
 
 def unregister():
@@ -1210,7 +1214,7 @@ def unregister():
 if __name__ == "__main__":
     #runit(bpy.context,1)    
     register()
-    print('LinkA2ArmVxx DONE')
+    print('LinkA2ArmNFL run')
 #    makefeetrot() 
     
 #run with register flag
