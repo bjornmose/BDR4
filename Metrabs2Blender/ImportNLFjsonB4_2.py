@@ -1625,37 +1625,27 @@ class MetrabsPanel(bpy.types.Panel):
         row.operator("object.pushtweak_operator")
 """    
 
-
+classes = (
+    make_metrabs,
+    read_metrabs_info,
+    import_metrabs,
+    import_metrabs2D,
+    MetrabsPanel,
+    findMETRABData,
+    delete_childen_actions,
+    delete_childen,
+    op_CreateArmature
+)
 
 def register():
-    bpy.utils.register_class(make_metrabs)
-    bpy.utils.register_class(read_metrabs_info)
-    bpy.utils.register_class(import_metrabs)
-    bpy.utils.register_class(import_metrabs2D)
-    bpy.utils.register_class(MetrabsPanel)
-    bpy.utils.register_class(findMETRABData)
-    #bpy.utils.register_class(push_down_joints_action)
-    bpy.utils.register_class(delete_childen_actions)
-    bpy.utils.register_class(delete_childen)
-    bpy.utils.register_class(op_CreateArmature)
-    #for cls in classes:
-    #    bpy.utils.register_class(cls)
+    for cls in classes:
+        bpy.utils.register_class(cls)
     print('Import Mertabs register DONE')
 
 
 def unregister():
-    bpy.utils.unregister_class(make_metrabs)
-    bpy.utils.unregister_class(read_metrabs_info)
-    bpy.utils.unregister_class(import_metrabs)
-    bpy.utils.unregister_class(import_metrabs2D)
-    bpy.utils.unregister_class(MetrabsPanel)
-    bpy.utils.unregister_class(findMETRABData)
-    #bpy.utils.unregister_class(push_down_joints_action)
-    bpy.utils.register_class(delete_childen_actions)
-    bpy.utils.register_class(delete_childen)
-    bpy.utils.unregister_class(op_CreateArmature)
-    #for cls in classes:
-    #    bpy.utils.unregister_class(cls)
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
     
 def main():
     register()
