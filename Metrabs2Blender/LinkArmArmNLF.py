@@ -159,6 +159,7 @@ _dMDB = {
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
     "kHeadRot_tw":{"name":"TW_HeadRot","tail":[0.,1.,0.],"parent":"kHeadRot"},
+    "kHeadLoc":{"name":"TW_HeadLoc","tail":[0.,1.,0.]},
     "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso","pos":[-0.6,0.0,0.]},
     "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot","pos":[-3.0,0.,0.]},
     "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-2.0,0.,0.]},
@@ -633,6 +634,7 @@ class LinkArmature2A(bpy.types.Operator):
             '''twice for nested relations'''
             createbones_ex(homearm,_dMDB,joma)
             '''build constraints for helpers'''
+
             '''ktorso'''
             bone = self.findbone(homearm,_nMDB("kTorsoR"))
             if bone is not None:
@@ -734,6 +736,20 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lear']
                 cname = pre+'_'+subtarget
                 cobonelockedtrack(bone,cname,homearm,subtarget,'TRACK_X','LOCK_Z',1)
+
+            '''kHeadLoc'''
+            bone = self.findbone(homearm,_nMDB("kHeadLoc"))
+            if bone is not None:
+                subtarget = joma['hbase']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['htop']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.1)
+                subtarget = joma['nose']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.1)
+
 
             '''Knee rotation'''
             bone = self.findbone(homearm,joma['rkne'])
@@ -1008,12 +1024,9 @@ class LinkArmature2A(bpy.types.Operator):
 
             bone = self.findbone(arm,armlinksto["Head"])
             if bone is not None:
-                subtarget = joma['hbase']
+                subtarget = _nMDB("kHeadLoc")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,1.0)
-                subtarget = joma['htop']
-                cname = pre+'_'+subtarget
-                coboneloc(bone,cname,obj,subtarget,0.1)
                 subtarget = _nMDB("kHeadRot_tw")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
