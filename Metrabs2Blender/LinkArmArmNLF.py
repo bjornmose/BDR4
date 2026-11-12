@@ -24,7 +24,7 @@ from BVT import *
 defaultrigversion = 35
 class _Carmlinkoptions:
    def __init__(self) -> None:
-       self.linktoes = False
+       self.linktoes = True
        self.linkhand = True
        self.stiffhand = False
        self.influenceEllbow = 0.75
@@ -80,7 +80,7 @@ joma_markers = {
     "rwri" :'Wrist_R',
     "lwri" :'Wrist_L',
     "rwrit" :'WristT_R',
-    "rwrit" :'WristT_L',
+    "lwrit" :'WristT_L',
     "rhan" :'Palm_R',
     "lhan" :'Palm_L',
     "rkneo":'Knee_R',
@@ -96,97 +96,7 @@ joma_markers = {
     "spin" :'Root'
     }
    
-joma_simpl = {
-        "neck" : "neck_smpl",
-        "nose" : "nose_coco",
-        "pelv" : "pelv_smpl",
-        "htop" : "htop_mpi_inf_3dhp",
-        "lsho" : "lsho_smpl",
-        "lcla" : "lcla_smpl",
-        "lelb" : "lelb_smpl",
-        "lwri" : "lwri_smpl",
-        "lhip" : "lhip_smpl",
-        "lkne" : "lkne_smpl",
-        "lank" : "lank_smpl",
-        "lhan" : "lhan_smpl",
-        "lfoo" : "lank_smpl",
-        "ltoe" : "ltoe_smpl",
-        "rsho" : "rsho_smpl",
-        "rcla" : "rcla_smpl",
-        "relb" : "relb_smpl",
-        "rwri" : "rwri_smpl",
-        "rhip" : "rhip_smpl",
-        "rkne" : "rkne_smpl",
-        "rank" : "rank_smpl",
-        "leye" : "leye_coco",
-        "lear" : "lear_coco",
-        "reye" : "reye_coco",
-        "rear" : "rear_coco",
-        "rhan" : "rhan_smpl",
-        "rfoo" : "rank_smpl",
-        "rtoe" : "rtoe_smpl",
-        "bell" : "bell_smpl",
-        "spin" : "spin_smpl"
-}    
-joma_simplOM = {
-        "neck" : "neck_smpl",
-        "nose" : "nosecoco",
-        "pelv" : "pelv_smpl",
-        "htop" : "htop_mpi_inf_3dhp",
-        "lsho" : "lsho_smpl",
-        "lelb" : "lelb_smpl",
-        "lwri" : "lwri_smpl",
-        "lhip" : "lhip_smpl",
-        "lkne" : "lkne_smpl",
-        "lank" : "lank_smpl",
-        "lhan" : "lhan_smpl",
-        "lfoo" : "lank_smpl",
-        "ltoe" : "ltoe_smpl",
-        "rsho" : "rsho_smpl",
-        "relb" : "relb_smpl",
-        "rwri" : "rwri_smpl",
-        "rhip" : "rhip_smpl",
-        "rkne" : "rkne_smpl",
-        "rank" : "rank_smpl",
-        "leye" : "leye_coco",
-        "lear" : "learcoco",
-        "reye" : "reyecoco",
-        "rear" : "rearcoco",
-        "rhan" : "rhan_smpl",
-        "rfoo" : "rank_smpl",
-        "rtoe" : "rtoe_smpl"
-}    
     
-joma_picked = {
-#joma= {
-        "lkne":"lkne",
-        "rkne":"rkne",
-        "lank":"lank",
-        "rank":"rank",
-        "ltoe":"ltoe",
-        "rtoe":"rtoe",
-        "neck":"neck",
-        "lsho":"lsho",
-        "rsho":"rsho",
-        "lelb":"lelb",
-        "relb":"relb",
-        "lwri":"lwri",
-        "rwri":"rwri",
-        "lhan":"lhan",
-        "rhan":"rhan",
-        "htop":"htop_muco",
-        "lear":"lear_cmu_panoptic",
-        "leye":"leye_sailvos",
-        "lhip":"lhip_h36m",
-        "nose":"nose_cmu_panoptic",
-        "pelv":"pelv_h36m",
-        "rear":"rear_cmu_panoptic",
-        "reye":"reae_sailvos",
-        "rhip":"rhip_h36m",
-        "rfoo" : "rank",
-        "lfoo" : "lank"
-
-    }
     
 dictarmlink3_5 = {
     "HandIK_R":"hand_ik.R",
@@ -240,7 +150,7 @@ dictarmlink2_7= {
 
 
 
-#Dictionary Metrabs Derived Bones
+#Dictionary nlf Derived Bones
 _dMDB = {
     "kHipRot": {"name":"ZD_HipRot","tail":[0.,0.,1.]},
     "kChestRot":{"name":"ZD_ChestRot","tail":[0.,0.,1.]},
@@ -249,9 +159,9 @@ _dMDB = {
     "kTorsoL":{"name":"ZD_TorsoL","tail":[0.,1.,0.]},
     "kHeadRot":{"name":"ZD_HeadRot","tail":[0.,1.,0.]},
     "kHeadRot_tw":{"name":"TW_HeadRot","tail":[0.,1.,0.],"parent":"kHeadRot"},
-    "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso"},
+    "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso","pos":[-0.6,0.0,0.]},
     "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot","pos":[-3.0,0.,0.]},
-    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-1.5,0.,0.]},
+    "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-2.0,0.,0.]},
     "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"}
 }
 
@@ -261,8 +171,6 @@ def _nMDB(key):
     
     
 joma_list ={
-    "smpl+head_30":joma_simpl,
-    "smpl+head_30OM":joma_simplOM,
     "":joma_markers,
     }
     
@@ -366,7 +274,7 @@ class UnLinkArmature2A(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return i>0
@@ -585,7 +493,7 @@ class LinkArmature2A(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return i>0
@@ -708,14 +616,6 @@ class LinkArmature2A(bpy.types.Operator):
             armlinkoptions.rigversion = arm['RV']
             armlinksto = armlinkoptions.getlinkdict()
 
-        # see if 'rwri' element of jome is there
-        '''
-        n_probe = pre+'_'+joma['rwri']
-        o_probe = bpy.data.objects.get(n_probe)
-        if o_probe is None:
-            print("Missing",n_probe,"leaving 4 Now")
-            return {'FINISHED'}
-        '''
         try:
             res = obj['skeleton']
             joma = joma_list[res]
@@ -736,7 +636,8 @@ class LinkArmature2A(bpy.types.Operator):
             '''ktorso'''
             bone = self.findbone(homearm,_nMDB("kTorsoR"))
             if bone is not None:
-                subtarget = joma['rches']
+                #subtarget = joma['rches']
+                subtarget = joma['rsho']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma['rhip']
@@ -745,7 +646,8 @@ class LinkArmature2A(bpy.types.Operator):
             
             bone = self.findbone(homearm,_nMDB("kTorsoL"))
             if bone is not None:
-                subtarget = joma['lches']
+                #subtarget = joma['lches']
+                subtarget = joma['lsho']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = joma['lhip']
@@ -922,13 +824,12 @@ class LinkArmature2A(bpy.types.Operator):
                     cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
         
                 if (armlinkoptions.linkhand):
-                    subtarget = joma['relb']
+                    subtarget = joma['rhan']
                     cname = pre+'_'+subtarget
-                    if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
-                    else: #fix me 
-                      #coboneIK(bone,cname,obj,subtarget,1,1.0)
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                    co = coboneIK(bone,cname,obj,subtarget,1,1.0)
+                    co.pole_target = homearm
+                    co.pole_subtarget = joma['rwrit']
+                    co.pole_angle = 1.5
 
             bone = self.findbone(arm,armlinksto["HandIK_L"])
             if bone is not None:
@@ -942,13 +843,13 @@ class LinkArmature2A(bpy.types.Operator):
                     cobonerot(bone,cname,arm,subtarget,1,1,1,1.0)
 
                 if (armlinkoptions.linkhand):
-                    subtarget = joma['lelb']
+                    subtarget = joma['lhan']
                     cname = pre+'_'+subtarget
-                    if (armlinkoptions.rigversion == 27):
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_Z',1.0)
-                    else: # fix me
-                      #coboneIK(bone,cname,obj,subtarget,1,1.0)
-                      cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+                    co = coboneIK(bone,cname,obj,subtarget,1,1.0)
+                    co.pole_target = homearm
+                    co.pole_subtarget = joma['lwrit']
+                    co.pole_angle = 1.5
+
                     
 
             subtarget = joma['relb']   
@@ -1113,7 +1014,7 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['htop']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,obj,subtarget,0.1)
-                subtarget = _nMDB("kHeadRot")
+                subtarget = _nMDB("kHeadRot_tw")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,obj,subtarget,1,1,1,1.0)
         else:
@@ -1123,7 +1024,7 @@ class LinkArmature2A(bpy.types.Operator):
 
 class makeRigVersion(bpy.types.Operator):
     """UnLinkArmatureToSimpl"""
-    bl_idname = "metrabs.makerigversion"
+    bl_idname = "nlf.makerigversion"
     bl_label = "RegisterRigVersion"
 
     def execute(self,context):
@@ -1147,7 +1048,7 @@ class LinkArm2ArmPanel(bpy.types.Panel):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
             po=obj.pose
             if po is None:
              i=0  
@@ -1164,7 +1065,7 @@ class LinkArm2ArmPanel(bpy.types.Panel):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]                            
+            i=obj["nlf"]                            
         except: 
             i = 0
 

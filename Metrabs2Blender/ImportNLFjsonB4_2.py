@@ -447,7 +447,7 @@ def makejoints(parent,joints,pre):
             obj = createEmpty(objname,0.1,'SPHERE')
             obj.parent = parent
     
-def readMetrabsJoints(name,pat):
+def readNLFJoints(name,pat):
     res =[]
     print('Filter:',pat)
     try: 
@@ -466,7 +466,7 @@ def readMetrabsJoints(name,pat):
 
 
 
-def readmetrabs(name,frame,box,jPre,sf):
+def readnlf(name,frame,box,jPre,sf):
     d_min = 100000.0
     res_box = box
     _pname = cs_vertices_3d
@@ -539,10 +539,10 @@ def readmetrabs(name,frame,box,jPre,sf):
 
 ''' 
 kind of man in the middle aproach
-collect a 3D track: (time[frame] location(x.y,z)) for each METRABS joint
+collect a 3D track: (time[frame] location(x.y,z)) for each NLF joint
 the place to apply fiters
 '''
-class C_rawMeterasData():
+class C_rawNLFData():
     def __init__(self) -> None:
         self.myData = {}
         self.myBoxes = {}
@@ -763,7 +763,7 @@ class C_rawMeterasData():
 
 
 
-def readmetrabs2D(name,frame,box,jPre,rx,ry,sf):
+def readnlf2D(name,frame,box,jPre,rx,ry,sf):
     d_min = 100000.0
     res_box = box
     pname = 'pose2d' 
@@ -901,7 +901,7 @@ def completeObjectProperties(obj):
         T=obj["ZBA"] 
     except:
         obj["ZBA"]   = 1
-    obj["metrabs"] = 1  
+    obj["nlf"] = 1  
     try:
         tof=obj["tof"] 
     except:
@@ -930,17 +930,17 @@ def completeObjectProperties(obj):
       
                 
                 
-class read_metrabs_info(bpy.types.Operator):
+class read_nlf_info(bpy.types.Operator):
     """print info file"""
-    bl_idname = "object.read_metrabs_info"
-    bl_label = "read_metrabs_job"
+    bl_idname = "object.read_nlf_info"
+    bl_label = "read_nlf_job"
 
     @classmethod
     def poll(cls, context):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         try:
@@ -986,7 +986,7 @@ class push_down_joints_action(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return i>0
@@ -1025,7 +1025,7 @@ class delete_childen_actions(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return i>0
@@ -1046,7 +1046,7 @@ class delete_childen(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return i>0
@@ -1146,16 +1146,16 @@ def progbar(pv,blen):
   return bar
   
 
-class import_metrabs(bpy.types.Operator):
-    bl_idname = "object.import_metrabs_operator"
-    bl_label = "Import metrabs data"
+class import_nlf(bpy.types.Operator):
+    bl_idname = "object.import_nlf_operator"
+    bl_label = "Import nlf data"
 
     @classmethod
     def poll(cls, context):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         try:
@@ -1172,7 +1172,7 @@ class import_metrabs(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        print('importMetrabsJson----------------Start' ) 
+        print('importNLFJson----------------Start' ) 
         '''
         try:
             res = obj['skeleton']
@@ -1221,7 +1221,7 @@ class import_metrabs(bpy.types.Operator):
         #pat= '_kinectv2'
         #pat= ''
         
-        joints = readMetrabsJoints(Name,pat)
+        joints = readNLFJoints(Name,pat)
         print('joints from data')
         print(joints)
 
@@ -1229,7 +1229,7 @@ class import_metrabs(bpy.types.Operator):
         makeactions_3d_res = makeactions_3d(joints,pre)
             
           
-        TheFilterCass = C_rawMeterasData()
+        TheFilterCass = C_rawNLFData()
         TheFilterCass.outpath =  obj['inpath']
         sbx = obj[nOP_Box_X]
         sby = obj[nOP_Box_Y]
@@ -1245,10 +1245,10 @@ class import_metrabs(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             if zba > 0:
               TheFilterCass.addframe(Name,i-start_frame)
-              #box=readmetrabs(Name,i - start_frame,box,pre,sf)
+              #box=readnlf(Name,i - start_frame,box,pre,sf)
             else:
               TheFilterCass.addframe(Name,i)
-              #box=readmetrabs(Name,i,box,pre,sf)
+              #box=readnlf(Name,i,box,pre,sf)
             progress =  (i-start_frame) * 100/(end_frame-start_frame)
             txt = "{0:06d}:{1:06d} {2:}".format(i,end_frame,progbar(progress,30)) 
             print(txt, end="\r") 
@@ -1326,21 +1326,21 @@ class import_metrabs(bpy.types.Operator):
 
         print(txt)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
-        print('importMetrabsJson----------------End' )
+        print('importNLFJson----------------End' )
         return {'FINISHED'}        
     
     
     
-class import_metrabs2D(bpy.types.Operator):
-    bl_idname = "object.import_metrabs2d_operator"
-    bl_label = "Import metrabs 2d data"
+class import_nlf2D(bpy.types.Operator):
+    bl_idname = "object.import_nlf2d_operator"
+    bl_label = "Import nlf 2d data"
 
     @classmethod
     def poll(cls, context):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         try:
@@ -1357,7 +1357,7 @@ class import_metrabs2D(bpy.types.Operator):
     
     def execute (self,context):
         obj = context.active_object
-        print('importMetrabsJson----------------Start' ) 
+        print('importNLFJson----------------Start' ) 
         try:
             res = obj['skeleton']
             joints = skel_list[res]
@@ -1388,24 +1388,24 @@ class import_metrabs2D(bpy.types.Operator):
             Name='{0:}{1:04d}.json'.format(file,i)
             bpy.context.scene.frame_set(i)
             print(Name)
-            box=readmetrabs2D(Name,i,box,pre,rx,ry,sf) 
+            box=readnlf2D(Name,i,box,pre,rx,ry,sf) 
             print(box)
         print('updated',makeactions_3d_res[0],'created',makeactions_3d_res[1],'of',makeactions_3d_res[2],'actions')
-        print('importMetrabsJson----------------End' )
+        print('importNLFJson----------------End' )
         return {'FINISHED'}        
 
     
 
-class make_metrabs(bpy.types.Operator):
-    bl_idname = "object.make_metrabs_operator"
-    bl_label = "Make metrabs root"
+class make_nlf(bpy.types.Operator):
+    bl_idname = "object.make_nlf_operator"
+    bl_label = "Make nlf root"
 
     @classmethod
     def poll(cls, context):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return (i == 0)
@@ -1413,21 +1413,21 @@ class make_metrabs(bpy.types.Operator):
     def execute (self,context):
         obj = context.active_object
         completeObjectProperties(obj)
-        obj["metrabs"] = 1  
+        obj["nlf"] = 1  
         obj["~armature"] = '*none*'  
 
         
         #
         #clear = lambda: os.system('clear')
         #clear()
-#        print('MetrabsJson----------------Start' )     
+#        print('NLFJson----------------Start' )     
 #        joints = joints_coco_19
 #        joints = joints_smpl_head_30
 #        joints = joints_mpi_inf_3dhp_28 
 #        print(joints)
 #        makejoints(obj,joints) 
 #        makeactions_3d(joints);
-#        print('MetrabsJson----------------End' )
+#        print('NLFJson----------------End' )
         return {'FINISHED'}        
 
 def set_importpath(context, filepath, use_some_setting):
@@ -1463,9 +1463,9 @@ def set_importpath(context, filepath, use_some_setting):
     return {'FINISHED'}
 
 
-class findMETRABData(Operator, ImportHelper):
-    """Browse for METRABS data"""
-    bl_idname = "operator.findmetabsdata"  # important since its how bpy.ops.import_test.some_data is constructed
+class findNLFData(Operator, ImportHelper):
+    """Browse for NLF data"""
+    bl_idname = "operator.findnlfdata"  # important since its how bpy.ops.import_test.some_data is constructed
     bl_label = "Find Data"
 
     # ImportHelper mixin class uses this
@@ -1506,7 +1506,7 @@ class op_CreateArmature(bpy.types.Operator):
         obj = context.active_object
         i = 0
         try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
         except: 
             i = 0
         return (i > 0)
@@ -1536,7 +1536,7 @@ class op_CreateArmature(bpy.types.Operator):
         scalediv = obj["scaledidvisor"]
         arm_obj=readArmatureRestPos(path,aName,dName,scalediv)
         arm_obj['skeleton'] = obj['skeleton']
-        arm_obj["metrabs"] = 2
+        arm_obj["nlf"] = 2
         try:
           arm_obj["~armature"] = obj["~armature"]
         except:
@@ -1547,10 +1547,10 @@ class op_CreateArmature(bpy.types.Operator):
 
 _filternames = ["RAW","Av","Med","KF5","AvN","KF9","KF3","Comb"]
 
-class MetrabsPanel(bpy.types.Panel):
+class NLFPanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
-    bl_label = "Metrabs"
-    bl_idname = "OBJECT_PT_METRABS"
+    bl_label = "NLF"
+    bl_idname = "OBJECT_PT_NLF"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
@@ -1561,7 +1561,7 @@ class MetrabsPanel(bpy.types.Panel):
         i = -1
         if (obj.type == 'EMPTY'):
           try:
-            i=obj["metrabs"]
+            i=obj["nlf"]
           except: 
             i = 0
         return (i in [0,1])
@@ -1573,24 +1573,24 @@ class MetrabsPanel(bpy.types.Panel):
 
         i = 0
         try:
-            i=obj["metrabs"]                            
+            i=obj["nlf"]                            
         except: 
             i = 0
         if(i ==0): 
             row = layout.row()
             row.label(text="**HAVING SPEAKING NAME**")
             row = layout.row()
-            row.operator("object.make_metrabs_operator")
+            row.operator("object.make_nlf_operator")
         else:
             row = layout.row()
-            row.operator("operator.findmetabsdata")
+            row.operator("operator.findnlfdata")
             try: 
                 obj["inpath"]
             except:
                 return
 
-            row.operator("object.read_metrabs_info")
-            row.operator("object.import_metrabs_operator")
+            row.operator("object.read_nlf_info")
+            row.operator("object.import_nlf_operator")
             row = layout.row()
             row.prop(obj, '["%s"]' % ("start_frame"),text="start")  
             row.prop(obj, '["%s"]' % ("end_frame"),text="end")  
@@ -1626,12 +1626,12 @@ class MetrabsPanel(bpy.types.Panel):
 """    
 
 classes = (
-    make_metrabs,
-    read_metrabs_info,
-    import_metrabs,
-    import_metrabs2D,
-    MetrabsPanel,
-    findMETRABData,
+    make_nlf,
+    read_nlf_info,
+    import_nlf,
+    import_nlf2D,
+    NLFPanel,
+    findNLFData,
     delete_childen_actions,
     delete_childen,
     op_CreateArmature
@@ -1640,7 +1640,7 @@ classes = (
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    print('Import Mertabs register DONE')
+    print('Import NLF register DONE')
 
 
 def unregister():
