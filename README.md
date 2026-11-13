@@ -1,5 +1,35 @@
 # BDR4
 
+
+The times they are changing:
+NLF is it! (may be)
+
+https://github.com/isarandi/nlf
+
+using tensorflow  still work though the projet seems to switch to PyTorch .. will work on this later..
+
+Setup:
+a file path for input / output
+on input a bunch of files .. image0001.png ...
+
+on output .json file and optialy viz folders with images in
+
+have a python 3.10 shell with tensorflow (mathplotlib for the viz files)
+
+edit Job_ioV001NLF.py to your needs
+run it 
+
+run 
+evaltofilesNLFmore.py (or so ).. needs some more files (the tf-model itself .. input tensor definition / map info for output)
+
+so now there is a folder with the raw results:
+
+1. suck them into blender (apply filters on the fly)
+2. create armature object
+3. bake the aramture to have all the data in one armature (still raw positions)
+4. derive data usable for a custum rig
+5. drive a rigfy rig with with it 
+
 Some work I did to crop the fruit of :
 
 https://github.com/isarandi/metrabs [1]
