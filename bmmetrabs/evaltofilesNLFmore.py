@@ -591,7 +591,7 @@ def visualize_tofileClipped(image,tf, pred, joint_names, joint_edges,i,pat):
     name=pat.format(i)
     print('<--',name)
     fig.savefig(name, dpi=200) 
-    plt.close()
+    plt.close('all')
 
 
 

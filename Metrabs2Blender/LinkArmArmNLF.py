@@ -30,6 +30,7 @@ class _Carmlinkoptions:
        self.influenceEllbow = 0.75
        self.influenceKnee = 0.75
        self.rigversion = defaultrigversion
+       self.torsobelly = True
     
    def getlinkdict(self):
        if self.rigversion == 27 :
@@ -163,7 +164,9 @@ _dMDB = {
     "kHips":{"name":"TW_Hips","tail":[1.,0.,0.],"parent":"kTorso","pos":[-0.6,0.0,0.]},
     "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot","pos":[-3.0,0.,0.]},
     "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-2.0,0.,0.]},
-    "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"}
+    "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"},
+    "kFemurR":{"name":"TW_FemurR","tail":[0.,-1.,0.],"parent":"kHips","pos":[0.5,-1.5,0.]},
+    "kFemurL":{"name":"TW_FemurL","tail":[0.,-1.,0.],"parent":"kHips","pos":[-0.5,-1.5,0.]}
 }
 
 # get the name of a _dMDB bone
@@ -390,7 +393,7 @@ def cobonelockedtrack(bone,cname,target,IDbone,track_axis,lock_axis,influence):
         
 def createbones_ex(arm,dicbones,joma):
     res = 0
-    print('dicbones',dicbones)
+    #print('dicbones',dicbones)
     bpy.ops.object.mode_set(mode='OBJECT')
     try: #B2.7 style
         bpy.context.scene.objects.active = arm
@@ -453,8 +456,14 @@ def createbones_ex(arm,dicbones,joma):
         
            bone.parent = bp
            try:#fails in 4.x
-               bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
-                False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+               if bname.find('TW_') == -1:
+                   bone.layers=(False, False , True, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                                False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+               else:
+                   bone.layers=(False, True , False, False, False, False, False, False, False, False, False, False, False, False, False, False,
+                                False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False)
+                   
+
            except:
                if bname.find('TW_') == -1:
                    col.assign(bone)
@@ -655,23 +664,41 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['lhip']
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
-
+            
             bone = self.findbone(homearm,_nMDB("kTorso"))
-            if bone is not None:
-                '''position'''
+            if (bone is not None) and not (armlinkoptions.torsobelly):
+                #position
                 subtarget = _nMDB("kTorsoR")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,1.0)
                 subtarget = _nMDB("kTorsoL")
                 cname = pre+'_'+subtarget
                 coboneloc(bone,cname,homearm,subtarget,0.5)
-                '''rotation'''
+                #rotation
                 subtarget = _nMDB("kTorsoL")
                 cname = pre+'_'+subtarget
                 cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
                 subtarget = _nMDB("kChestRot")
                 cname = pre+'_'+subtarget
                 cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_Z','LOCK_X',1.0)
+            
+            bone = self.findbone(homearm,_nMDB("kTorso"))
+            if (bone is not None) and (armlinkoptions.torsobelly):
+                '''position'''
+                subtarget = joma['rbell']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,1.0)
+                subtarget = joma['lbell']
+                cname = pre+'_'+subtarget
+                coboneloc(bone,cname,homearm,subtarget,0.5)
+                '''rotation'''
+                subtarget = joma['lbell']
+                cname = pre+'_'+subtarget
+                cobonetrackto(bone,cname,obj,subtarget,'TRACK_X','UP_Z',1.0)
+                subtarget = joma['bell']
+                cname = pre+'_'+subtarget
+                cobonelockedtrack(bone,cname,obj,subtarget,'TRACK_NEGATIVE_Y','LOCK_X',1.0)
+
 
 
             '''kHipRot'''
@@ -762,7 +789,42 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = _nMDB("kTorso")
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
-                
+
+            '''foot rotation'''
+            bone = self.findbone(homearm,joma['rank'])
+            if bone is not None:
+                subtarget = joma['rtoe']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
+            bone = self.findbone(homearm,joma['lank'])
+            if bone is not None:
+                subtarget = joma['ltoe']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
+
+            '''shin rotation'''
+            bone = self.findbone(homearm,joma['rkneo'])
+            if bone is not None:
+                subtarget = joma['rank']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
+            bone = self.findbone(homearm,joma['lkneo'])
+            if bone is not None:
+                subtarget = joma['lank']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
+
+            '''femur rotation'''
+            bone = self.findbone(homearm,_nMDB("kFemurR"))
+            if bone is not None:
+                subtarget = joma['rkneo']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
+            bone = self.findbone(homearm,_nMDB("kFemurL"))
+            if bone is not None:
+                subtarget = joma['lkneo']
+                cname = pre+'_'+subtarget
+                coboneIK(bone,cname,homearm,subtarget,1,1.0)
 
             ''' FK HELPER '''
             bone = self.findbone(homearm,joma['rsho'])
