@@ -423,8 +423,11 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
             
 
 
-
-        
+    #create template for coustom display
+    cs_rew_looks_like = 'E_raw_Looks_like'
+    raw_Looks_like = bpy.data.objects.get(cs_rew_looks_like)
+    if (raw_Looks_like is None):
+        raw_Looks_like = createEmpty(cs_rew_looks_like,0.1,'SPHERE')
             
     bpy.ops.object.mode_set(mode='OBJECT')
     if (True):
@@ -435,6 +438,7 @@ def readArmatureRestPos(name,jPre,deko,scalediv):
                 cname = '_'+jname
                 IDtarget = jPre+'_'+jname
                 cocoloc(bone,cname,IDtarget,jPre)
+                bone.custom_shape = raw_Looks_like
         res_arm["bakestep"]=1
     return res_arm
 

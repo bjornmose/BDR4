@@ -68,7 +68,7 @@ def makeFplane(nv):
 #6890
 #num_verts = 2500
 #num_verts = 7500
-num_verts = 44
+num_verts = 52
 
 def main(jobname):
     #set default values
@@ -175,9 +175,9 @@ def main(jobname):
 #   cano_verts = makeFplane(50)
 #   cano_joints = np.load(f'{home_data}/canonical_joints/smplh16.npy')
 #    cano_verts = np.load(f'{home_data}/canonical_verts/smpl.npy')
-    marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames.npy')
+    marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames{num_verts}.npy')
     print(marker_names)
-    cano_verts = np.load(f'{home_data}/canonical_verts/Markers.npy')
+    cano_verts = np.load(f'{home_data}/canonical_verts/Markers{num_verts}.npy')
     cano_joints = np.load(f'{home_data}/canonical_joints/smpl.npy')
     cano_all = np.concatenate([cano_verts, cano_joints], axis=0)
     #print(cano_verts)
@@ -392,7 +392,7 @@ def DumpNLFjson(tf,joint_names,poses3d,boxes,frame,pat):
         jdata['markers'] = []
         jdata['joints3d'] = []
         jdata['vertices3d'] = []
-        marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames.npy')
+        marker_names = np.load(f'{home_data}/canonical_verts/MarkerNames{num_verts}.npy')
         for x, y, w, h in boxes[:, :4]:
           jdata['boxes'].append([x.astype(float),y.astype(float),w.astype(float),h.astype(float)])
           

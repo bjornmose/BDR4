@@ -796,11 +796,14 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rtoe']
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                bone.custom_shape = None
+                
             bone = self.findbone(homearm,joma['lank'])
             if bone is not None:
                 subtarget = joma['ltoe']
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                bone.custom_shape = None
 
             '''shin rotation'''
             bone = self.findbone(homearm,joma['rkneo'])
@@ -808,11 +811,13 @@ class LinkArmature2A(bpy.types.Operator):
                 subtarget = joma['rank']
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                bone.custom_shape = None
             bone = self.findbone(homearm,joma['lkneo'])
             if bone is not None:
                 subtarget = joma['lank']
                 cname = pre+'_'+subtarget
                 coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                bone.custom_shape = None
 
             '''femur rotation'''
             bone = self.findbone(homearm,_nMDB("kFemurR"))
@@ -834,6 +839,8 @@ class LinkArmature2A(bpy.types.Operator):
                 co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
                 co.pole_target = homearm
                 co.pole_subtarget = joma['spin']
+                bone.custom_shape = None
+
 
             bone = self.findbone(homearm,joma['lsho'])
             if bone is not None:
@@ -842,6 +849,7 @@ class LinkArmature2A(bpy.types.Operator):
                 co=coboneIK(bone,cname,homearm,subtarget,1,1.0)
                 co.pole_target = homearm
                 co.pole_subtarget = joma['spin']
+                bone.custom_shape = None
 
             bone = self.findbone(homearm,joma['relb'])
             if bone is not None:
@@ -850,7 +858,8 @@ class LinkArmature2A(bpy.types.Operator):
                 co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
                 co.pole_target = homearm
                 co.pole_subtarget = joma['bell']
-                co.pole_angle = 3.14159 
+                co.pole_angle = 3.14159
+                bone.custom_shape = None 
 
             bone = self.findbone(homearm,joma['lelb'])
             if bone is not None:
@@ -860,6 +869,7 @@ class LinkArmature2A(bpy.types.Operator):
                 co.pole_target = homearm
                 co.pole_subtarget = joma['bell']
                 co.pole_angle = 0.0
+                bone.custom_shape = None
 
 
 

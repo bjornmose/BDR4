@@ -105,6 +105,14 @@ markers = [
     'Ank_L',
     'Toe_R',
     'Toe_L',
+    'Thigh_RO',
+    'Thigh_RF',
+    'Thigh_RI',
+    'Thigh_RB',
+    'Thigh_LO',
+    'Thigh_LF',
+    'Thigh_LI',
+    'Thigh_LB',
     
     
     'Root'
@@ -158,8 +166,9 @@ def makeMarkers():
             
 def dumpMarkers():
     out = []
-    opath_m = f'{home_data}/canonical_verts/Markers.npy'
-    opath_mn = f'{home_data}/canonical_verts/MarkerNames.npy'
+    l = len(markers)
+    opath_m = f'{home_data}/canonical_verts/Markers{l}.npy'
+    opath_mn = f'{home_data}/canonical_verts/MarkerNames{l}.npy'
     for vert in markers:
         obj = bpy.data.objects.get(vert)
         if (obj):
@@ -169,15 +178,13 @@ def dumpMarkers():
     print(out)
             
 def readMarkers(inpath_m ):
-    rmark = np.load(inpath_m)
-    i = 0
-    for vert in markers:
+    locs = np.load(inpath_m)
+    for rmark,vert in zip(locs,markers):
         obj = bpy.data.objects.get(vert)
         if (obj):
-            obj.location[0] = rmark[i][0]
-            obj.location[1] = rmark[i][1]
-            obj.location[2] = rmark[i][2]
-        i += 1
+            obj.location[0] = rmark[0]
+            obj.location[1] = rmark[1]
+            obj.location[2] = rmark[2]
             
             
 class op_makecano(bpy.types.Operator):
