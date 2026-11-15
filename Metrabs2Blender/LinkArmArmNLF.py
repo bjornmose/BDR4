@@ -121,7 +121,9 @@ dictarmlink3_5 = {
     "UparmFK_R":"upper_arm_fk.R",
     "UparmFK_L":"upper_arm_fk.L",
     "ForearmFK_R":"forearm_fk.R",
-    "ForearmFK_L":"forearm_fk.L"
+    "ForearmFK_L":"forearm_fk.L",
+    "HandFK_R":"hand_fk.R",
+    "HandFK_L":"hand_fk.L"
     }
 
 dictarmlink2_7= {
@@ -146,7 +148,9 @@ dictarmlink2_7= {
     "UparmFK_R":"upper_arm.fk.R",
     "UparmFK_L":"upper_arm.fk.L",
     "ForearmFK_R":"forearm.fk.R",
-    "ForearmFK_L":"forearm.fk.L"
+    "ForearmFK_L":"forearm.fk.L",
+    "HandFK_R":"hand.fk.R",
+    "HandFK_L":"hand.fk.L"
     }
 
 
@@ -165,8 +169,8 @@ _dMDB = {
     "kChest":{"name":"TW_Chest","tail":[1.,0.,0.],"parent":"kChestRot","pos":[-3.0,0.,0.]},
     "kTorsoLoc":{"name":"TW_TorsoLoc","tail":[1.,0.,0.],"parent":"kTorso","pos":[-2.0,0.,0.]},
     "kClav":{"name":"TW_Clav","tail":[0.,-1.,0.],"parent":"kChestRot"},
-    "kFemurR":{"name":"TW_FemurR","tail":[0.,-1.,0.],"parent":"kHips","pos":[0.5,-1.5,0.]},
-    "kFemurL":{"name":"TW_FemurL","tail":[0.,-1.,0.],"parent":"kHips","pos":[-0.5,-1.5,0.]}
+    "kFemurR":{"name":"TW_Femur_FK_R","tail":[0.,-1.,0.],"parent":"kHips","pos":[0.5,-1.5,0.]},
+    "kFemurL":{"name":"TW_Femur_FK_L","tail":[0.,-1.,0.],"parent":"kHips","pos":[-0.5,-1.5,0.]}
 }
 
 # get the name of a _dMDB bone
@@ -871,6 +875,25 @@ class LinkArmature2A(bpy.types.Operator):
                 co.pole_angle = 0.0
                 bone.custom_shape = None
 
+            bone = self.findbone(homearm,joma['rwri'])
+            if bone is not None:
+                subtarget = joma['rhan']
+                cname = pre+'_'+subtarget
+                co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                co.pole_target = homearm
+                co.pole_subtarget = joma['rwrit']
+                co.pole_angle = 1.5
+                bone.custom_shape = None
+
+            bone = self.findbone(homearm,joma['lwri'])
+            if bone is not None:
+                subtarget = joma['lhan']
+                cname = pre+'_'+subtarget
+                co = coboneIK(bone,cname,homearm,subtarget,1,1.0)
+                co.pole_target = homearm
+                co.pole_subtarget = joma['lwrit']
+                co.pole_angle = 1.5
+                bone.custom_shape = None
 
 
             '''helpers done'''
@@ -895,6 +918,18 @@ class LinkArmature2A(bpy.types.Operator):
             bone = self.findbone(arm,armlinksto["ForearmFK_L"])
             if bone is not None:
                 subtarget = joma['lelb']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["HandFK_R"])
+            if bone is not None:
+                subtarget = joma['rwri']
+                cname = pre+'_'+subtarget
+                cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
+
+            bone = self.findbone(arm,armlinksto["HandFK_L"])
+            if bone is not None:
+                subtarget = joma['lwri']
                 cname = pre+'_'+subtarget
                 cobonerot(bone,cname,homearm,subtarget,1,1,1,1.0)
             

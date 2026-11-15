@@ -595,7 +595,7 @@ class C_rawNLFData():
                 if self.firstframe > frame : self.firstframe = frame
                 if self.lastframe < frame : self.lastframe = frame
         except:
-            print('except',name)
+            print('Failed to read',name)
         return
     
     def extract_all(self):
@@ -1322,7 +1322,8 @@ class import_nlf(bpy.types.Operator):
 
         if zba > 0:
             bpy.context.scene.frame_start = 0
-            bpy.context.scene.frame_end = int((end_frame-start_frame) * tf/100.0)
+            bpy.context.scene.frame_end = TheFilterCass.lastframe
+            #bpy.context.scene.frame_end = int((end_frame-start_frame) * tf/100.0)
         else:
             bpy.context.scene.frame_start = start_frame
             bpy.context.scene.frame_end = end_frame
