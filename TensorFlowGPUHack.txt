@@ -1,4 +1,33 @@
-almost working 
+did it on Ubunutu 20.04
+
+PyTorch Hack that is for NLF
+
+# Micromamba is the simplest way to install the dependencies
+# If you don't have it yet, install it as follows:
+export MAMBA_ROOT_PREFIX=$HOME/micromamba
+mkdir -p $MAMBA_ROOT_PREFIX
+curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj -C $MAMBA_ROOT_PREFIX bin/micromamba
+# Execute and add to ~/.bashrc the following two lines
+export MAMBA_ROOT_PREFIX=$HOME/micromamba
+eval "$($MAMBA_ROOT_PREFIX/bin/micromamba shell hook -s posix)"
+#
+micromamba create -n pyto -c conda-forge python=3.12
+
+#pip3 install torch torchvision
+#does not work with good old 'NVIDIA GeForce GTX 1080 Ti'
+
+
+# downgrade to match 
+pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytorch.org/whl/cu126
+
+(pyto) jenscave@jenscave:~/Documents/Bdr_Root/BDR4/bmmetrabs$ python3 -c "import torch; print([(i, torch.cuda.get_device_properties(i)) for i in range(torch.cuda.device_count())])"
+[(0, _CudaDeviceProperties(name='NVIDIA GeForce GTX 1080 Ti', major=6, minor=1, total_memory=11162MB, multi_processor_count=28, uuid=f3c6a1d9-8291-4e09-358d-c935592b8e89, pci_bus_id=9, pci_device_id=0, pci_domain_id=0, L2_cache_size=2MB))]
+
+### there we go with the old lady ####
+
+
+some times working
+
 
 hook in conda:
 
@@ -98,4 +127,8 @@ python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'
 
 Hope it helps... Best Regards
 DiDaMain
+
+(m310c) jenscave@jenscave:~/Documents/Bdr_Root/BDR4/bmmetrabs$ python -c "import nvidia.cudnn; print(list(nvidia.cudnn.__path__)[0])"
+/home/jenscave/miniconda3/envs/m310c/lib/python3.10/site-packages/nvidia/cudnn
+
 

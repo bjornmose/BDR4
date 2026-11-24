@@ -10,3 +10,7 @@ conda remove libstdcxx-ng --force
 conda install -c conda-forge "libstdcxx-ng>=13" 
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
+python3 -m pip install 'tensorflow[and-cuda]'
+# Verify the installation:
+python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+

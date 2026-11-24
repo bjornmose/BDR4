@@ -205,7 +205,7 @@ def main(jobname):
       if(_autoStart > i):
       	_autoStart = i
     #out there will be no more input
-    frame_end = _autoEnd
+    frame_end = _autoEnd+1
     frame_start = _autoStart
     print('Frames autorange',frame_start,frame_end)
     #detect holes
