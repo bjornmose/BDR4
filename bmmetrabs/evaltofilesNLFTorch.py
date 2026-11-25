@@ -11,7 +11,7 @@ import torchvision  # Must import this for the model to load without error
 from os.path import exists
 from os import remove
 #from Job_ioV001 import Job_io
-from Job_ioV001NLF import Job_io
+from Job_ioNLF_PY_torch import Job_io
 
 
 '''
@@ -265,7 +265,7 @@ def main(jobname):
     #tf.config.threading.set_intra_op_parallelism_threads(cpu_count)
 
     print(msgbarstart,'load model :)',_modelname,msgbarend)
-    model = torch.jit.load('models/nlf_l_multi.torchscript').cuda().eval()
+    model = torch.jit.load(_modelname).cuda().eval()
     #model = tf.saved_model.load(_modelname)
     memstart = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss    
     print(msgbarstart,'model loaded:)',msgbarend)

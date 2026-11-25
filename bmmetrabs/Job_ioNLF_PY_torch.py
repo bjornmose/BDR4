@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+import resource
+import gc
+import os
+import json
+import sys
+from os.path import exists
+#licence MIT
+#author bjornmose
+#today 2026_11_02
+version = 5
+
+##############################################
+# configuration start
+##############################################
+
+# choose skeleton not used here 4 now
+skeleton = 'smpl_24'
+# skeleton = 'smpl+head_30'
+# skeleton = 'coco_19'
+# skeleton = 'h36m_17'
+# skeleton = 'h36m_25'
+# skeleton = 'mpi_inf_3dhp_17'
+# skeleton = 'mpi_inf_3dhp_28'
+
+
+# I/O Path AKA where the input images are
+datapath = 'Angelica_2'
+#outpathdeko
+outpathdeko = ''
+# absolute path homebased
+usehome = True
+datapathpre = '/sambashare/MetarbsData/'
+filetemplate = '/Image{0:04d}.png'
+
+#not used here
+#fov_degrees = 30
+fov_degrees = 55
+#fov_degrees = 75
+#fov_degrees = 90
+#fov_degrees = 100
+
+qual = 500
+#qual = 501
+#qual = 502
+#qual = 503
+#qual = 504
+#qual = 505
+#qual = 506
+modellist = {
+	500:'nlf_s_multi.torchscript',
+	501:'nlf_s_multi_0.2.2.torchscript',
+	502:'nlf_s_multi_0.2.2.patch2.torchscript',
+	503:'',
+	504:'nlf_l_multi.torchscript',
+	505:'nlf_l_multi_0.2.2.torchscript',
+	506:''
+}
+tfmodelname = ''
+#use modellist
+if (qual > 399):
+	tfmodelname = modellist[qual]
+
+
+#framerange
+frame_start = 1
+frame_end = 30000 # 7000
+skip = 1
+
+#
+max_detections=1
+
+#result as images 
+viz = 2 # enum 0, none 1, 3D Plot 2, 2D ovelay clipped 3, 3D 2D aside 
+#result as data
+create_json = 1  # enum 0, dont 1, skip existing 2, overwrite
+add_2d_json = 0 
+cpu_count = 8
+
+
+##############################################
+# configuration end
+##############################################
+
+#adust pathes
+
+# set appenix
+txt="{}fov{}m{}".format(skeleton,fov_degrees,qual)
+resdetail = txt+outpathdeko
+respath = datapath + resdetail
+
+jobfilename = 'e2fjob'+datapath+resdetail+'.json'
+#use relative (local) path by default
+inpath ='input/' + datapath
+outpath ='output/resNLF' + respath
+#override to absolute path in users home
+if (usehome):
+	home_directory = os.path.expanduser( '~' )
+	inpath = home_directory+datapathpre+'input/' + datapath
+	outpath =home_directory+datapathpre+'output/res' + respath
+
+
+inpattern = inpath + filetemplate
+
+class Job_io:
+    @classmethod
+    def __init__(self,name = jobfilename):
+        print('class __init__ Jobfile', name)
+        self._myname = name
+
+    @classmethod
+    def myname(self):
+    	#print('func myname smn',self._myname)
+    	return self._myname
+
+    @classmethod
+    def make_job_input(self):
+        with open(self.myname(), 'w') as ji:
+            jdata = {}
+            jdata['version'] = version
+            jdata['max_detections'] = max_detections
+            jdata['fov_degrees'] = fov_degrees
+            jdata['skeleton'] = skeleton
+            jdata['start'] = frame_start
+            jdata['end'] = frame_end
+            jdata['skip'] = skip
+            jdata['viz'] = viz
+            jdata['qual'] = qual
+            jdata['modelname'] = tfmodelname
+            jdata['cpu_count'] = cpu_count
+            jdata['create_json'] = create_json
+            jdata['add_2d_json'] = add_2d_json
+            jdata['inpattern'] = inpattern
+            jdata['outpath'] = outpath
+            jdata['outputpatternjson'] = '/NLFdata{0:04d}.json'
+            jdata['outputpatternviz'] = '/vizNLFraw/Image{0:04d}.png'
+            jdata['outputpatternviz1'] = '/viz1/Image{0:04d}.png'
+            jdata['outputpatternviz2'] = '/viz2/Image{0:04d}.png'
+            json.dump(jdata, ji, ensure_ascii=False, indent=4)
+            ji.close()
+
+    @classmethod           	
+    def read_job_input(self):
+        try: 
+            with open(self.myname()) as json_file:
+                jdata = json.load(json_file)
+                return jdata
+        except:
+            print('read_job_input()->except',self.myname())
+            return None
+
+    
+def main():
+
+    # total arguments
+    #n = len(sys.argv)
+    #print("Total arguments passed:", n)
+    # Arguments passed
+    #print("\nName of Python script:", sys.argv[0])
+    #print("\nArguments passed:", end = " ")
+    #for i in range(1, n):
+    	#print(sys.argv[i], end = " ")
+
+    jobio = Job_io()
+    #jobio = Job_io('something_else.json')
+    
+    res = jobio.read_job_input()
+    if (res == None):
+        jobio.make_job_input()
+        print(jobio.myname(),'created' )
+        res = jobio.read_job_input()
+        print ('The job is',res)
+
+    else :
+        print ('found job is',res)
+        answ = input('Replace? [y/n] ')
+        if len(answ)>0:
+            if answ[0] ==  'y':
+                jobio.make_job_input()
+                print('Replaced->',jobio.myname())
+                res = jobio.read_job_input()
+                print ('New job is',res)
+            else:
+                if answ[0] ==  'n':
+                    print('no changes')
+                else:
+                    print(answ)
+                    print('so what?')
+        	
+        
+
+
+if __name__ == '__main__':
+    main()
+
+
