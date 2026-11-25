@@ -1,4 +1,4 @@
-did it on Ubunutu 20.04
+did it on Ubuntu 22.04.5 LTS
 
 PyTorch Hack that is for NLF
 
@@ -28,7 +28,7 @@ pip install torch==2.13.0 torchvision==0.28.0 --index-url https://download.pytor
 
 some times working
 
-
+did it on Ubunutu 20.04
 hook in conda:
 
 jenscave@jenscave-i5:~$ eval "$("$HOME/miniconda3/bin/conda" shell.bash hook)" 
