@@ -25,7 +25,7 @@ skeleton = 'smpl_24'
 
 
 # I/O Path AKA where the input images are
-datapath = 'Angelica_2'
+datapath = 'MN7'
 #outpathdeko
 outpathdeko = ''
 # absolute path homebased
@@ -40,13 +40,13 @@ fov_degrees = 55
 #fov_degrees = 90
 #fov_degrees = 100
 
-qual = 500
+#qual = 500
 #qual = 501
 #qual = 502
 #qual = 503
 #qual = 504
 #qual = 505
-#qual = 506
+qual = 506
 modellist = {
 	500:'nlf_s_multi.torchscript',
 	501:'nlf_s_multi_0.2.2.torchscript',
@@ -54,7 +54,7 @@ modellist = {
 	503:'',
 	504:'nlf_l_multi.torchscript',
 	505:'nlf_l_multi_0.2.2.torchscript',
-	506:''
+	506:'nlf_l_multi_0.3.2.torchscript'
 }
 tfmodelname = ''
 #use modellist
@@ -71,7 +71,7 @@ skip = 1
 max_detections=1
 
 #result as images 
-viz = 2 # enum 0, none 1, 3D Plot 2, 2D ovelay clipped 3, 3D 2D aside 
+viz = 0 # enum 0, none 1, 3D Plot 2, 2D ovelay clipped 3, 3D 2D aside 
 #result as data
 create_json = 1  # enum 0, dont 1, skip existing 2, overwrite
 add_2d_json = 0 
