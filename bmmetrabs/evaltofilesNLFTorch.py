@@ -346,9 +346,8 @@ def doimage(model,cano_all,marker_names,i,inpattern,fov_degrees,skeleton,max_det
 #			pose2jsonplus(skeleton,p3d,p2d,boxes,joint_names,i,outputpatternjson)
 #		else:
 #			pose2json(skeleton,p3d,boxes,joint_names,i,outputpatternjson)
-	img = image.cpu()
 	if viz == 1 :visualize_3dtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
-	if viz == 2 :visualize_tofileClipped(img.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
+	if viz == 2 :visualize_tofileClipped(name, pred, joint_names, joint_edges,i,outputpatternviz)
 	if viz == 3 :
 		visualize_tofileClipped(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz)
 		#visualize_3dOtofile(image.numpy(), pred, joint_names, joint_edges,i,outputpatternviz1)
@@ -525,7 +524,7 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
     from matplotlib.patches import Rectangle
     plt.switch_backend('TkAgg')
 
-    fig = plt.figure(figsize=(7, 5))
+    fig = plt.figure(figsize=(7, 4))
     image_ax = fig.add_subplot(1, 1, 1)
     image_ax.imshow(image)
     for x, y, w, h in detections[:, :4]:
@@ -541,35 +540,29 @@ def visualize_tofile(image, pred, joint_names, joint_edges,i,pat):
     fig.tight_layout()
     name=pat.format(i)
     print('<--',name)
-    fig.savefig(name, dpi=200) 
+    fig.savefig(name, dpi=100) 
     plt.close()
 #    plt.show()
 
-def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
+def visualize_tofileClipped(name, pred, joint_names, joint_edges,i,pat):
 #    poses3d, poses2d = pred['joints3d'], pred['joints2d']
     detections, poses3d, poses2d = pred['boxes'], pred['poses3d'], pred['poses2d']
 
     import matplotlib.pyplot as plt
+    from PIL import Image
     # noinspection PyUnresolvedReferences
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib.patches import Rectangle
     plt.switch_backend('TkAgg')
-
-    fig = plt.figure(figsize=(7, 5))
-    image_ax = fig.add_subplot(1, 1, 1)
-    '''
-    image_ax.imshow(image)
-    for x, y, w, h in detections[:, :4]:
-        image_ax.add_patch(Rectangle((x, y), w, h, fill=False))
-    '''
+    fig = plt.figure(figsize=(4, 3))
+    image = np.asarray(Image.open(name))
     #image_ax.add_patch(Rectangle((0, 0), image.shape[2], image.shape[1], fill=False))
-    fig = plt.figure(figsize=(7, 5))
     plot_ax = fig.add_subplot(1, 1, 1)
     plot_ax.set_xlim(0, image.shape[1])
-    plot_ax.set_ylim(0, image.shape[2])
+    plot_ax.set_ylim(0, image.shape[0])
     plot_ax.invert_yaxis()
-    #print(image)
-    #plot_ax.imshow(image)
+    #print(repr(image))
+    plot_ax.imshow(image)
     plot_ax.axis('off')
     T1,T2 = torch.split(poses2d[0], [num_verts,24],dim=-2)
     vertices = T1.numpy(force=True)
@@ -587,7 +580,7 @@ def visualize_tofileClipped(image, pred, joint_names, joint_edges,i,pat):
     fig.tight_layout()
     name=pat.format(i)
     print('<--',name)
-    fig.savefig(name, dpi=200) 
+    fig.savefig(name, dpi=100) 
     plt.close('all')
 
 
@@ -600,6 +593,7 @@ def visualize_3dtofile(image, pred, joint_names, joint_edges,frame,pat):
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib.patches import Rectangle
     plt.switch_backend('TkAgg')
+    
 
     fig = plt.figure(figsize=(10, 5.2))
     image_ax = fig.add_subplot(1, 2, 1)
